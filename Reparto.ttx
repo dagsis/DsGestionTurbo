@@ -1,0 +1,4 @@
+Producto	String	15	
+Descripcion	String	50	
+Cantidad	Number		
+PrecioTotal	Currency		

@@ -1,0 +1,2225 @@
+VERSION 5.00
+Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Begin VB.Form VentaComprobantes 
+   BorderStyle     =   1  'Fixed Single
+   Caption         =   "Comprobantes de Venta"
+   ClientHeight    =   7080
+   ClientLeft      =   45
+   ClientTop       =   330
+   ClientWidth     =   11790
+   KeyPreview      =   -1  'True
+   LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
+   MDIChild        =   -1  'True
+   Picture         =   "VentaComprobantes.frx":0000
+   ScaleHeight     =   7080
+   ScaleWidth      =   11790
+   Begin VB.CheckBox ChkA4 
+      Caption         =   "Fact.A4"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   645
+      Left            =   10890
+      TabIndex        =   85
+      Top             =   3885
+      Width           =   780
+   End
+   Begin VB.CommandButton CmdBotones 
+      Caption         =   "E-Mail"
+      Height          =   675
+      Index           =   10
+      Left            =   10920
+      Style           =   1  'Graphical
+      TabIndex        =   83
+      Top             =   879
+      Width           =   750
+   End
+   Begin VB.CommandButton CmdBotones 
+      Caption         =   "Recibo"
+      Height          =   675
+      Index           =   9
+      Left            =   10920
+      Style           =   1  'Graphical
+      TabIndex        =   82
+      Top             =   75
+      Width           =   750
+   End
+   Begin VB.ComboBox CmbCorredor 
+      Height          =   315
+      Left            =   7560
+      Style           =   2  'Dropdown List
+      TabIndex        =   11
+      Top             =   1395
+      Width           =   2040
+   End
+   Begin VB.TextBox TxtVendedor 
+      Alignment       =   1  'Right Justify
+      Height          =   285
+      Left            =   6825
+      MaxLength       =   7
+      TabIndex        =   1
+      Text            =   "TxtVend"
+      Top             =   75
+      Width           =   675
+   End
+   Begin VB.TextBox TxtReparto 
+      Height          =   315
+      Left            =   8400
+      MaxLength       =   13
+      TabIndex        =   2
+      Text            =   "0000000000000"
+      Top             =   75
+      Width           =   1335
+   End
+   Begin VB.TextBox LblIva1 
+      Alignment       =   1  'Right Justify
+      Height          =   285
+      Left            =   8400
+      MaxLength       =   10
+      TabIndex        =   74
+      Text            =   "LblIva1"
+      Top             =   5880
+      Width           =   1095
+   End
+   Begin VB.ComboBox CmbVend 
+      Height          =   315
+      Left            =   4650
+      Style           =   2  'Dropdown List
+      TabIndex        =   0
+      Top             =   75
+      Width           =   2085
+   End
+   Begin VB.ComboBox CmbEmpresa 
+      Height          =   315
+      Left            =   1080
+      Style           =   2  'Dropdown List
+      TabIndex        =   71
+      Top             =   75
+      Width           =   2790
+   End
+   Begin VB.TextBox TxtCotizacion 
+      Alignment       =   1  'Right Justify
+      Height          =   285
+      Left            =   3960
+      MaxLength       =   7
+      TabIndex        =   10
+      Text            =   "TxtCotizac"
+      Top             =   1395
+      Width           =   840
+   End
+   Begin VB.CommandButton CmdBotones 
+      Caption         =   "Modificar"
+      Height          =   675
+      Index           =   8
+      Left            =   9840
+      Style           =   1  'Graphical
+      TabIndex        =   69
+      Top             =   2487
+      Width           =   1005
+   End
+   Begin VB.CommandButton CmdBotones 
+      Caption         =   "&Nuevo"
+      Height          =   675
+      Index           =   0
+      Left            =   9840
+      Style           =   1  'Graphical
+      TabIndex        =   68
+      Top             =   75
+      Width           =   1005
+   End
+   Begin VB.CommandButton CmdBotones 
+      Caption         =   "&Buscar"
+      Height          =   675
+      Index           =   1
+      Left            =   9840
+      Style           =   1  'Graphical
+      TabIndex        =   67
+      Top             =   1680
+      Width           =   1005
+   End
+   Begin VB.CommandButton CmdBotones 
+      Caption         =   "&Salir"
+      Height          =   675
+      Index           =   5
+      Left            =   9840
+      Style           =   1  'Graphical
+      TabIndex        =   66
+      Top             =   6270
+      Width           =   1005
+   End
+   Begin VB.CommandButton CmdBotones 
+      Caption         =   "&Anular"
+      Height          =   675
+      Index           =   6
+      Left            =   9840
+      Style           =   1  'Graphical
+      TabIndex        =   65
+      Top             =   879
+      Width           =   1005
+   End
+   Begin VB.CommandButton CmdBotones 
+      Caption         =   "Imprimir"
+      Height          =   675
+      Index           =   7
+      Left            =   9840
+      Style           =   1  'Graphical
+      TabIndex        =   64
+      Top             =   3885
+      Width           =   1005
+   End
+   Begin VB.CommandButton CmdBotones 
+      Caption         =   "Aplicación"
+      Height          =   675
+      Index           =   4
+      Left            =   9840
+      Style           =   1  'Graphical
+      TabIndex        =   63
+      Top             =   4674
+      Width           =   1005
+   End
+   Begin VB.CommandButton CmdTexto 
+      Caption         =   "Texto"
+      Height          =   450
+      Left            =   9840
+      TabIndex        =   62
+      Top             =   3291
+      Width           =   1005
+   End
+   Begin VB.ComboBox CmbCondPago 
+      Height          =   315
+      Left            =   3975
+      Sorted          =   -1  'True
+      Style           =   2  'Dropdown List
+      TabIndex        =   13
+      Top             =   1830
+      Width           =   3285
+   End
+   Begin VB.TextBox TxtNumero 
+      Height          =   315
+      Left            =   8835
+      MaxLength       =   8
+      TabIndex        =   6
+      Text            =   "00000000"
+      Top             =   510
+      Width           =   855
+   End
+   Begin VB.TextBox TxtSucursal 
+      Height          =   315
+      Left            =   8040
+      MaxLength       =   4
+      TabIndex        =   5
+      Text            =   "0000"
+      Top             =   510
+      Width           =   495
+   End
+   Begin VB.ComboBox CmbFormaPago 
+      Height          =   315
+      Left            =   1050
+      Style           =   2  'Dropdown List
+      TabIndex        =   12
+      Top             =   1830
+      Width           =   2070
+   End
+   Begin VB.TextBox TxtCliente 
+      Height          =   285
+      Left            =   1080
+      MaxLength       =   15
+      TabIndex        =   7
+      Text            =   "TxtCliente"
+      Top             =   945
+      Width           =   795
+   End
+   Begin VB.Frame Frame1 
+      Caption         =   "Detalle"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   4830
+      Left            =   75
+      TabIndex        =   38
+      Top             =   2145
+      Width           =   9540
+      Begin VB.TextBox TxtPDesc 
+         Alignment       =   1  'Right Justify
+         Height          =   285
+         Left            =   2775
+         MaxLength       =   5
+         TabIndex        =   21
+         Text            =   "TxtPD"
+         Top             =   3180
+         Width           =   870
+      End
+      Begin VB.ComboBox CmbCuenta 
+         Height          =   315
+         Left            =   3840
+         Style           =   2  'Dropdown List
+         TabIndex        =   24
+         Top             =   3525
+         Width           =   2700
+      End
+      Begin VB.TextBox TxtNoGrav 
+         Alignment       =   1  'Right Justify
+         Height          =   285
+         Left            =   8475
+         MaxLength       =   10
+         TabIndex        =   58
+         Text            =   "TxtNoGrav"
+         Top             =   3052
+         Width           =   915
+      End
+      Begin VB.ComboBox CmbUnidad 
+         Height          =   315
+         Left            =   4785
+         Style           =   2  'Dropdown List
+         TabIndex        =   19
+         Top             =   2775
+         Width           =   1740
+      End
+      Begin VB.ComboBox CmbDeposito 
+         Height          =   315
+         Left            =   840
+         Style           =   2  'Dropdown List
+         TabIndex        =   18
+         Top             =   2780
+         Width           =   2820
+      End
+      Begin VB.ComboBox CmbImpuesto 
+         Height          =   315
+         Left            =   4320
+         Style           =   2  'Dropdown List
+         TabIndex        =   22
+         Top             =   3180
+         Width           =   2235
+      End
+      Begin VB.CommandButton CmdDetalle 
+         Caption         =   "Borrar"
+         Height          =   645
+         Index           =   1
+         Left            =   2940
+         Style           =   1  'Graphical
+         TabIndex        =   53
+         Top             =   3900
+         Width           =   870
+      End
+      Begin VB.CommandButton CmdDetalle 
+         Caption         =   "Actualizar"
+         Height          =   645
+         Index           =   2
+         Left            =   3870
+         Style           =   1  'Graphical
+         TabIndex        =   25
+         Top             =   3900
+         Width           =   870
+      End
+      Begin VB.CommandButton CmdDetalle 
+         Caption         =   "Cancelar"
+         Height          =   645
+         Index           =   3
+         Left            =   6465
+         Style           =   1  'Graphical
+         TabIndex        =   52
+         Top             =   3900
+         Width           =   870
+      End
+      Begin MSDataGridLib.DataGrid Grid1 
+         Height          =   2055
+         Left            =   165
+         TabIndex        =   51
+         Top             =   255
+         Width           =   9255
+         _ExtentX        =   16325
+         _ExtentY        =   3625
+         _Version        =   393216
+         AllowUpdate     =   0   'False
+         HeadLines       =   1
+         RowHeight       =   15
+         BeginProperty HeadFont {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ColumnCount     =   2
+         BeginProperty Column00 
+            DataField       =   ""
+            Caption         =   ""
+            BeginProperty DataFormat {6D835690-900B-11D0-9484-00A0C91110ED} 
+               Type            =   0
+               Format          =   ""
+               HaveTrueFalseNull=   0
+               FirstDayOfWeek  =   0
+               FirstWeekOfYear =   0
+               LCID            =   2058
+               SubFormatType   =   0
+            EndProperty
+         EndProperty
+         BeginProperty Column01 
+            DataField       =   ""
+            Caption         =   ""
+            BeginProperty DataFormat {6D835690-900B-11D0-9484-00A0C91110ED} 
+               Type            =   0
+               Format          =   ""
+               HaveTrueFalseNull=   0
+               FirstDayOfWeek  =   0
+               FirstWeekOfYear =   0
+               LCID            =   2058
+               SubFormatType   =   0
+            EndProperty
+         EndProperty
+         SplitCount      =   1
+         BeginProperty Split0 
+            MarqueeStyle    =   3
+            AllowRowSizing  =   0   'False
+            AllowSizing     =   0   'False
+            RecordSelectors =   0   'False
+            BeginProperty Column00 
+            EndProperty
+            BeginProperty Column01 
+            EndProperty
+         EndProperty
+      End
+      Begin VB.TextBox TxtDetalle 
+         Height          =   285
+         Left            =   1920
+         MaxLength       =   80
+         TabIndex        =   16
+         Text            =   "TxtDetalle"
+         Top             =   2400
+         Width           =   4680
+      End
+      Begin VB.CommandButton CmdDetalle 
+         Caption         =   "Agregar"
+         Height          =   645
+         Index           =   0
+         Left            =   1890
+         Style           =   1  'Graphical
+         TabIndex        =   26
+         Top             =   3900
+         Width           =   870
+      End
+      Begin VB.TextBox TxtPrecio 
+         Alignment       =   1  'Right Justify
+         Height          =   285
+         Left            =   690
+         MaxLength       =   10
+         TabIndex        =   23
+         Text            =   "TxtPrecio"
+         Top             =   3525
+         Width           =   1095
+      End
+      Begin VB.TextBox TxtCantidad 
+         Alignment       =   1  'Right Justify
+         Height          =   285
+         Left            =   840
+         MaxLength       =   10
+         TabIndex        =   20
+         Text            =   "TxtCa"
+         Top             =   3180
+         Width           =   930
+      End
+      Begin VB.CommandButton CmdProductos 
+         Caption         =   "Buscar"
+         Height          =   255
+         Left            =   6630
+         TabIndex        =   17
+         Top             =   2400
+         Width           =   705
+      End
+      Begin VB.TextBox TxtProducto 
+         Height          =   285
+         Left            =   720
+         MaxLength       =   25
+         TabIndex        =   15
+         Text            =   "TxtProducto"
+         Top             =   2400
+         Width           =   1080
+      End
+      Begin VB.Label LblPercepcion 
+         Alignment       =   1  'Right Justify
+         BorderStyle     =   1  'Fixed Single
+         Caption         =   "LblPercepcion"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   270
+         Left            =   8295
+         TabIndex        =   81
+         Top             =   4095
+         Width           =   1095
+      End
+      Begin VB.Label Label32 
+         Caption         =   "Perc.IB:"
+         Height          =   195
+         Left            =   7500
+         TabIndex        =   80
+         Top             =   4125
+         Width           =   630
+      End
+      Begin VB.Label Label31 
+         Caption         =   "C.Contable :"
+         Height          =   240
+         Left            =   2805
+         TabIndex        =   79
+         Top             =   3525
+         Width           =   915
+      End
+      Begin VB.Label Label29 
+         Caption         =   "Iva :"
+         Height          =   210
+         Left            =   3795
+         TabIndex        =   78
+         Top             =   3180
+         Width           =   390
+      End
+      Begin VB.Label Label28 
+         Caption         =   "P.Desc.:"
+         Height          =   240
+         Left            =   1905
+         TabIndex        =   77
+         Top             =   3180
+         Width           =   675
+      End
+      Begin VB.Label Label22 
+         Caption         =   "No Grav. :"
+         Height          =   195
+         Left            =   7500
+         TabIndex        =   59
+         Top             =   3045
+         Width           =   855
+      End
+      Begin VB.Label Label21 
+         Caption         =   "U.De Medida :"
+         Height          =   225
+         Left            =   3690
+         TabIndex        =   57
+         Top             =   2780
+         Width           =   1140
+      End
+      Begin VB.Label Label18 
+         Caption         =   "Depósito :"
+         Height          =   195
+         Left            =   90
+         TabIndex        =   56
+         Top             =   2780
+         Width           =   870
+      End
+      Begin VB.Label LblTotal 
+         Alignment       =   1  'Right Justify
+         BorderStyle     =   1  'Fixed Single
+         Caption         =   "LblTotal"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   270
+         Left            =   8010
+         TabIndex        =   50
+         Top             =   4440
+         Width           =   1380
+      End
+      Begin VB.Label Label16 
+         Caption         =   "Total :"
+         Height          =   225
+         Left            =   7500
+         TabIndex        =   49
+         Top             =   4440
+         Width           =   495
+      End
+      Begin VB.Label Label11 
+         Caption         =   "Iva 1:"
+         Height          =   180
+         Left            =   7500
+         TabIndex        =   48
+         Top             =   3750
+         Width           =   420
+      End
+      Begin VB.Label LblFinanciacion 
+         Alignment       =   1  'Right Justify
+         BorderStyle     =   1  'Fixed Single
+         Caption         =   "LblFinanciacion"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   270
+         Left            =   8295
+         TabIndex        =   47
+         Top             =   3408
+         Width           =   1095
+      End
+      Begin VB.Label LblBonificacion 
+         Alignment       =   1  'Right Justify
+         BorderStyle     =   1  'Fixed Single
+         Caption         =   "LblBonificacion"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   270
+         Left            =   8295
+         TabIndex        =   46
+         Top             =   2711
+         Width           =   1095
+      End
+      Begin VB.Label Label20 
+         Caption         =   "Finac.:"
+         Height          =   195
+         Left            =   7500
+         TabIndex        =   45
+         Top             =   3405
+         Width           =   510
+      End
+      Begin VB.Label Label19 
+         Caption         =   "Bonif.:"
+         Height          =   225
+         Left            =   7500
+         TabIndex        =   44
+         Top             =   2715
+         Width           =   495
+      End
+      Begin VB.Label LblNeto 
+         Alignment       =   1  'Right Justify
+         BorderStyle     =   1  'Fixed Single
+         Caption         =   "LblNeto"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   270
+         Left            =   7965
+         TabIndex        =   43
+         Top             =   2370
+         Width           =   1425
+      End
+      Begin VB.Label Label10 
+         Caption         =   "Neto :"
+         Height          =   255
+         Left            =   7500
+         TabIndex        =   42
+         Top             =   2370
+         Width           =   525
+      End
+      Begin VB.Label Label14 
+         Caption         =   "Precio :"
+         Height          =   195
+         Left            =   75
+         TabIndex        =   41
+         Top             =   3525
+         Width           =   750
+      End
+      Begin VB.Label Label13 
+         Caption         =   "Cantidad :"
+         Height          =   255
+         Left            =   60
+         TabIndex        =   40
+         Top             =   3180
+         Width           =   855
+      End
+      Begin VB.Label Label12 
+         Caption         =   "Codigo :"
+         Height          =   210
+         Left            =   120
+         TabIndex        =   39
+         Top             =   2400
+         Width           =   735
+      End
+   End
+   Begin VB.ComboBox CmbLista 
+      Height          =   315
+      Left            =   1065
+      Style           =   2  'Dropdown List
+      TabIndex        =   9
+      Top             =   1395
+      Width           =   2040
+   End
+   Begin VB.CommandButton CmdClientes 
+      Caption         =   "Buscar"
+      Height          =   300
+      Left            =   4980
+      TabIndex        =   8
+      Top             =   915
+      Width           =   735
+   End
+   Begin MSComCtl2.DTPicker DTPFecha 
+      Height          =   315
+      Left            =   5745
+      TabIndex        =   4
+      Top             =   510
+      Width           =   1290
+      _ExtentX        =   2275
+      _ExtentY        =   556
+      _Version        =   393216
+      Format          =   120455169
+      CurrentDate     =   36783
+   End
+   Begin VB.ComboBox CmbComprobante 
+      Height          =   315
+      Left            =   1200
+      Style           =   2  'Dropdown List
+      TabIndex        =   3
+      Top             =   465
+      Width           =   3825
+   End
+   Begin MSComCtl2.DTPicker DtpVenc 
+      Height          =   315
+      Left            =   8280
+      TabIndex        =   14
+      Top             =   1830
+      Width           =   1290
+      _ExtentX        =   2275
+      _ExtentY        =   556
+      _Version        =   393216
+      Format          =   120455169
+      CurrentDate     =   36783
+   End
+   Begin VB.PictureBox Picture1 
+      Height          =   570
+      Left            =   6915
+      ScaleHeight     =   510
+      ScaleWidth      =   210
+      TabIndex        =   84
+      Top             =   5190
+      Width           =   270
+   End
+   Begin VB.Label Label27 
+      Caption         =   "Cantidad :"
+      Height          =   255
+      Left            =   2025
+      TabIndex        =   76
+      Top             =   5280
+      Width           =   855
+   End
+   Begin VB.Label Label26 
+      Caption         =   "Reparto :"
+      Height          =   240
+      Left            =   7650
+      TabIndex        =   75
+      Top             =   75
+      Width           =   675
+   End
+   Begin VB.Label Label25 
+      Caption         =   "Vendedor:"
+      Height          =   240
+      Left            =   3900
+      TabIndex        =   73
+      Top             =   75
+      Width           =   825
+   End
+   Begin VB.Label Label24 
+      Caption         =   "Empresa :"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   225
+      Left            =   135
+      TabIndex        =   72
+      Top             =   75
+      Width           =   885
+   End
+   Begin VB.Label Label23 
+      Caption         =   "Cotización :"
+      Height          =   195
+      Left            =   3105
+      TabIndex        =   70
+      Top             =   1395
+      Width           =   960
+   End
+   Begin VB.Label LblDescuento 
+      Alignment       =   1  'Right Justify
+      BorderStyle     =   1  'Fixed Single
+      Caption         =   "LblDescuento"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   285
+      Left            =   5775
+      TabIndex        =   61
+      Top             =   1410
+      Width           =   765
+   End
+   Begin VB.Label Label15 
+      Caption         =   "F.de Pago :"
+      Height          =   210
+      Left            =   3150
+      TabIndex        =   60
+      Top             =   1845
+      Width           =   885
+   End
+   Begin VB.Label Label17 
+      Caption         =   "--"
+      Height          =   195
+      Left            =   8610
+      TabIndex        =   55
+      Top             =   495
+      Width           =   150
+   End
+   Begin VB.Label Label30 
+      Caption         =   "C.de Pago :"
+      Height          =   210
+      Left            =   135
+      TabIndex        =   54
+      Top             =   1845
+      Width           =   885
+   End
+   Begin VB.Label LbLIva 
+      BorderStyle     =   1  'Fixed Single
+      Caption         =   "LbLIva"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   300
+      Left            =   6270
+      TabIndex        =   37
+      Top             =   930
+      Width           =   3390
+   End
+   Begin VB.Label LblCliente 
+      BorderStyle     =   1  'Fixed Single
+      Caption         =   "LblCliente"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   285
+      Left            =   1860
+      TabIndex        =   36
+      Top             =   945
+      Width           =   3105
+   End
+   Begin VB.Label Label9 
+      Caption         =   "F.Venc. :"
+      Height          =   240
+      Left            =   7500
+      TabIndex        =   35
+      Top             =   1845
+      Width           =   735
+   End
+   Begin VB.Label Label8 
+      Caption         =   "Corredor :"
+      Height          =   225
+      Left            =   6660
+      TabIndex        =   34
+      Top             =   1410
+      Width           =   780
+   End
+   Begin VB.Label Label7 
+      Caption         =   "Descuento :"
+      Height          =   240
+      Left            =   4860
+      TabIndex        =   33
+      Top             =   1395
+      Width           =   975
+   End
+   Begin VB.Label Label6 
+      Caption         =   "Lista :"
+      Height          =   330
+      Left            =   135
+      TabIndex        =   32
+      Top             =   1395
+      Width           =   555
+   End
+   Begin VB.Label Label5 
+      Caption         =   "Iva :"
+      Height          =   225
+      Left            =   5850
+      TabIndex        =   31
+      Top             =   945
+      Width           =   480
+   End
+   Begin VB.Label Label4 
+      Caption         =   "Cliente :"
+      Height          =   255
+      Left            =   135
+      TabIndex        =   30
+      Top             =   945
+      Width           =   660
+   End
+   Begin VB.Label Label3 
+      Caption         =   "Fecha :"
+      Height          =   210
+      Left            =   5160
+      TabIndex        =   29
+      Top             =   510
+      Width           =   975
+   End
+   Begin VB.Label Label2 
+      Caption         =   "Número :"
+      Height          =   240
+      Left            =   7155
+      TabIndex        =   28
+      Top             =   510
+      Width           =   765
+   End
+   Begin VB.Label Label1 
+      Caption         =   "Comprobante :"
+      Height          =   240
+      Left            =   135
+      TabIndex        =   27
+      Top             =   510
+      Width           =   1155
+   End
+End
+Attribute VB_Name = "VentaComprobantes"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Explicit
+Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" ( _
+    ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+
+Private Const WM_NEXTDLGCTL As Long = &H28
+
+Private mShell As Object
+
+Private RsCv As ADODB.Recordset  'Cabecera
+Private Rsd  As ADODB.Recordset  'Detalle
+Private RsCli As ADODB.Recordset 'Cliente Elegido
+Private RsComp As ADODB.Recordset 'Comprobante elegido
+
+Private cRsl As ClsLectura
+Private P    As ClsPrograma
+
+'======== ESTADOS ========
+Private Enum eEstado
+    stIdle = 0
+    stNuevo = 1
+    stViendo = 2
+End Enum
+
+Private Enum eEstadoDetalle
+    detIdle = 0
+    detnuevo = 1
+    detEditando = 2
+End Enum
+
+Private mDetEstado As eEstadoDetalle
+
+Private mEstado As eEstado
+Private mSaltoADetalle As Boolean
+
+'--- Producto
+Private mProdId As Long
+Private mProdCodigo As String
+Private mProdImpuesto As Long
+Private mProdUM As Long
+Private mProdDeposito As Long
+Private mProdTasa As Single
+Private mProdCuenta As Long
+Private mProdPrecio As Double
+Private mProdDescripcion As String
+
+'----Varios
+Private mListaPrecio As Integer
+Private mCodVentaTipo As Integer
+
+'========================
+'  RS
+'========================
+Private Sub CrearRsVenta()
+    On Error GoTo errHandler
+    Set RsCv = cRsl.RsVacio("CabComprobantes", "Id", "N")
+    Exit Sub
+errHandler:
+    ManejaErrores
+End Sub
+
+Private Sub CrearRsDetalles()
+    On Error GoTo errHandler
+    Set Rsd = cRsl.RsVacio("DetallesComprobantes", "Id", "N")
+    Exit Sub
+errHandler:
+    ManejaErrores
+End Sub
+
+Private Sub CrearRsdMemoria()
+    On Error GoTo errHandler
+
+    Set Rsd = New ADODB.Recordset
+    Rsd.CursorLocation = adUseClient
+
+    With Rsd.Fields
+        .Append "Producto", adVarChar, 30
+        .Append "Descripcion", adVarChar, 255
+        .Append "Cuenta", adInteger
+        .Append "Deposito", adInteger
+        .Append "Medida", adInteger
+        .Append "Cantidad", adDouble
+        .Append "PDesc", adDouble
+        .Append "Desc", adDouble
+        .Append "ImpId", adDouble
+        .Append "ImpPorc", adInteger             'Id impuesto o tasa
+        .Append "ImpIncluido", adDouble           '<<< NO existe en tabla real, pero te sirve
+        .Append "PrecioUnitNeto", adDouble
+        .Append "PrecioUnitFinal", adDouble
+        .Append "Neto", adDouble
+        .Append "Impuesto", adDouble
+        .Append "Total", adDouble
+    End With
+
+    Rsd.Open  'abre el rs en memoria
+
+    Exit Sub
+errHandler:
+    ManejaErrores
+End Sub
+
+'========================
+'  VALIDACIONES
+'========================
+Private Function CabeceraOK() As Boolean
+    Dim ok As Boolean
+    ok = True
+
+    ok = ok And (CmbComprobante.ListIndex <> -1)
+
+    ' Cliente: no solo TxtCliente, sino que esté linkeado (LblCliente)
+    ok = ok And (Len(Trim$(TxtCliente.Text)) > 0)
+    ok = ok And (Len(Trim$(LblCliente.Caption)) > 0)
+
+    ok = ok And (CmbLista.ListIndex <> -1)
+
+    ' Corredor: si aceptás "Ninguno", no lo bloquees
+    ok = ok And (Len(Trim$(CmbCorredor.Text)) > 0)
+
+    ' Forma de pago
+    ok = ok And (Len(Trim$(CmbFormaPago.Text)) > 0)
+
+    ' CondPago solo si CONTADO (según tu lógica)
+    If UCase$(Trim$(CmbFormaPago.Text)) = "CONTADO" Then
+        ok = ok And (Len(Trim$(CmbCondPago.Text)) > 0) _
+                 And (UCase$(Trim$(CmbCondPago.Text)) <> "NINGUNO")
+    End If
+
+    CabeceraOK = ok
+End Function
+
+Private Function DetalleEditOK() As Boolean
+    Dim ok As Boolean
+    ok = True
+
+  '  ok = ok And (Len(Trim$(TxtProducto.Text)) > 0)
+    ok = ok And (Len(Trim$(TxtDetalle.Text)) > 0)
+
+    ok = ok And (CmbDeposito.ListIndex <> -1)
+    ok = ok And (CmbUnidad.ListIndex <> -1)
+    ok = ok And (CmbImpuesto.ListIndex <> -1)
+    ok = ok And (CmbCuenta.ListIndex <> -1)
+
+    ok = ok And (Val(TxtCantidad.Text) > 0)
+    ok = ok And (Len(Trim$(TxtPrecio.Text)) > 0)
+
+    ' descuento puede ser 0, pero debe ser numérico
+    ok = ok And (Len(Trim$(TxtPDesc.Text)) > 0)
+
+    DetalleEditOK = ok
+End Function
+
+'========================
+'  UI REFRESH (LA CLAVE)
+'========================
+Private Sub RefrescarUI()
+    Select Case mEstado
+
+        Case stIdle
+            HabilitarTodo False
+            HabilitarDetalles False
+            BotonDetalles False, False, False, False
+            BotonBuscar False, False
+
+            'Nuevo, Buscar, Salir
+            Botones True, False, False, True, False, False, True, False
+
+            CmdBotones(0).Caption = "Nuevo"
+            CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
+            CmdBotones(5).Caption = "Salir"
+            CmdBotones(5).Picture = LoadResPicture("Salir", 0)
+
+      Case stNuevo
+           Dim okCab As Boolean: okCab = CabeceraOK()
+           Dim okDet As Boolean: okDet = DetalleOK()
+           Dim okDetEdit As Boolean: okDetEdit = DetalleEditOK()
+                      
+            ' Cabecera: Grabar/Cancelar
+           CmdBotones(0).Caption = "Grabar"
+           CmdBotones(0).Picture = LoadResPicture("Grabar", 0)
+           CmdBotones(5).Caption = "Cancelar"
+           CmdBotones(5).Picture = LoadResPicture("Cancelar", 0)
+        
+            ' Si estás editando un detalle => NO se puede grabar cabecera todavía
+           If mDetEstado <> detIdle Then
+              CmdBotones(0).Enabled = False
+           Else
+                ' Grabar cabecera solo si cabecera OK + hay detalle cargado
+              CmdBotones(0).Enabled = (okCab And okDet)
+            End If
+        
+            ' Deshabilitá buscar/acciones mientras estás cargando
+            CmdTexto.Enabled = False
+            CmdBotones(1).Enabled = False
+            CmdBotones(7).Enabled = False
+            CmdBotones(4).Enabled = False
+            CmdBotones(9).Enabled = False
+            CmdBotones(10).Enabled = False
+        
+            ' ===== DETALLE =====
+            If mDetEstado = detIdle Then
+                ' Todavía no estás editando un renglón
+                HabilitarTodo True
+                HabilitarDetalles False
+                BotonBuscar True, False
+        
+                ' Botón "Nuevo detalle" solo si cabecera ok
+                CmdDetalle(0).Caption = "Nuevo"
+                CmdDetalle(0).Picture = LoadResPicture("Nuevo", 0)
+                CmdDetalle(0).Enabled = okCab
+        
+                CmdDetalle(1).Enabled = okDet          'Borrar (si hay registros)
+                CmdDetalle(2).Enabled = okDet          'Modificar (si hay registros)
+                CmdDetalle(3).Enabled = False          'Cancelar detalle no
+        
+            Else
+                ' Estás en modo carga/edición de renglón
+                HabilitarTodo False
+                HabilitarDetalles True
+                BotonBuscar False, True
+        
+                CmdDetalle(0).Caption = "Grabar"
+                CmdDetalle(0).Picture = LoadResPicture("Grabar", 0)
+                CmdDetalle(0).Enabled = okDetEdit
+        
+                CmdDetalle(1).Enabled = False
+                CmdDetalle(2).Enabled = False
+                CmdDetalle(3).Enabled = True           'Cancelar renglón
+            End If
+                   
+        Case stViendo
+            HabilitarTodo False
+            HabilitarDetalles False
+
+            'Nuevo, Buscar, Salir + acciones de ver
+            Botones True, True, False, True, False, True, True, False
+
+            CmdBotones(0).Caption = "Nuevo"
+            CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
+            CmdBotones(5).Caption = "Salir"
+            CmdBotones(5).Picture = LoadResPicture("Salir", 0)
+
+            BotonDetalles False, False, False, False
+            BotonBuscar False, False
+    End Select
+End Sub
+
+Private Sub CmbCondPago_Click()
+  Dim nPorcValor As Double, RsFPago As ADODB.Recordset
+  
+  nPorcValor = 0
+  
+  Set RsFPago = cRsl.TraerRsCondi("CondVenta", "CondVta", "CondVta=" & CmbCondPago.ItemData(CmbCondPago.ListIndex))
+  mCodVentaTipo = RsFPago!tipo
+  
+  If RsFPago!tipo = 7 Then
+  
+  Else
+     nPorcValor = RsFPago!RgTarjeta
+     RecalcularRsd nPorcValor
+  End If
+   
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+Private Sub RecalcularRsd(pValor As Double)
+'  Dim nTasa As Single, nPorc As Double, nReg As Variant, nIva As Double
+'  On Error GoTo errHandler
+'
+'
+'   Dim nTextPrecio As Double, nTextCantidad As Double
+'   Dim nLista As Integer, nCosto As Byte, nImpuesto As Single
+'
+'   If Rsd.RecordCount <> 0 Then
+'
+'      nLista = mListaPrecio
+'      nCosto = RsComp!Costo
+'      nIva = RsComp!Costo
+'
+'      nReg = Rsd.Bookmark
+'      Rsd.MoveFirst
+'      Do While Not Rsd.EOF
+'
+'          If nIva = 1 Then
+'              nTasa = cRsl.TraerValorDeUnCampo("ProductoImpuesto", "Impuesto", "Producto='" & Rsd!Producto & "'")
+'              If nTasa = 0 Then
+'                   nTasa = cRsl.RegPorDefecto("Pais")
+'              End If
+'          Else
+'             nTasa = 10
+'          End If
+'          Rsd!Tasa = nTasa
+'
+'          nImpuesto = cRsl.TraerValorDeUnCampo("Impuestos", "Porcentaje", "Impuesto=" & Rsd!Tasa)
+'
+'          Dim nPreTot As Double, nPreUn As Double, nPreDec As Double
+'
+'          nTextCantidad = Rsd!Cantidad
+'          nTextPrecio = Format(cRsp.TraerPrecioImp(Rsd!Producto, CmbLista.ItemData(CmbLista.ListIndex)), nCantDecimales)
+'
+'          If nTextPrecio = 0 Then
+'               nTextPrecio = Rsd!precio
+'          Else
+'              Rsd!precio = nTextPrecio
+'          End If
+'
+'          nTextPrecio = nTextPrecio + (nTextPrecio * nRecargo / 100) + (nTextPrecio * nValor / 100)
+'          Rsd!PrecioUnitario = RedondearPrecios(nTextPrecio)
+'
+'          Dim nImpu As Double, nPre As Double, nDes As Double, nDesL As Double
+'          If nTextCantidad <> 0 And nTextPrecio <> 0 Then
+'             If nLista = 1 Then
+'                 If nTasa <> 0 Then
+'                     If nCosto = 1 Then
+'                         nImpu = (nTextPrecio / ((nImpuesto / 100) + 1)) * nTextCantidad
+'                         nDes = nImpu * LblDescuento.Caption / 100
+'                         nImpu = Round(nImpu, 4)
+'                         nDesL = nImpu * (CDbl(Rsd!PDesc) + CDbl(LblDescuento.Caption)) / 100
+'                         nDes = nDes + nDesL
+'                         nDes = Abs(nDesL)
+'                         nPreDec = (nTextPrecio * nTextCantidad) - nImpu - ((nDes * nImpuesto) / 100)
+'                         Rsd!Impuesto = Round(nPreDec, 4)
+'                     Else
+'                         nDes = nTextPrecio * LblDescuento.Caption / 100
+'                         nDesL = nTextPrecio * Rsd!PDesc / 100
+'                         nDes = Abs(nDes + nDesL) * nTextCantidad
+'                         nPreDec = ((nTextPrecio * nTextCantidad) - nDes) - (((nTextPrecio * nTextCantidad) - nDes) / ((nImpuesto / 100) + 1))
+'                         Rsd!Impuesto = Round(nPreDec, 4)
+'                     End If
+'                     Rsd!Impuesto = Rsd!Impuesto
+'                 Else
+'                      nDes = (nTextPrecio * nTextCantidad) * LblDescuento.Caption / 100
+'                      nDesL = (nTextPrecio * nTextCantidad) * Rsd!PDesc / 100
+'                      nDes = nDes + nDesL
+'                      Rsd!Impuesto = 0
+'                 End If
+'                 Rsd!Descuento = Round(nDes, 4) '* TxtCantidad.text
+'                 If nImpu <> 0 Then
+'                    nPreTot = IIf(nImpu = 0, nTextPrecio, nImpu)
+'                    Rsd!PrecioTotal = Round(nPreTot, 4)
+'                    nPreUn = nImpu / nTextCantidad
+'                    Rsd!PrecioUnitario = Round(nPreUn, 4)
+'                 Else
+'                    nPreTot = IIf(nImpu = 0, nTextPrecio, nImpu) * Rsd!Cantidad
+'                    Rsd!PrecioTotal = Round(nPreTot, 4)
+'                    nPreUn = Rsd!PrecioTotal / nTextCantidad
+'                    Rsd!PrecioUnitario = Round(nPreUn, 4)
+'                 End If
+'                 If nCosto = 0 Then
+'                    nPreUn = (nImpu / Rsd!Cantidad) + Rsd!Impuesto
+'                    Rsd!PrecioUnitario = Round(nPreUn, 4)
+'                    nPreTot = nTextPrecio * nTextCantidad
+'                    Rsd!PrecioTotal = Round(nPreTot, 4)
+'                 End If
+'              Else
+'                  nDes = (nTextPrecio * LblDescuento.Caption / 100)
+'                  nDesL = nTextCantidad * Rsd!PDesc / 100
+'                  nDes = nDes + nDesL
+'                  nDes = Abs(nDes)
+'                  nPre = nTextPrecio - nDes
+'                  Rsd!Descuento = nDes * nTextCantidad
+'                  nImpu = ((nPre) * ((nImpuesto)) / 100) * nTextCantidad
+'                  Rsd!Impuesto = Round(nImpu, 4)
+'                  If nCosto = 1 Then
+'                     nPreTot = (TxtCantidad.Text * Rsd!PrecioUnitario)
+'                     Rsd!PrecioTotal = Round(nPreTot, 4)
+'                  Else
+'                     nPreTot = (nTextPrecio * nTextCantidad) + Rsd!Impuesto
+'                     Rsd!PrecioTotal = Round(nPreTot, 4)
+'                     nPreUn = nTextPrecio + Rsd!Impuesto
+'                     Rsd!PrecioUnitario = Round(nPreUn, 4) ' - Rsd!Descuento
+'                  End If
+'              End If
+'              Rsd!PrecioUnitario = Rsd!PrecioTotal / Rsd!Cantidad
+'              Rsd!PrecioUnitario = Round(Rsd!PrecioUnitario, 4)
+'         Else
+'            Rsd!Impuesto = 0
+'            Rsd!Descuento = 0
+'            Rsd!PrecioUnitario = 0
+'            Rsd!PrecioTotal = 0
+'         End If
+'         Rsd.Update
+'
+'         Rsd.MoveNext
+'      Loop
+'      Rsd.Bookmark = nReg
+'      LinkearDetalles
+'      sw1 = True
+'      CalcularTotales
+'   End If
+
+Exit Sub
+
+errHandler:
+   ManejaErrores
+End Sub
+
+Private Sub CmbCorredor_Click()
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+Private Sub CmbLista_Click()
+    If mEstado = stNuevo Then RefrescarUI
+    If CmbLista.ListIndex <> -1 Then
+       mListaPrecio = cRsl.TraerValorDeUnCampo("ListaDePrecio", "PrecioIva", "ListaPrecio=" & CmbLista.ItemData(CmbLista.ListIndex))
+    End If
+End Sub
+
+Private Sub CmdClientes_Click()
+    nDat = 0
+    nBuscar = 1
+    FrmBuscarEx.Show 1
+
+    If nDat <> 0 Then
+        LinkearCliente nDat
+
+        If mDetEstado = detIdle Then
+          If Len(Trim$(LblCliente.Caption)) > 0 Then CmbLista.SetFocus
+        End If
+    End If
+End Sub
+
+Private Sub CmdProductos_Click()
+ nDat = 0
+ nBuscar = 3
+ FrmBuscarEx.Show 1
+  If nDat <> 0 Then
+     LinkearProducto nDat
+  End If
+End Sub
+
+Private Sub DtpFecha_Change()
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+Private Sub DtpVenc_Change()
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+'========================
+'  FORM LOAD
+'========================
+Private Sub Form_Load()
+    On Error GoTo errHandler
+
+    Set mShell = CreateObject("WScript.Shell")
+    Set cRsl = New ClsLectura
+    Set P = New ClsPrograma
+
+    CrearRsdMemoria
+
+    'imagenes
+    CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
+    CmdBotones(1).Picture = LoadResPicture("Buscar", 0)
+    CmdBotones(5).Picture = LoadResPicture("Salir", 0)
+    CmdBotones(4).Picture = LoadResPicture("Valores", 0)
+    CmdBotones(6).Picture = LoadResPicture("Borrar", 0)
+    CmdBotones(7).Picture = LoadResPicture("Imprimir", 0)
+    CmdBotones(8).Picture = LoadResPicture("Modificar", 0)
+    CmdBotones(9).Picture = LoadResPicture("Imprimir", 0)
+    CmdBotones(10).Picture = LoadResPicture("Email", 0)
+
+    CmdDetalle(0).Picture = LoadResPicture("Nuevo", 0)
+    CmdDetalle(1).Picture = LoadResPicture("Borrar", 0)
+    CmdDetalle(2).Picture = LoadResPicture("Modificar", 0)
+    CmdDetalle(3).Picture = LoadResPicture("Cancelar", 0)
+
+    CabGrid
+    CargarCombos
+
+    Limpiar
+
+    mEstado = stIdle
+    RefrescarUI
+
+    Me.Top = 0
+    Me.Left = 0
+    Exit Sub
+
+errHandler:
+    On Error Resume Next
+    ManejaErrores
+End Sub
+
+
+'========================
+'  ENTER COMO TAB (TU MÉTODO)
+'========================
+Private Sub Form_KeyPress(KeyAscii As Integer)
+  Dim WshShell As Object
+  If KeyAscii = vbKeyReturn Then
+    Set WshShell = CreateObject("WScript.Shell")
+    WshShell.SendKeys "{TAB}"
+    KeyAscii = 0
+  End If
+End Sub
+
+Private Sub DtpFecha_KeyDown(KeyCode As Integer, Shift As Integer)
+  Dim WshShell As Object
+  If KeyCode = vbKeyReturn Then
+     Set WshShell = CreateObject("WScript.Shell")
+     WshShell.SendKeys "{TAB}"
+  End If
+End Sub
+
+Private Sub DtpVenc_KeyDown(KeyCode As Integer, Shift As Integer)
+  Dim WshShell As Object
+  If KeyCode = vbKeyReturn Then
+     Set WshShell = CreateObject("WScript.Shell")
+     WshShell.SendKeys "{TAB}"
+  End If
+End Sub
+
+
+'========================
+'  NUMÉRICOS / SELECCIONAR
+'========================
+Private Sub SoloNumEntero(ByRef KeyAscii As Integer)
+    If SoloNumero(KeyAscii) = False Then KeyAscii = 0
+End Sub
+
+Private Sub SoloNumDecimal(ByRef KeyAscii As Integer, ByVal tb As TextBox)
+    If SoloNumeroDecimalFinal(KeyAscii, tb) = False Then KeyAscii = 0
+End Sub
+
+Private Sub SeleccionarTodo(ByVal tb As TextBox)
+    tb.SelStart = 0
+    tb.SelLength = Len(tb.Text)
+End Sub
+
+Private Sub TxtCantidad_LostFocus()
+  If TxtCantidad.Text = "" Then TxtCantidad.Text = 1
+  TxtCantidad.Text = Format(TxtCantidad.Text, nDecimalCant)
+End Sub
+
+Private Sub TxtCliente_Change()
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+Private Sub TxtCliente_LostFocus()
+    LinkearCliente 0
+
+    If mDetEstado <> detIdle Then Exit Sub '<<< importante
+
+    If Len(Trim$(LblCliente.Caption)) > 0 Then
+        CmbLista.SetFocus
+    End If
+End Sub
+
+
+Private Sub TxtCotizacion_Change()
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+Private Sub TxtPrecio_LostFocus()
+  If TxtPrecio.Text = "" Then TxtPrecio.Text = 0
+  TxtPrecio.Text = Format(TxtPrecio.Text, nCantDecimales)
+End Sub
+
+Private Sub TxtPDesc_LostFocus()
+  If TxtPDesc.Text = "" Then TxtPDesc.Text = 0
+  TxtPDesc.Text = Format(TxtPDesc.Text, "#0.00")
+End Sub
+
+Private Sub TxtNumero_Change()
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+Private Sub LinkearProducto(pProducto As Long)
+  Dim cRpl As ClsProductoL
+  
+  Set cRpl = New ClsProductoL
+  
+  If TxtProducto.Text <> "" Or nDat <> 0 Then
+     Dim RsProduc As ADODB.Recordset
+     Set RsProduc = cRpl.TraerProducto(TxtProducto.Text, pProducto)
+     
+     If Not RsProduc Is Nothing And RsProduc.RecordCount > 0 Then
+     
+        mProdId = RsProduc!ID
+        mProdCodigo = RsProduc!Producto
+        mProdDescripcion = RsProduc!Descripcion
+        mProdUM = RsProduc!UMVenta
+        mProdTasa = RsProduc!Porcentaje
+        mProdDeposito = RsProduc!Deposito
+        mProdImpuesto = RsProduc!Impuesto
+        mProdPrecio = CDbl(RsProduc!precio)
+        
+        TxtProducto.Text = mProdCodigo
+        TxtDetalle.Text = mProdDescripcion
+        
+        P.SetComboByItemData CmbUnidad, mProdUM
+        P.SetComboByItemData CmbDeposito, mProdDeposito
+         CmbImpuesto.Text = "IVA EXENTO"
+         If Not RsComp Is Nothing Then
+            If RsComp!Iva = 1 Then
+              P.SetComboByItemData CmbImpuesto, mProdImpuesto
+            End If
+        End If
+        If RsProduc!precio <> 0 Then
+           TxtPrecio.Text = Format(mProdPrecio, "#0.00")
+           TxtCantidad.SetFocus
+        Else
+           TxtPrecio.Text = "0.00"
+           TxtPrecio.SetFocus
+        End If
+     Else
+        LimpiarDetalles
+        TxtProducto.SetFocus
+     End If
+  End If
+End Sub
+
+
+Private Sub TxtProducto_LostFocus()
+   LinkearProducto 0
+End Sub
+
+Private Sub TxtReparto_Change()
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+Private Sub TxtSucursal_Change()
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+Private Sub TxtVendedor_Change()
+  If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+'-- ejemplo (dejá el resto igual)
+Private Sub TxtVendedor_GotFocus(): SeleccionarTodo TxtVendedor: End Sub
+Private Sub TxtVendedor_KeyPress(KeyAscii As Integer): SoloNumDecimal KeyAscii, TxtVendedor: End Sub
+
+
+'========================
+'  LIMPIAR
+'========================
+Private Sub Limpiar()
+    Dim ctl As Control
+
+    For Each ctl In Controls
+        If TypeOf ctl Is TextBox Then ctl.Text = ""
+    Next ctl
+
+    DTPFecha.Value = Date
+    DtpVenc.Value = Date
+
+    LblDescuento.Caption = "0.00"
+    TxtReparto.Text = "0000000000000"
+    LblCliente.Caption = ""
+    TxtSucursal.Text = "0000"
+    TxtNumero.Text = "00000000"
+    TxtVendedor.Text = "0.00"
+    LbLIva.Caption = ""
+    TxtCotizacion.Text = "1.000"
+    LblNeto.Caption = "0.00"
+    LblBonificacion.Caption = "0.00"
+    LblFinanciacion.Caption = "0.00"
+    TxtNoGrav.Text = "0.00"
+    LblIva1.Text = "0.00"
+    LblPercepcion.Caption = "0.00"
+    LblTotal.Caption = "0.00"
+
+    CmbComprobante.ListIndex = -1
+    CmbVend.Text = "NINGUNO"
+    CmbCorredor.Text = "Ninguno"
+    CmbLista.ListIndex = -1
+    CmbCuenta.ListIndex = -1
+
+    ' Forma pago / cond pago
+    CmbFormaPago.Text = IIf(nCondPago = 0, "CUENTA CORRIENTE", "CONTADO")
+    CmbCondPago.Text = "EFECTIVO"
+      
+End Sub
+
+Private Sub LimpiarDetalles()
+    TxtProducto.Text = ""
+    P.SetComboByItemData CmbDeposito, nDepDetalle
+    P.SetComboByItemData CmbUnidad, nMedDetalle
+    P.SetComboByItemData CmbCuenta, nCueDetalle
+    
+    CmbImpuesto.Text = "IVA EXENTO"
+    If Not RsComp Is Nothing Then
+        If RsComp!Iva = 1 Then
+           P.SetComboByItemData CmbImpuesto, nImpDetalle
+        End If
+    End If
+    TxtCantidad.Text = Format(1, nDecimalCant)
+    TxtDetalle.Text = ""
+    TxtPDesc.Text = "0.00"
+    TxtPrecio.Text = Format(0, nCantDecimales) '<<< corregido
+End Sub
+
+
+'========================
+'  BOTONES
+'========================
+Private Sub CmdBotones_Click(Index As Integer)
+    Select Case Index
+        Case 0
+            Nuevo
+        Case 5
+            Salir
+    End Select
+End Sub
+
+Private Sub Nuevo()
+    On Error GoTo errHandler
+
+    If mEstado <> stNuevo Then
+        ' pasar a nuevo
+        CrearRsVenta
+        CrearRsDetalles
+       
+        Limpiar
+        LimpiarDetalles
+
+        mEstado = stNuevo
+        RefrescarUI
+
+        CmbCorredor.Text = "Ninguno"
+        P.SetComboByItemData CmbComprobante, nVentaFactura
+       
+        CmbComprobante.SetFocus
+    Else
+        ' acá después va GRABAR
+        ' GrabarCabecera + GrabarDetalles...
+        ' Si grabó OK:
+        mEstado = stIdle
+        Limpiar
+        CrearRsDetalles
+        RefrescarUI
+    End If
+    Exit Sub
+
+errHandler:
+    MsgBox err.Description, vbCritical, "Nuevo"
+End Sub
+
+Private Sub Salir()
+    If mEstado = stNuevo Then
+        If MsgBox("Cancela la creación del comprobante?", vbYesNo + vbQuestion, "Atención") = vbNo Then Exit Sub
+        mEstado = stIdle
+        Limpiar
+        LimpiarDetalles
+        CrearRsDetalles
+        RefrescarUI
+    Else
+        Unload Me
+    End If
+End Sub
+
+
+Private Sub CmbFormaPago_Click()
+   If CmbFormaPago.Text <> "CONTADO" Then
+      CmbCondPago.Enabled = False
+      CmbCondPago.Text = "Ninguno"
+   Else
+      CmbCondPago.Enabled = True
+      CmbCondPago.Text = "EFECTIVO"
+   End If
+   If mEstado = stNuevo Then RefrescarUI
+End Sub
+
+
+
+Private Sub TxtReparto_GotFocus()
+    SeleccionarTodo TxtReparto
+End Sub
+
+Private Sub TxtReparto_KeyPress(KeyAscii As Integer)
+    SoloNumEntero KeyAscii
+End Sub
+
+Private Sub TxtSucursal_GotFocus()
+    SeleccionarTodo TxtSucursal
+End Sub
+
+Private Sub TxtSucursal_KeyPress(KeyAscii As Integer)
+    SoloNumEntero KeyAscii
+End Sub
+
+Private Sub TxtNumero_GotFocus()
+    SeleccionarTodo TxtNumero
+End Sub
+
+Private Sub TxtNumero_KeyPress(KeyAscii As Integer)
+    SoloNumEntero KeyAscii
+End Sub
+
+Private Sub TxtCliente_GotFocus()
+    SeleccionarTodo TxtCliente
+End Sub
+
+Private Sub TxtCotizacion_GotFocus()
+    SeleccionarTodo TxtCotizacion
+End Sub
+
+Private Sub TxtCantidad_GotFocus()
+    SeleccionarTodo TxtCantidad
+End Sub
+
+Private Sub TxtCantidad_KeyPress(KeyAscii As Integer)
+    SoloNumDecimal KeyAscii, TxtCantidad
+End Sub
+
+Private Sub TxtPDesc_GotFocus()
+    SeleccionarTodo TxtPDesc
+End Sub
+
+Private Sub TxtPrecio_GotFocus()
+    SeleccionarTodo TxtPrecio
+End Sub
+
+Private Sub TxtPrecio_KeyPress(KeyAscii As Integer)
+    SoloNumDecimal KeyAscii, TxtPrecio
+End Sub
+
+Private Sub Botones(bNue As Boolean, bBorr As Boolean, bMod As Boolean, bBus As Boolean, _
+  bVal As Boolean, bModi As Boolean, bSal As Boolean, Optional bPago As Boolean)
+  CmdBotones(0).Enabled = bNue
+  CmdBotones(1).Enabled = bBus
+  CmdBotones(6).Enabled = bBorr
+  CmdBotones(4).Enabled = bBus
+  CmdTexto.Enabled = bBus
+  If TxtSucursal.ForeColor = &H40C0& Then
+     CmdBotones(6).Enabled = False
+  End If
+  If TxtNumero.ForeColor = &H40C0& Then
+     CmdBotones(6).Enabled = False
+  End If
+
+  CmdBotones(5).Enabled = bSal
+  CmdBotones(7).Enabled = bBus
+  CmdBotones(8).Enabled = bModi
+  CmdBotones(9).Enabled = bBus
+  CmdBotones(10).Enabled = bBus
+   
+End Sub
+
+
+Private Sub BotonDetalles(bAgr As Boolean, bBorr As Boolean, bMod As Boolean, bCan As Boolean)
+     CmdDetalle(0).Enabled = bAgr
+     CmdDetalle(1).Enabled = bBorr
+     CmdDetalle(2).Enabled = bMod
+     CmdDetalle(3).Enabled = bCan
+End Sub
+
+Private Sub BotonBuscar(bCli As Boolean, bPro As Boolean)
+  CmdClientes.Enabled = bCli
+  CmdProductos.Enabled = bPro
+End Sub
+
+Private Sub HabilitarTodo(bEstado As Boolean)
+  Dim ctl As Control
+
+  For Each ctl In Controls
+
+      '<<< NO TOCAR EL FRAME DEL DETALLE NI SUS CONTROLES
+      If ctl.Container Is Frame1 Then
+          'saltarlo
+      Else
+          If TypeOf ctl Is TextBox Or TypeOf ctl Is CheckBox _
+             Or TypeOf ctl Is DTPicker Or TypeOf ctl Is ListBox _
+             Or TypeOf ctl Is ComboBox Then
+             ctl.Enabled = bEstado
+          End If
+      End If
+
+  Next ctl
+
+  Grid1.Enabled = bEstado
+End Sub
+
+
+Private Sub HabilitarDetalles(bHabi As Boolean)
+  TxtProducto.Enabled = bHabi
+  TxtDetalle.Enabled = bHabi
+  CmbImpuesto.Enabled = bHabi
+  CmbDeposito.Enabled = bHabi
+  CmbUnidad.Enabled = bHabi
+  TxtCantidad.Enabled = bHabi
+  TxtPDesc.Enabled = bHabi
+  TxtPrecio.Enabled = bHabi
+  CmbCuenta.Enabled = bHabi
+End Sub
+
+Private Sub CabGrid()
+  Set Grid1.DataSource = Rsd
+  Grid1.HeadFont.Size = 10
+  Grid1.HeadFont.Bold = True
+  With Grid1
+      .Columns(0).Caption = "Producto"
+      .Columns(0).Width = 1000
+      .Columns(1).Caption = "Descripción"
+      .Columns(1).Width = 4400
+      .Columns(2).Visible = False
+      .Columns(3).Visible = False
+      .Columns(4).Visible = False
+      .Columns(5).Caption = "Cant."
+      .Columns(5).Width = 1000
+      .Columns(5).Alignment = dbgRight
+      .Columns(5).NumberFormat = nDecimalCant
+      .Columns(6).Visible = False
+      .Columns(7).Visible = False
+      .Columns(8).Visible = False
+      .Columns(9).Visible = False
+      .Columns(10).Visible = False
+      .Columns(11).Caption = "P.Uni."
+      .Columns(11).Width = 1000
+      .Columns(11).NumberFormat = "0.00"
+      .Columns(11).Alignment = dbgRight
+      .Columns(12).Visible = False
+      .Columns(13).Visible = False
+      .Columns(14).Visible = False
+      .Columns(15).Caption = "Total"
+      .Columns(15).Width = 1200
+      .Columns(15).NumberFormat = "#0.00" ' nCantDecimales
+      .Columns(15).Alignment = dbgRight
+ End With
+End Sub
+
+Private Sub CargarCombos()
+  On Error GoTo errHandler
+  
+ 
+  cRsl.CargaCombo CmbComprobante, "UsuariosComprobantesVentas", "Comprobante", "Descripcion", "Valor=1 and Usuario=" & nUsuario
+  cRsl.CargaCombo CmbLista, "ListadePrecio", "ListaPrecio", "Descripcion", ""
+  cRsl.CargaCombo CmbCorredor, "Clientes", "Id", "RazonSocial", "Tipo=3"
+     
+  CmbCorredor.AddItem "Ninguno"
+    
+  cRsl.CargaCombo CmbImpuesto, "Impuestos", "Impuesto", "Descripcion", "Producto='1' OR Retencion='1' OR Percepcion='1' OR Interno='1'"
+  cRsl.CargaCombo CmbCondPago, "CondVenta", "CondVta", "Descripcion", "Tipo<9 and tipo<>3"
+  CmbCondPago.AddItem "Ninguno"
+  
+  CmbFormaPago.AddItem "CUENTA CORRIENTE"
+  CmbFormaPago.ItemData(CmbFormaPago.NewIndex) = 0
+  CmbFormaPago.AddItem "CONTADO"
+  CmbFormaPago.ItemData(CmbFormaPago.NewIndex) = 1
+  CmbFormaPago.AddItem "COTIZAR"
+  CmbFormaPago.ItemData(CmbFormaPago.NewIndex) = 2
+  
+  cRsl.CargaCombo CmbUnidad, "UnidadMedida", "Unidad", "Descripcion", ""
+  cRsl.CargaCombo CmbDeposito, "Depositos", "Deposito", "Descripcion", "Suc=" & nSucursal
+  cRsl.CargaCombo CmbCuenta, "PlanDeCuenta", "Id", "Descripcion", "Grupo=4"
+  cRsl.CargaCombo CmbVend, "Vendedores", "Vendedor", "Descripcion", ""
+   
+Exit Sub
+
+errHandler:
+   ManejaErrores
+  
+End Sub
+
+Private Sub CmbComprobante_Click()
+  Dim cNum As ClsComprobantesL, nNum As String * 8, nSuc As String * 4
+  On Error GoTo errHandler
+  
+  If mEstado = stNuevo Then
+     Set cNum = New ClsComprobantesL
+     
+     Set RsComp = cRsl.TraerRsCondi("Comprobantes", "Id", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex))
+     
+     ' Si en impresion es false Numera cuando Termina de grabar el comprobante, si es verdadero actualiza el numero aca
+     
+     If cRsl.TraerValorDeUnCampo("UsuariosComprobantesVentas", "Comanda", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario) = False Then
+        ChkA4.Enabled = False
+     Else
+        ChkA4.Enabled = True
+     End If
+     
+     If cRsl.TraerValorDeUnCampo("Impresion", "Numero", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario) = False Then
+        nNum = Format(cNum.TraerUltimoNumeroVenta(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "00000000")
+        nSuc = Format(cNum.TraerSucursalNumero(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "0000")
+     Else
+        nNum = Format(cNum.TraerUltimoNumero(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "00000000")
+        nSuc = Format(cNum.TraerSucursalNumero(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "0000")
+     End If
+     TxtSucursal.Text = nSuc
+     TxtNumero.Text = nNum
+     If Rsd.RecordCount <> 0 Then
+        RecalcularRsd cRsl.TraerValorDeUnCampo("CondVenta", "Tipo", "CondVta=" & CmbCondPago.ItemData(CmbCondPago.ListIndex))
+        CalcularTotales
+     End If
+        
+  End If
+  If mEstado = stNuevo Then RefrescarUI
+  
+  Set cNum = Nothing
+   
+Exit Sub
+
+errHandler:
+   ManejaErrores
+  
+End Sub
+
+Public Sub CalcularTotales()
+  
+  Dim cDes As Double, nTasa As Double, nNeto As Double, nDes As Double
+  Dim nIva As Double, nReg As Variant, nOtros As Currency, nNoGra As Double, tIva As Boolean, nPerc As Double
+  Dim nCons As Double, nIva1 As Double, sCuit As String
+ 
+  On Error GoTo errHandler
+  
+  LblFinanciacion.Caption = "0.00"
+  LblNeto.Caption = "0.00"
+  LblIva1.Text = "0.00"
+  
+  cDes = 0
+  nNeto = 0
+  nNoGra = 0
+  nDes = 0
+  nIva = 0
+  tIva = False
+  If CmbComprobante.ListIndex <> -1 Then
+     If cRsl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 1 Then
+        tIva = True
+     End If
+  End If
+  If Rsd.RecordCount <> 0 Then
+     nReg = Rsd.Bookmark
+     Rsd.MoveFirst
+     Do While Not Rsd.EOF
+        If tIva = True Then
+           nIva = nIva + Rsd!Impuesto
+        End If
+        nDes = nDes + Rsd!Descuento
+        If Rsd!Tasa <> 21 Then
+           nNeto = nNeto + Rsd!PrecioTotal
+        Else
+           nNoGra = nNoGra + Rsd!PrecioTotal
+        End If
+        Rsd.MoveNext
+     Loop
+     nIva = Round(nIva, 2)
+     nDes = Round(nDes, 2)
+     nNeto = Round(nNeto, 2)
+     nNoGra = Round(nNoGra, 2)
+     Rsd.Bookmark = nReg
+  End If
+  TxtNoGrav.Text = Format(nNoGra, "#0.00")
+  LblNeto.Caption = Format(nNeto, "#0.00")
+  LblBonificacion.Caption = Format(nDes, "#0.00")
+  nOtros = CCur(TxtNoGrav.Text)
+  LblIva1.Text = Format(nIva, "#0.00")
+  
+ If cRsl.TraerValorDeUnCampo("Comprobantes", "Iva", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 1 And cRsl.TraerValorDeUnCampo("Comprobantes", "Afip", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) <> 0 Then
+     nPerc = cRsl.TraerValorDeUnCampo("Clientes", "Percepcion", "Cliente='" & TxtCliente.Text & "'")
+    ' bPerc = False
+    ' If nPerc <> 0 Then
+    '    nPerc = (nNeto - LblBonificacion.Caption) * nPerc / 100
+    '    LblPercepcion.Caption = Format(nPerc, "#0.00")
+    ' End If
+  End If
+  
+  LblTotal.Caption = Format(nNeto - nDes + nIva + nNoGra + nPerc, "#0.00")
+    
+Exit Sub
+
+errHandler:
+  
+     ManejaErrores
+
+End Sub
+
+Private Sub LinkearCliente(nDat As Long)
+  Dim cRiL As ClsClienteL
+  On Error GoTo errHandler
+    
+  Set cRiL = New ClsClienteL
+  LblCliente.Caption = ""
+  LbLIva.Caption = ""
+  If TxtCliente.Text <> "" Or nDat <> 0 Then
+       Set RsCli = cRiL.TraerDatosCliente(TxtCliente.Text, nDat)
+       TxtCliente.Text = RsCli!Cliente
+       
+       If RsCli.RecordCount <> 0 Then
+         If IsNull(RsCli!FechaBaja) Or RsCli!FechaBaja = "" Then
+            LblCliente.Caption = RsCli!RazonSocial
+            LbLIva.Caption = RsCli!TivaDesc
+            P.SetComboByItemData CmbLista, RsCli!ListaPrecio
+            LblDescuento.Caption = Format(RsCli!DescPorc, "0.00")
+            If CmbVend.Text = "NINGUNO" Then
+               CmbVend.Text = RsCli!VendDesc
+               TxtVendedor.Text = Format(RsCli!VendComision, "0.00")
+            End If
+         End If
+      End If
+  End If
+  
+  Set cRiL = Nothing
+  If mEstado = stNuevo Then RefrescarUI
+
+Exit Sub
+
+errHandler:
+   ManejaErrores
+End Sub
+
+Private Sub CmdDetalle_Click(Index As Integer)
+    Select Case Index
+        Case 0
+            If mDetEstado = detIdle Then
+                mDetEstado = detnuevo
+                RefrescarUI
+                TxtProducto.SetFocus
+            Else
+                ' Grabar renglón
+                GrabarDetalleActual
+                mDetEstado = detIdle
+                RefrescarUI
+                ' Dejá listo para nuevo renglón o foco donde quieras
+                CmdDetalle(0).SetFocus
+            End If
+
+        Case 3
+            ' Cancelar renglón
+            mDetEstado = detIdle
+            LimpiarDetalles
+            RefrescarUI
+            CmdDetalle(0).SetFocus
+    End Select
+End Sub
+
+Private Sub GrabarDetalleActual()
+  Dim nTasa As Single
+  On Error GoTo errHandler
+  
+  Rsd.AddNew
+  Rsd!Producto = TxtProducto.Text
+  Rsd!Descripcion = TxtDetalle.Text
+  Rsd!Cantidad = TxtCantidad.Text
+  Rsd!PDesc = IIf(IsNull(TxtPDesc.Text), 0, TxtPDesc.Text)
+  Rsd!Tasa = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
+  Rsd!Cuenta = CmbCuenta.ItemData(CmbCuenta.ListIndex)
+  Rsd!Deposito = CmbDeposito.ItemData(CmbDeposito.ListIndex)
+  Rsd!Medida = CmbUnidad.ItemData(CmbUnidad.ListIndex)
+  
+  nTasa = mProdTasa
+    
+  Dim nPreTot As Double, nPreUn As Double, nPreDec As Double
+  
+  TxtPrecio.Text = TxtPrecio.Text + (TxtPrecio.Text * nRecargo / 100) + (TxtPrecio.Text * nValor / 100)
+   
+  Rsd!PrecioUnitario = TxtPrecio.Text
+  
+  If CmdDetalle(2).Caption = "Grabar" Then
+     If cRsl.TraerValorDeUnCampo("CondVenta", "Tipo", "CondVta=" & CmbCondPago.ItemData(CmbCondPago.ListIndex)) = 6 Then
+        Rsd!precio = TxtPrecio.Text
+     End If
+  Else
+     Rsd!precio = Format(cRsp.TraerPrecioImp(Rsd!Producto, CmbLista.ItemData(CmbLista.ListIndex)), nCantDecimales)
+     If Rsd!precio = 0 Then
+        Rsd!precio = TxtPrecio.Text
+     End If
+  End If
+  
+  Dim nImpu As Double, nPre As Double, nDes As Double, nDesL As Double
+  If TxtCantidad.Text <> 0 And TxtPrecio.Text <> 0 Then
+     If cRsl.TraerValorDeUnCampo("ListaDePrecio", "PrecioIva", "ListaPrecio=" & CmbLista.ItemData(CmbLista.ListIndex)) = 1 Then
+        If nTasa <> 0 Then
+           If cRsl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 1 Then
+              nImpu = (TxtPrecio.Text / ((nTasa / 100) + 1)) * TxtCantidad.Text
+              nDes = nImpu * LblDescuento.Caption / 100
+              nImpu = Round(nImpu, 4)
+              nDesL = nImpu * (CDbl(TxtPDesc.Text) + CDbl(LblDescuento.Caption)) / 100
+              nDes = nDes - nDesL
+              nDes = Abs(nDesL)
+              nPreDec = (TxtPrecio.Text * TxtCantidad) - nImpu - ((nDes * nTasa) / 100)
+              Rsd!Impuesto = Round(nPreDec, 4)
+           Else
+               nDes = TxtPrecio.Text * LblDescuento.Caption / 100
+               nDesL = TxtPrecio.Text * TxtPDesc.Text / 100
+               nDes = Abs(nDes + nDesL) * TxtCantidad.Text
+               nPreDec = ((TxtPrecio.Text * TxtCantidad) - nDes) - (((TxtPrecio.Text * TxtCantidad) - nDes) / ((cRsl.TraerValorDeUnCampo("Impuestos", "Porcentaje", "Impuesto=" & Rsd!Tasa) / 100) + 1))
+               Rsd!Impuesto = Round(nPreDec, 4)
+           End If
+           Rsd!Impuesto = Rsd!Impuesto
+        Else
+           nDes = (TxtPrecio.Text * TxtCantidad.Text) * LblDescuento.Caption / 100
+           nDesL = (TxtPrecio.Text * TxtCantidad.Text) * TxtPDesc.Text / 100
+           nDes = nDes + nDesL
+         ' nDes = Abs(nDesL)
+           Rsd!Impuesto = 0
+        End If
+        Rsd!Descuento = Round(nDes, 4) '* TxtCantidad.text
+        If nImpu <> 0 Then
+           nPreTot = IIf(nImpu = 0, TxtPrecio.Text, nImpu)
+           Rsd!PrecioTotal = Round(nPreTot, 4)
+           nPreUn = nImpu / TxtCantidad.Text
+           Rsd!PrecioUnitario = Round(nPreUn, 4)
+        Else
+           nPreTot = IIf(nImpu = 0, TxtPrecio.Text, nImpu) * Rsd!Cantidad
+           Rsd!PrecioTotal = Round(nPreTot, 4)
+           nPreUn = Rsd!PrecioTotal / TxtCantidad.Text
+           Rsd!PrecioUnitario = Round(nPreUn, 4)
+        End If
+
+        If cRsl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 0 Then
+           nPreUn = (nImpu / Rsd!Cantidad) + Rsd!Impuesto
+           Rsd!PrecioUnitario = Round(nPreUn, 4)
+           nPreTot = TxtPrecio.Text * TxtCantidad.Text
+           Rsd!PrecioTotal = Round(nPreTot, 4)
+          ' Rsd!Descuento = (TxtPrecio.text * TxtCantidad.text) * LblDescuento.Caption / 100
+        End If
+     Else
+        nDes = (TxtPrecio.Text * LblDescuento.Caption / 100)
+        nDesL = TxtPrecio.Text * TxtPDesc.Text / 100
+        nDes = nDes + nDesL
+        nDes = Abs(nDes)
+        nPre = TxtPrecio.Text - nDes
+        Rsd!Descuento = nDes * TxtCantidad.Text
+        nImpu = ((nPre) * ((cRsl.TraerValorDeUnCampo("Impuestos", "Porcentaje", "Impuesto=" & Rsd!Tasa))) / 100) * TxtCantidad.Text
+        Rsd!Impuesto = Round(nImpu, 4)
+     
+        If cRsl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 1 Then
+           nPreTot = (TxtCantidad.Text * Rsd!PrecioUnitario)
+           Rsd!PrecioTotal = Round(nPreTot, 4)
+        Else
+           nPreTot = (TxtPrecio.Text * TxtCantidad.Text) + Rsd!Impuesto
+           Rsd!PrecioTotal = Round(nPreTot, 4)
+           nPreUn = TxtPrecio.Text + Rsd!Impuesto
+           Rsd!PrecioUnitario = Round(nPreUn, 4) ' - Rsd!Descuento
+        End If
+     End If
+     
+     Rsd!PrecioUnitario = Rsd!PrecioTotal / Rsd!Cantidad
+     Rsd!PrecioUnitario = Round(Rsd!PrecioUnitario, 4)
+     TxtPrecio.Text = Format(Rsd!PrecioUnitario, nCantDecimales)
+  Else
+     Rsd!Impuesto = 0
+     Rsd!Descuento = 0
+     Rsd!PrecioUnitario = 0
+     Rsd!PrecioTotal = 0
+  End If
+  Rsd.Update
+  Set crs = Nothing
+Exit Sub
+
+errHandler:
+   ManejaErrores
+End Sub
+
+Private Sub TxtDetalle_Change()
+    If mEstado = stNuevo And mDetEstado <> detIdle Then
+        RefrescarUI
+    End If
+End Sub
+
+Private Sub TxtCantidad_Change()
+  If mEstado = stNuevo And mDetEstado <> detIdle Then RefrescarUI
+End Sub
+
+Private Sub TxtPrecio_Change()
+  If mEstado = stNuevo And mDetEstado <> detIdle Then RefrescarUI
+End Sub
+
+Private Sub CmbDeposito_Click()
+  If mEstado = stNuevo And mDetEstado <> detIdle Then RefrescarUI
+End Sub
+
+Private Sub TxtPDesc_Change()
+    If mEstado = stNuevo And mDetEstado <> detIdle Then RefrescarUI
+End Sub
+
+Private Function DetalleOK() As Boolean
+    Dim bk As Variant
+    If Rsd Is Nothing Then Exit Function
+    If (Rsd.BOF And Rsd.EOF) Then Exit Function
+
+    bk = Rsd.Bookmark
+    Rsd.MoveFirst
+    Do While Not Rsd.EOF
+        If Len(Trim$(Rsd!Descripcion & "")) > 0 Then
+            DetalleOK = True
+            Exit Do
+        End If
+        Rsd.MoveNext
+    Loop
+    Rsd.Bookmark = bk
+End Function
+

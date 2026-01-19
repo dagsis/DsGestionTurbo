@@ -1,0 +1,18 @@
+echo "# gestion21" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/dagsis/gestion21.git
+git push -u origin main
+
+Una vez que esta creado y subido la primera vez esto
+
+git init
+git add .
+git commit -m "first commit"
+git branch -M main
+git push -u origin main
+
+
+

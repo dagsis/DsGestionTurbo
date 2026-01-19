@@ -1,0 +1,11 @@
+Id	Number
+Nombre	String	50	
+Tipo	String	30	
+Banco	String	30	
+NumeroCheque	String	20	
+FechaAcreditacion	Date		
+NumeroTarjeta	String	20	
+FechaVencimiento	Date		
+Autorizacion	String	20	
+Cupon	String	20	
+Importe	Currency		

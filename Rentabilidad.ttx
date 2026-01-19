@@ -1,0 +1,6 @@
+Producto	String	15	
+Descripcion	String	50	
+Cantidad	Number	
+TotalVenta	Currency	
+UniCosto	Currency		
+	

@@ -1,0 +1,11 @@
+Fecha	Date		
+Comprobantes	String	20	
+Numero	Long		
+Sucursal	Short		
+Cliente	String	40	
+Vendedor	String	20	
+Caja	String	15	
+Total	Currency	
+Porcentaje	Currency	
+Comicion	Currency
+Zona	String	30

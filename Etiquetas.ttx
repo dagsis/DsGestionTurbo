@@ -1,0 +1,5 @@
+Codigo	String	15	
+Barra	String	20
+Descripcion	String	50
+Descripcion1	String	50	
+Importe	Currency		

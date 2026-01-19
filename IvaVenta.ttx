@@ -1,0 +1,13 @@
+Fecha	Date		
+Comprobante	String	30	
+Numero	String	13	
+Cliente	String	20	
+Cuit	String	13	
+NetoGrabado	Number		
+NetoNoGrabado	Number		
+Exento	Number	
+RetenIva	Number		
+RetenPercep	Number		
+Tasa	Number		
+DebitoFiscal	Number		
+Total	Number		

@@ -1,0 +1,6 @@
+Cliente	String	15	
+Razon	String	30	
+Cuit	String	15
+Producto	String	15	
+Descripcion	String	50	
+Cantidad	Number		

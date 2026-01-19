@@ -1,0 +1,9 @@
+Comprobante	String	30	
+Numero	String	13	
+Cliente	String	15	
+Razon	String	50	
+Fecha	Date		
+Factura	String	30	
+NumeFac	String	13	
+Importe	Currency		
+Cancelado	Currency		

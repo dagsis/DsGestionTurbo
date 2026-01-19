@@ -1,0 +1,23 @@
+Fecha	Date		
+ComprCaja	String	15	
+SucuCaja	Short		
+NumCaja	Long		
+Cliente	String	30	
+Vendedor	String	15	
+ComprVenta	String	15	
+FechaVenta	Date		
+SucuVenta	Short		
+NumVenta	Long		
+Caja	String	15	
+Hora	String	10
+FormaPago	String	30	
+Nombre	String	20	
+Banco	String	15	
+NumCheque	String	15	
+FechaAcreditacion	Date		
+NumTarjeta	String	20	
+FechaVenci	Date		
+Autorizacion	String	15	
+Cupon	String	15	
+Debe	Currency		
+Haber	Currency		

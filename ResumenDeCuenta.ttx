@@ -1,0 +1,17 @@
+Cliente	String	15	
+RazonSocial	String	45	
+Domicilio	String	45	
+CPostal	String	8		
+Localidad	String	30	
+Provincia	String	20	
+Iva	String	30	
+Cuit	String	15
+Telefono	String	20	
+Fecha	Date		
+Comprobante	String	30	
+Numero	Long		
+Sucursal	Number		
+Cuota	Number		
+Debe	Currency		
+Haber	Currency
+Cobrador	Number	

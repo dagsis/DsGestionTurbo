@@ -1,0 +1,12 @@
+Cliente	String	50	
+FComprobante	Date		
+Comprobante	String	30	
+Numero	String	13	
+Importe	Currency		
+FPago	Date		
+Cobranza	String	30	
+RNumero	String	13	
+RImporte	Currency		
+SaldoAnterior	Currency		
+SaldoActual	Currency		
+SaldoFecha	Currency		

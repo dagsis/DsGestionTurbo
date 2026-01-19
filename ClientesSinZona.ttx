@@ -1,0 +1,13 @@
+Cliente	String	15	
+RazonSocial	String	45	
+Contacto	String	30	
+Domicilio	String	40	
+CPostal	Short		
+Localidad	String	20	
+Provincia	String	20	
+Telefono	String	15	
+Iva	String	20	
+Cuit	String	13	
+IngBruto	String	15	
+Zona	String	15	
+Precio	String	15	

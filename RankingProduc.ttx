@@ -1,0 +1,4 @@
+Codigo	String	15	
+Descripcion	String	50	
+Cantidad	Number		
+Total	Currency		

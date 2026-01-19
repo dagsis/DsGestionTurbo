@@ -1,0 +1,15 @@
+Numero	String	8		
+Cuit	String	15	
+RazonSocial	String	30	
+Domicilio	String	30	
+Codigo	String	8	
+Localidad	String	30	
+Provincia	String	30	
+Fecha	Date		
+COperacion	String	15	
+Base	Currency		
+Alicuota	Currency		
+IRetenido	Currency
+OrdenPago	String	15
+CIva	String	30
+Regimen	string	30		

@@ -1,0 +1,4 @@
+Grupo	String	30	
+Cuenta	Short		
+Descripcion	String	30	
+Importe	Currency		

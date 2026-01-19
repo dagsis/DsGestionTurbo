@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<loginTicketResponse version="1">
+    <header>
+        <source>CN=wsaa, O=AFIP, C=AR, SERIALNUMBER=CUIT 33693450239</source>
+        <destination>C=ar, O=carlos dagostino, SERIALNUMBER=CUIT 20170550189, CN=pyafipws</destination>
+        <uniqueId>2699679608</uniqueId>
+        <generationTime>2015-12-06T22:57:38.150-03:00</generationTime>
+        <expirationTime>2015-12-07T10:57:38.150-03:00</expirationTime>
+    </header>
+    <credentials>
+        <token>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pgo8c3NvIHZlcnNpb249IjIuMCI+CiAgICA8aWQgdW5pcXVlX2lkPSI5NzM0NjE0MDgiIHNyYz0iQ049d3NhYSwgTz1BRklQLCBDPUFSLCBTRVJJQUxOVU1CRVI9Q1VJVCAzMzY5MzQ1MDIzOSIgZ2VuX3RpbWU9IjE0NDk0NTMzOTgiIGV4cF90aW1lPSIxNDQ5NDk2NjU4IiBkc3Q9IkNOPXdzZmUsIE89QUZJUCwgQz1BUiIvPgogICAgPG9wZXJhdGlvbiB2YWx1ZT0iZ3JhbnRlZCIgdHlwZT0ibG9naW4iPgogICAgICAgIDxsb2dpbiB1aWQ9IkM9YXIsIE89Y2FybG9zIGRhZ29zdGlubywgU0VSSUFMTlVNQkVSPUNVSVQgMjAxNzA1NTAxODksIENOPXB5YWZpcHdzIiBzZXJ2aWNlPSJ3c2ZlIiByZWdtZXRob2Q9IjIyIiBlbnRpdHk9IjMzNjkzNDUwMjM5IiBhdXRobWV0aG9kPSJjbXMiPgogICAgICAgICAgICA8cmVsYXRpb25zPgogICAgICAgICAgICAgICAgPHJlbGF0aW9uIHJlbHR5cGU9IjQiIGtleT0iMjAxNzA1NTAxODkiLz4KICAgICAgICAgICAgPC9yZWxhdGlvbnM+CiAgICAgICAgPC9sb2dpbj4KICAgIDwvb3BlcmF0aW9uPgo8L3Nzbz4KCg==</token>
+        <sign>RQwJazmpt3EIyRjOIBCX3kGBsVOx+Rk7GxutOvsAckVkk8uQMAalu9cWWH9oxHoWD3enqfFpfdQCUCfv6+y6BpdtEV8Kd150MUwjAf6mYKDEZgk94cMtgLhykZv38EpK4UGR0nL7uGi4pZCQ86CCM2uUzCndHXOVuVifAGvsLto=</sign>
+    </credentials>
+</loginTicketResponse>
+
+

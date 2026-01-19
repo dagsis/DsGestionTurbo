@@ -1,0 +1,12 @@
+Fecha	date
+NRemito	String	15		
+NFactura	String	50
+Horario	String	50	
+Destinatario	String	50	
+Vendedor	String	50	
+Direccion	String	50	
+Telefono	String	50	
+Observaciones	String	100	
+Cantidad 	Number
+Productos	String	25	
+Descripcion	String	50	

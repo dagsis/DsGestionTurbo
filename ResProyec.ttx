@@ -1,0 +1,8 @@
+Cliente	String	15
+RazonSocial	String	50
+Fecha1	Number		
+Fecha2	Number		
+Fecha3	Number		
+Fecha4	Number		
+Fecha5	Number		
+Total	Number		

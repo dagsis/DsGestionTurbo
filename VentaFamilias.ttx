@@ -1,0 +1,4 @@
+Cliente	String	15
+Nombre	String	50
+Familia	String	30	
+Importe	Currency		

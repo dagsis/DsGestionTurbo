@@ -1,0 +1,9 @@
+FechaP	Date
+Fecha	Date
+Numero	String	4
+Comprobante	String	13	
+Cuit	String	13	
+Contribuyente	String	50	
+Base	Currency		
+Porcentaje	Currency		
+Retenido	Currency		

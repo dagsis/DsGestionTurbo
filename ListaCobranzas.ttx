@@ -1,0 +1,18 @@
+Documento	String	13
+FechaCob	date
+Cliente	String	30
+Domicilio	String	30
+Localidad	String	30
+Fecha	Date		
+Comprobante	String	30	
+Sucursal	Number		
+Numero	Number		
+Importe	Currency		
+Cancelado	Currency		
+Movimiento	Number		
+Forma	String	30	
+NumeroCom	String	20	
+Banco	String	20	
+FechaCom	Date		
+ImportePago	Currency		
+Aplicacion	Boolean		

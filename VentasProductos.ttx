@@ -1,0 +1,13 @@
+Venderor	String	30
+Producto	String	15	
+Descripcion	String	50	
+Fecha	Date		
+Comprobante	String	15	
+Numero	Long		
+Sucursal	Short		
+Cliente	String	30	
+Vendedor	String	15	
+Caja	String	15	
+Cantidad	Number		
+Precio	Currency		
+Total	Currency		

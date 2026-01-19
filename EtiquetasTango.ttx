@@ -1,0 +1,7 @@
+Descripcion	String	25	
+DescripAdi	String	25	
+Leyenda	String	13	
+Fecha	Date		
+Porcentaje	Currency		
+Codigo	String	15	
+Barra	String	15

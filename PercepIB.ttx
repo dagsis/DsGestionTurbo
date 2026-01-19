@@ -1,0 +1,8 @@
+Fecha	Date
+Sucursal	Number		
+Numero	Number		
+Cuit	String	13	
+RazonSocial	String	30	
+Neto	Currency		
+Percepcion	Currency
+Comprobante	String	5		

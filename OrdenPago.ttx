@@ -1,0 +1,11 @@
+Cliente	String	15	
+Razon	String	50	
+Direccion	String	50	
+Localidad	String	50	
+APagar	Currency		
+Tipo	String	30	
+Banco	String	30	
+Detalle	String	50	
+Cheque	String	20	
+Fecha	Date		
+ImporteValor	Currency		

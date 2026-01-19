@@ -1,0 +1,92 @@
+;*** BEGIN **********************************************************
+;**                                                                **
+;** Automatically generated on: Tue Dec 09 18:42:01 2025           **
+;**                                                                **
+;** MakeCAB Version: (32) 1.00.603.4 (06/25/98)                     **
+;**                                                                **
+;*** BEGIN **********************************************************
+[disk list]
+1,Disk 1
+2,Disk 2
+3,Disk 3
+4,Disk 4
+5,Disk 5
+6,Disk 6
+7,Disk 7
+8,Disk 8
+9,Disk 9
+10,Disk 10
+11,Disk 11
+12,Disk 12
+[cabinet list]
+1,1,Gestio1.CAB
+2,2,Gestio2.CAB
+3,3,Gestio3.CAB
+4,4,Gestio4.CAB
+5,5,Gestio5.CAB
+6,6,Gestio6.CAB
+7,7,Gestio7.CAB
+8,8,Gestio8.CAB
+9,9,Gestio9.CAB
+10,10,Gestio10.CAB
+11,11,Gestio11.CAB
+12,12,Gestio12.CAB
+[file list]
+1,0,Setup.Lst,7140
+1,0,setup.exe,141824
+1,1,Gestion Server.exe,5107712
+1,1,msvbvm60.dll,1384479
+2,2,OLEAUT32.DLL,598288
+2,2,OLEPRO32.DLL,164112
+2,2,ASYCFILT.DLL,147728
+2,2,STDOLE2.TLB,17920
+2,2,COMCAT.DLL,22288
+2,2,VB6ES.DLL,119568
+2,2,craxdrt.dll,5550080
+3,3,msado26.tlb,81920
+3,3,crviewer.dll,548864
+4,4,craxddt.dll,8880128
+6,6,sviewhlp.dll,57344
+6,6,MSDATGRD.OCX,262328
+6,6,MSSTDFMT.DLL,118784
+6,6,STDFTES.DLL,6656
+6,6,DATGDES.DLL,30208
+6,6,MSCOMCTL.OCX,1077336
+6,6,MSCMCES.DLL,140800
+6,6,MSCOMCT2.OCX,647872
+7,7,MSCC2ES.DLL,60928
+7,7,MSCOMM32.OCX,103744
+7,7,MSCOMES.DLL,14336
+7,7,Comdlg32.ocx,140288
+7,7,CMDLGES.DLL,33280
+7,7,SETUP1.EXE,253952
+7,7,VB6STKIT.DLL,101888
+7,7,ST6UNST.EXE,74240
+7,7,Conex.udl,402
+7,7,Crpaig80.dll,618496
+7,7,Implode.dll,17920
+7,7,MDAC_TYP.EXE,6477888
+11,11,msvcrt.dll,322560
+12,12,P2smon.dll,147456
+12,12,p3smnes.dll,36864
+12,12,pg32conv.dll,100352
+12,12,sscsdk80.dll,974848
+12,12,scrrnes.dll,24626
+12,12,scrrun.dll,147483
+12,12,Crxlat32.dll,24576
+12,12,msdart.dll,126976
+12,12,Fiscal.ocx,405552
+12,12,WINFIS32.DLL,196663
+12,12,FactBase.csv,37176
+12,12,factBaseImg.csv,37122
+12,12,factBaseImg06.csv,37171
+12,12,FactBase06.csv,37004
+12,12,Importador.mdb,151552
+12,12,IFEpson.ocx,98304
+12,12,EpsonFPHostControlX.ocx,822272
+12,12,Consulta.sql,5927
+;*** END ************************************************************
+;**                                                                **
+;** Automatically generated on: Tue Dec 09 18:42:01 2025           **
+;**                                                                **
+;*** END ************************************************************

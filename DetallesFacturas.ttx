@@ -1,0 +1,13 @@
+Cliente	String	15	
+RazonSocial	String	50	
+Domicilio	String	50	
+Telefono	String	20	
+Comprobante	String	20	
+Fecha	Date		
+Numero	String	6	
+Sucursal	String	6	
+Producto	String	15	
+Descripcion	String	50	
+Cantidad	Currency		
+PrecioUnitario	Currency		
+PrecioTotal	Currency		

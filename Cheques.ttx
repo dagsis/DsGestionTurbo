@@ -1,0 +1,9 @@
+Entrada	Date
+ChId	Long		
+Banco	String	20	
+Numero	String	15	
+Titular	String	50	
+Proveedor	String	50	
+Fecha	Date		
+Importe	Currency		
+Salida	Date		

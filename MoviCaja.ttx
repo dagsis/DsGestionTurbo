@@ -1,0 +1,7 @@
+Fecha	Date		
+Descripcion	String	30	
+FormaPago	String	30	
+Nombre	String	30	
+Motivo	String	30
+Debe	Currency		
+Haber	Currency		

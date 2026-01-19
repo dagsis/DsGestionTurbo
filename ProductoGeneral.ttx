@@ -1,0 +1,8 @@
+Producto	String	15	
+Descripcion	String	40	
+Marca	String	20	
+Compra	String	15	
+Venta	String	15	
+Deposito	String	20	
+Familia	String	20
+Proveedor	String	40

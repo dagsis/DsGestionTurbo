@@ -1,0 +1,6 @@
+Id	Number		
+Comprobante	String	20
+Observacion	String	60	
+Numero	String	15	
+Ingreso	Currency		
+Egreso	Currency		

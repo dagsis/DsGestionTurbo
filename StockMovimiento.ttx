@@ -1,0 +1,9 @@
+Fecha	Date		
+Comprobante	String	30	
+Sucursal	Number		
+Numero	Number		
+Deposito	String	30	
+Producto	String	15	
+Descripcion	String	50	
+Saldo	Currency		
+Razon	String	50	

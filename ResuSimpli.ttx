@@ -1,0 +1,5 @@
+Cliente	String	15		
+RazonSocial	String	50
+Domicilio	String	50
+Telefono	String	40
+Saldo	Currency		

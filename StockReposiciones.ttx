@@ -1,0 +1,5 @@
+Codigo	String	15	
+Descripcion	String	50	
+CantMinima	Currency		
+CantActual	Currency		
+Proveedor		String	50

@@ -1,0 +1,5 @@
+Fecha	Date		
+Comprobante	String	50
+Importe	Currency	
+Cobrado	Currency
+APagar	Currency	

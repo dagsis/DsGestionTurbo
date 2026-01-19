@@ -1,0 +1,7 @@
+Comprobante	String	30	
+Fecha	Date		
+Sucursal	Byte		
+Numero	Long		
+Cliente	String	15	
+RazonSocial	String	50	
+Importe	Currency

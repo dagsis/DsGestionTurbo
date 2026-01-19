@@ -1,0 +1,16 @@
+Fecha	Date		
+Numero	String	20	
+Cliente	String	15	
+RazonSocial	String	50	
+Direccion	String	50	
+Iva	String	30	
+CPostal	String	8	
+Localidad	String	30	
+Provincia	String	30	
+Cuit	String	13	
+Codigo	String	15	
+Cantidad	Long		
+Descripcion	String	80
+Corte	Long		
+PUnitario	Currency		
+Impuesto	Currency

@@ -1,0 +1,5 @@
+FormaPago	String	30		
+Numero	String	13	
+Banco	String	20	
+Acreditacion	Date		
+Valor	Currency		

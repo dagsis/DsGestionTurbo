@@ -1,0 +1,6 @@
+Fecha	Date		
+Producto	String	15	
+Descripcion	String	50	
+Cantidad	Long		
+Unitario	Currency		
+Costo	Currency		

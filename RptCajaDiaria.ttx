@@ -1,0 +1,17 @@
+Id	Number
+Suc	byte
+Fecha	Date		
+Monedas	Currency		
+X2	Currency		
+X5	Currency
+X10X20	Currency
+X50	Currency		
+X100	Currency
+X10X20B	Currency				
+Dolares	Currency		
+Cotizacion	Currency		
+TotalDolares	Currency		
+Cheques	Currency		
+Tarjetas	Currency		
+Vales	Currency		
+Otros	Currency		

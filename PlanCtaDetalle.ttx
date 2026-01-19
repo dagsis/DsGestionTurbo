@@ -1,0 +1,10 @@
+Fecha	Date		
+Cliente	String	50	
+Sucursal	Number		
+Numero	Number		
+Comprobante	String	30	
+Cuenta	String	50	
+Producto	String	15	
+Cantidad	Number		
+Detalle	String	50	
+Precio	Currency		

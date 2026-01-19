@@ -1,0 +1,15 @@
+Cliente	String	15	
+Razon	String	45	
+Domicilio	String	45	
+Postal	Number		
+Localidad	String	30	
+Provincia	String	30	
+Fecha	Date		
+Comprobante	String	4	
+Numero	Long		
+Cuota	Number		
+Importe	Currency		
+Cobrado	Currency		
+Cobrar	Currency		
+Venta	Long		
+Sucursal	Number		

@@ -1,0 +1,5 @@
+Codigo	String	15	
+Descripcion	String	50	
+Precio	Currency		
+Marca	String	30	
+Moneda	String	10
