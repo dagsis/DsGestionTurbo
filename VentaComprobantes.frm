@@ -701,7 +701,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   120455169
+      Format          =   159383553
       CurrentDate     =   36783
    End
    Begin VB.ComboBox CmbComprobante 
@@ -721,7 +721,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   120455169
+      Format          =   159383553
       CurrentDate     =   36783
    End
    Begin VB.PictureBox Picture1 
@@ -983,10 +983,14 @@ Private mProdTasa As Single
 Private mProdCuenta As Long
 Private mProdPrecio As Double
 Private mProdDescripcion As String
+Private mProdIntTipo As String
+Private mProdIntValor As Double
 
 '----Varios
 Private mListaPrecio As Integer
 Private mCodVentaTipo As Integer
+Private nPorcValor As Double
+Private mCliePercepcion As Double
 
 '========================
 '  RS
@@ -1022,17 +1026,23 @@ Private Sub CrearRsdMemoria()
         .Append "Cantidad", adDouble
         .Append "PDesc", adDouble
         .Append "Desc", adDouble
-        .Append "ImpId", adDouble
-        .Append "ImpPorc", adInteger             'Id impuesto o tasa
-        .Append "ImpIncluido", adDouble           '<<< NO existe en tabla real, pero te sirve
+        .Append "ImpId", adInteger
+        .Append "ImpPorc", adDouble             'Id impuesto o
+        .Append "ImpIncluido", adInteger           '<<< NO existe en tabla real, pero te sirve
         .Append "PrecioUnitNeto", adDouble
         .Append "PrecioUnitFinal", adDouble
         .Append "Neto", adDouble
         .Append "Impuesto", adDouble
         .Append "Total", adDouble
+        .Append "IntTipo", adVarChar, 20
+        .Append "IntValor", adDouble
+        .Append "IntUnit", adDouble
+        .Append "IntTotal", adDouble
     End With
 
     Rsd.Open  'abre el rs en memoria
+    
+    
 
     Exit Sub
 errHandler:
@@ -1073,22 +1083,18 @@ Private Function DetalleEditOK() As Boolean
     Dim ok As Boolean
     ok = True
 
-  '  ok = ok And (Len(Trim$(TxtProducto.Text)) > 0)
     ok = ok And (Len(Trim$(TxtDetalle.Text)) > 0)
-
     ok = ok And (CmbDeposito.ListIndex <> -1)
     ok = ok And (CmbUnidad.ListIndex <> -1)
     ok = ok And (CmbImpuesto.ListIndex <> -1)
     ok = ok And (CmbCuenta.ListIndex <> -1)
-
-    ok = ok And (Val(TxtCantidad.Text) > 0)
-    ok = ok And (Len(Trim$(TxtPrecio.Text)) > 0)
-
-    ' descuento puede ser 0, pero debe ser numérico
+    ok = ok And (CDbl(TxtCantidad.Text) > 0)
+    ok = ok And (CDbl(TxtPrecio.Text) > 0)
     ok = ok And (Len(Trim$(TxtPDesc.Text)) > 0)
 
     DetalleEditOK = ok
 End Function
+
 
 '========================
 '  UI REFRESH (LA CLAVE)
@@ -1186,154 +1192,66 @@ Private Sub RefrescarUI()
 End Sub
 
 Private Sub CmbCondPago_Click()
-  Dim nPorcValor As Double, RsFPago As ADODB.Recordset
+  Dim RsFPago As ADODB.Recordset
   
   nPorcValor = 0
   
   Set RsFPago = cRsl.TraerRsCondi("CondVenta", "CondVta", "CondVta=" & CmbCondPago.ItemData(CmbCondPago.ListIndex))
   mCodVentaTipo = RsFPago!tipo
   
+  nPorcValor = 0
+  
   If RsFPago!tipo = 7 Then
   
   Else
      nPorcValor = RsFPago!RgTarjeta
-     RecalcularRsd nPorcValor
+     RecalcularRsd
   End If
    
   If mEstado = stNuevo Then RefrescarUI
 End Sub
 
-Private Sub RecalcularRsd(pValor As Double)
-'  Dim nTasa As Single, nPorc As Double, nReg As Variant, nIva As Double
-'  On Error GoTo errHandler
-'
-'
-'   Dim nTextPrecio As Double, nTextCantidad As Double
-'   Dim nLista As Integer, nCosto As Byte, nImpuesto As Single
-'
-'   If Rsd.RecordCount <> 0 Then
-'
-'      nLista = mListaPrecio
-'      nCosto = RsComp!Costo
-'      nIva = RsComp!Costo
-'
-'      nReg = Rsd.Bookmark
-'      Rsd.MoveFirst
-'      Do While Not Rsd.EOF
-'
-'          If nIva = 1 Then
-'              nTasa = cRsl.TraerValorDeUnCampo("ProductoImpuesto", "Impuesto", "Producto='" & Rsd!Producto & "'")
-'              If nTasa = 0 Then
-'                   nTasa = cRsl.RegPorDefecto("Pais")
-'              End If
-'          Else
-'             nTasa = 10
-'          End If
-'          Rsd!Tasa = nTasa
-'
-'          nImpuesto = cRsl.TraerValorDeUnCampo("Impuestos", "Porcentaje", "Impuesto=" & Rsd!Tasa)
-'
-'          Dim nPreTot As Double, nPreUn As Double, nPreDec As Double
-'
-'          nTextCantidad = Rsd!Cantidad
-'          nTextPrecio = Format(cRsp.TraerPrecioImp(Rsd!Producto, CmbLista.ItemData(CmbLista.ListIndex)), nCantDecimales)
-'
-'          If nTextPrecio = 0 Then
-'               nTextPrecio = Rsd!precio
-'          Else
-'              Rsd!precio = nTextPrecio
-'          End If
-'
-'          nTextPrecio = nTextPrecio + (nTextPrecio * nRecargo / 100) + (nTextPrecio * nValor / 100)
-'          Rsd!PrecioUnitario = RedondearPrecios(nTextPrecio)
-'
-'          Dim nImpu As Double, nPre As Double, nDes As Double, nDesL As Double
-'          If nTextCantidad <> 0 And nTextPrecio <> 0 Then
-'             If nLista = 1 Then
-'                 If nTasa <> 0 Then
-'                     If nCosto = 1 Then
-'                         nImpu = (nTextPrecio / ((nImpuesto / 100) + 1)) * nTextCantidad
-'                         nDes = nImpu * LblDescuento.Caption / 100
-'                         nImpu = Round(nImpu, 4)
-'                         nDesL = nImpu * (CDbl(Rsd!PDesc) + CDbl(LblDescuento.Caption)) / 100
-'                         nDes = nDes + nDesL
-'                         nDes = Abs(nDesL)
-'                         nPreDec = (nTextPrecio * nTextCantidad) - nImpu - ((nDes * nImpuesto) / 100)
-'                         Rsd!Impuesto = Round(nPreDec, 4)
-'                     Else
-'                         nDes = nTextPrecio * LblDescuento.Caption / 100
-'                         nDesL = nTextPrecio * Rsd!PDesc / 100
-'                         nDes = Abs(nDes + nDesL) * nTextCantidad
-'                         nPreDec = ((nTextPrecio * nTextCantidad) - nDes) - (((nTextPrecio * nTextCantidad) - nDes) / ((nImpuesto / 100) + 1))
-'                         Rsd!Impuesto = Round(nPreDec, 4)
-'                     End If
-'                     Rsd!Impuesto = Rsd!Impuesto
-'                 Else
-'                      nDes = (nTextPrecio * nTextCantidad) * LblDescuento.Caption / 100
-'                      nDesL = (nTextPrecio * nTextCantidad) * Rsd!PDesc / 100
-'                      nDes = nDes + nDesL
-'                      Rsd!Impuesto = 0
-'                 End If
-'                 Rsd!Descuento = Round(nDes, 4) '* TxtCantidad.text
-'                 If nImpu <> 0 Then
-'                    nPreTot = IIf(nImpu = 0, nTextPrecio, nImpu)
-'                    Rsd!PrecioTotal = Round(nPreTot, 4)
-'                    nPreUn = nImpu / nTextCantidad
-'                    Rsd!PrecioUnitario = Round(nPreUn, 4)
-'                 Else
-'                    nPreTot = IIf(nImpu = 0, nTextPrecio, nImpu) * Rsd!Cantidad
-'                    Rsd!PrecioTotal = Round(nPreTot, 4)
-'                    nPreUn = Rsd!PrecioTotal / nTextCantidad
-'                    Rsd!PrecioUnitario = Round(nPreUn, 4)
-'                 End If
-'                 If nCosto = 0 Then
-'                    nPreUn = (nImpu / Rsd!Cantidad) + Rsd!Impuesto
-'                    Rsd!PrecioUnitario = Round(nPreUn, 4)
-'                    nPreTot = nTextPrecio * nTextCantidad
-'                    Rsd!PrecioTotal = Round(nPreTot, 4)
-'                 End If
-'              Else
-'                  nDes = (nTextPrecio * LblDescuento.Caption / 100)
-'                  nDesL = nTextCantidad * Rsd!PDesc / 100
-'                  nDes = nDes + nDesL
-'                  nDes = Abs(nDes)
-'                  nPre = nTextPrecio - nDes
-'                  Rsd!Descuento = nDes * nTextCantidad
-'                  nImpu = ((nPre) * ((nImpuesto)) / 100) * nTextCantidad
-'                  Rsd!Impuesto = Round(nImpu, 4)
-'                  If nCosto = 1 Then
-'                     nPreTot = (TxtCantidad.Text * Rsd!PrecioUnitario)
-'                     Rsd!PrecioTotal = Round(nPreTot, 4)
-'                  Else
-'                     nPreTot = (nTextPrecio * nTextCantidad) + Rsd!Impuesto
-'                     Rsd!PrecioTotal = Round(nPreTot, 4)
-'                     nPreUn = nTextPrecio + Rsd!Impuesto
-'                     Rsd!PrecioUnitario = Round(nPreUn, 4) ' - Rsd!Descuento
-'                  End If
-'              End If
-'              Rsd!PrecioUnitario = Rsd!PrecioTotal / Rsd!Cantidad
-'              Rsd!PrecioUnitario = Round(Rsd!PrecioUnitario, 4)
-'         Else
-'            Rsd!Impuesto = 0
-'            Rsd!Descuento = 0
-'            Rsd!PrecioUnitario = 0
-'            Rsd!PrecioTotal = 0
-'         End If
-'         Rsd.Update
-'
-'         Rsd.MoveNext
-'      Loop
-'      Rsd.Bookmark = nReg
-'      LinkearDetalles
-'      sw1 = True
-'      CalcularTotales
-'   End If
 
-Exit Sub
+
+Private Sub RecalcularRsd()
+  On Error GoTo errHandler
+
+  Dim bk As Variant
+  Dim negro As Boolean
+
+  If Rsd Is Nothing Then Exit Sub
+  If (Rsd.BOF And Rsd.EOF) Then Exit Sub
+
+  negro = EsNegro()
+
+  bk = Rsd.Bookmark
+  Rsd.MoveFirst
+
+  Do While Not Rsd.EOF
+
+      'si cambió lista (con IVA o sin IVA)
+      Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
+
+      'regla negro
+      If negro Then
+          Rsd!ImpPorc = 0
+          Rsd!IntTipo = 0
+          Rsd!IntValor = 0
+      End If
+
+      CalcularImportesRenglon Rsd
+      Rsd.Update
+      Rsd.MoveNext
+  Loop
+
+  Rsd.Bookmark = bk
+  CalcularTotales
+  Exit Sub
 
 errHandler:
-   ManejaErrores
+  ManejaErrores
 End Sub
+
 
 Private Sub CmbCorredor_Click()
   If mEstado = stNuevo Then RefrescarUI
@@ -1343,6 +1261,7 @@ Private Sub CmbLista_Click()
     If mEstado = stNuevo Then RefrescarUI
     If CmbLista.ListIndex <> -1 Then
        mListaPrecio = cRsl.TraerValorDeUnCampo("ListaDePrecio", "PrecioIva", "ListaPrecio=" & CmbLista.ItemData(CmbLista.ListIndex))
+       RecalcularRsd
     End If
 End Sub
 
@@ -1388,6 +1307,7 @@ Private Sub Form_Load()
     Set P = New ClsPrograma
 
     CrearRsdMemoria
+    CabGrid
 
     'imagenes
     CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
@@ -1525,6 +1445,8 @@ Private Sub LinkearProducto(pProducto As Long)
         mProdDeposito = RsProduc!Deposito
         mProdImpuesto = RsProduc!Impuesto
         mProdPrecio = CDbl(RsProduc!precio)
+        mProdIntTipo = RsProduc!TipoInterno
+        mProdIntValor = RsProduc!ValorInterno
         
         TxtProducto.Text = mProdCodigo
         TxtDetalle.Text = mProdDescripcion
@@ -1583,7 +1505,7 @@ Private Sub Limpiar()
         If TypeOf ctl Is TextBox Then ctl.Text = ""
     Next ctl
 
-    DTPFecha.Value = Date
+    DtpFecha.Value = Date
     DtpVenc.Value = Date
 
     LblDescuento.Caption = "0.00"
@@ -1600,7 +1522,7 @@ Private Sub Limpiar()
     TxtNoGrav.Text = "0.00"
     LblIva1.Text = "0.00"
     LblPercepcion.Caption = "0.00"
-    LblTotal.Caption = "0.00"
+    lblTotal.Caption = "0.00"
 
     CmbComprobante.ListIndex = -1
     CmbVend.Text = "NINGUNO"
@@ -1650,14 +1572,12 @@ Private Sub Nuevo()
 
     If mEstado <> stNuevo Then
         ' pasar a nuevo
-        CrearRsVenta
-        CrearRsDetalles
-       
-        Limpiar
+        ResetDetalleMemoria
         LimpiarDetalles
-
-        mEstado = stNuevo
+        CalcularTotales
         RefrescarUI
+       
+        mEstado = stNuevo
 
         CmbCorredor.Text = "Ninguno"
         P.SetComboByItemData CmbComprobante, nVentaFactura
@@ -1669,7 +1589,7 @@ Private Sub Nuevo()
         ' Si grabó OK:
         mEstado = stIdle
         Limpiar
-        CrearRsDetalles
+       ' CrearRsDetalles
         RefrescarUI
     End If
     Exit Sub
@@ -1684,7 +1604,7 @@ Private Sub Salir()
         mEstado = stIdle
         Limpiar
         LimpiarDetalles
-        CrearRsDetalles
+       ' CrearRsDetalles
         RefrescarUI
     Else
         Unload Me
@@ -1702,8 +1622,6 @@ Private Sub CmbFormaPago_Click()
    End If
    If mEstado = stNuevo Then RefrescarUI
 End Sub
-
-
 
 Private Sub TxtReparto_GotFocus()
     SeleccionarTodo TxtReparto
@@ -1858,6 +1776,10 @@ Private Sub CabGrid()
       .Columns(15).Width = 1200
       .Columns(15).NumberFormat = "#0.00" ' nCantDecimales
       .Columns(15).Alignment = dbgRight
+      .Columns(16).Visible = False
+      .Columns(17).Visible = False
+      .Columns(18).Visible = False
+      .Columns(19).Visible = False
  End With
 End Sub
 
@@ -1921,8 +1843,7 @@ Private Sub CmbComprobante_Click()
      TxtSucursal.Text = nSuc
      TxtNumero.Text = nNum
      If Rsd.RecordCount <> 0 Then
-        RecalcularRsd cRsl.TraerValorDeUnCampo("CondVenta", "Tipo", "CondVta=" & CmbCondPago.ItemData(CmbCondPago.ListIndex))
-        CalcularTotales
+        RecalcularRsd ' cRsl.TraerValorDeUnCampo("CondVenta", "Tipo", "CondVta=" & CmbCondPago.ItemData(CmbCondPago.ListIndex))
      End If
         
   End If
@@ -1938,73 +1859,83 @@ errHandler:
 End Sub
 
 Public Sub CalcularTotales()
-  
-  Dim cDes As Double, nTasa As Double, nNeto As Double, nDes As Double
-  Dim nIva As Double, nReg As Variant, nOtros As Currency, nNoGra As Double, tIva As Boolean, nPerc As Double
-  Dim nCons As Double, nIva1 As Double, sCuit As String
- 
   On Error GoTo errHandler
-  
-  LblFinanciacion.Caption = "0.00"
-  LblNeto.Caption = "0.00"
-  LblIva1.Text = "0.00"
-  
-  cDes = 0
-  nNeto = 0
-  nNoGra = 0
-  nDes = 0
-  nIva = 0
-  tIva = False
-  If CmbComprobante.ListIndex <> -1 Then
-     If cRsl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 1 Then
-        tIva = True
+
+  Dim nNeto As Double, nIva As Double, nDes As Double
+  Dim nNoGrabado As Double, nPercepcion As Double, nTot As Double
+  Dim nNetoGravado As Double
+  Dim bk As Variant
+  Dim negro As Boolean
+
+  nNeto = 0: nIva = 0: nDes = 0: nNoGrabado = 0: nPercepcion = 0: nTot = 0
+  nNetoGravado = 0
+
+  negro = EsNegro()
+
+  If Not (Rsd Is Nothing) Then
+     If Not (Rsd.BOF And Rsd.EOF) Then
+        bk = Rsd.Bookmark
+        Rsd.MoveFirst
+        Do While Not Rsd.EOF
+            nNeto = nNeto + CDbl(Val(Rsd!neto & ""))
+            nIva = nIva + CDbl(Val(Rsd!Impuesto & ""))
+            nDes = nDes + CDbl(Val(Rsd!desc & ""))
+            nNoGrabado = nNoGrabado + CDbl(Val(Rsd!IntTotal & "")) 'interno
+            nTot = nTot + CDbl(Val(Rsd!Total & ""))
+            Rsd.MoveNext
+        Loop
+        Rsd.Bookmark = bk
      End If
   End If
-  If Rsd.RecordCount <> 0 Then
-     nReg = Rsd.Bookmark
-     Rsd.MoveFirst
-     Do While Not Rsd.EOF
-        If tIva = True Then
-           nIva = nIva + Rsd!Impuesto
-        End If
-        nDes = nDes + Rsd!Descuento
-        If Rsd!Tasa <> 21 Then
-           nNeto = nNeto + Rsd!PrecioTotal
-        Else
-           nNoGra = nNoGra + Rsd!PrecioTotal
-        End If
-        Rsd.MoveNext
-     Loop
-     nIva = Round(nIva, 2)
-     nDes = Round(nDes, 2)
-     nNeto = Round(nNeto, 2)
-     nNoGra = Round(nNoGra, 2)
-     Rsd.Bookmark = nReg
+
+  '--- neto gravado = neto - interno
+  nNetoGravado = Round(nNeto - nNoGrabado, 2)
+
+  '--- percepción (si no es negro)
+  nPercepcion = 0
+  If PuedePercepcion() Then
+     nPercepcion = Round(nNetoGravado * mCliePercepcion / 100, 2)
   End If
-  TxtNoGrav.Text = Format(nNoGra, "#0.00")
-  LblNeto.Caption = Format(nNeto, "#0.00")
+  LblPercepcion.Caption = Format(nPercepcion, "#0.00")
+
+  '--- redondeos finales
+  nNetoGravado = Round(nNetoGravado, 2)
+  nIva = Round(nIva, 2)
+  nDes = Round(nDes, 2)
+  nNoGrabado = Round(nNoGrabado, 2)
+  nTot = Round(nTot, 2)
+
+  '--- pintar UI
+  LblFinanciacion.Caption = "0.00"
+  TxtNoGrav.Text = Format(nNoGrabado, "#0.00")
+  LblNeto.Caption = Format(nNetoGravado, "#0.00")
   LblBonificacion.Caption = Format(nDes, "#0.00")
-  nOtros = CCur(TxtNoGrav.Text)
   LblIva1.Text = Format(nIva, "#0.00")
-  
- If cRsl.TraerValorDeUnCampo("Comprobantes", "Iva", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 1 And cRsl.TraerValorDeUnCampo("Comprobantes", "Afip", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) <> 0 Then
-     nPerc = cRsl.TraerValorDeUnCampo("Clientes", "Percepcion", "Cliente='" & TxtCliente.Text & "'")
-    ' bPerc = False
-    ' If nPerc <> 0 Then
-    '    nPerc = (nNeto - LblBonificacion.Caption) * nPerc / 100
-    '    LblPercepcion.Caption = Format(nPerc, "#0.00")
-    ' End If
-  End If
-  
-  LblTotal.Caption = Format(nNeto - nDes + nIva + nNoGra + nPerc, "#0.00")
-    
-Exit Sub
+  LblPercepcion.Caption = Format(nPercepcion, "#0.00")
+
+  lblTotal.Caption = Format(nTot + nPercepcion, "#0.00")
+  Exit Sub
 
 errHandler:
-  
-     ManejaErrores
-
+  ManejaErrores
 End Sub
+
+Private Function PuedePercepcion() As Boolean
+    PuedePercepcion = False
+
+    '1) Debe ser blanco (lleva IVA)
+    If RsComp Is Nothing Then Exit Function
+    If Val(RsComp!Iva & "") <> 1 Then Exit Function
+
+    '2) Debe discriminar (Factura A típicamente)
+    If Val(RsComp!Costo & "") <> 1 Then Exit Function
+
+    '3) Cliente con percepción configurada
+    If mCliePercepcion = 0 Then Exit Function
+
+    PuedePercepcion = True
+End Function
+
 
 Private Sub LinkearCliente(nDat As Long)
   Dim cRiL As ClsClienteL
@@ -2016,6 +1947,7 @@ Private Sub LinkearCliente(nDat As Long)
   If TxtCliente.Text <> "" Or nDat <> 0 Then
        Set RsCli = cRiL.TraerDatosCliente(TxtCliente.Text, nDat)
        TxtCliente.Text = RsCli!Cliente
+       mCliePercepcion = RsCli!Percepcion
        
        If RsCli.RecordCount <> 0 Then
          If IsNull(RsCli!FechaBaja) Or RsCli!FechaBaja = "" Then
@@ -2045,6 +1977,7 @@ Private Sub CmdDetalle_Click(Index As Integer)
         Case 0
             If mDetEstado = detIdle Then
                 mDetEstado = detnuevo
+                LimpiarDetalles
                 RefrescarUI
                 TxtProducto.SetFocus
             Else
@@ -2065,124 +1998,165 @@ Private Sub CmdDetalle_Click(Index As Integer)
     End Select
 End Sub
 
+
 Private Sub GrabarDetalleActual()
-  Dim nTasa As Single
   On Error GoTo errHandler
-  
+
+  Dim negro As Boolean
+  negro = EsNegro()
+
   Rsd.AddNew
   Rsd!Producto = TxtProducto.Text
   Rsd!Descripcion = TxtDetalle.Text
-  Rsd!Cantidad = TxtCantidad.Text
-  Rsd!PDesc = IIf(IsNull(TxtPDesc.Text), 0, TxtPDesc.Text)
-  Rsd!Tasa = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
   Rsd!Cuenta = CmbCuenta.ItemData(CmbCuenta.ListIndex)
   Rsd!Deposito = CmbDeposito.ItemData(CmbDeposito.ListIndex)
   Rsd!Medida = CmbUnidad.ItemData(CmbUnidad.ListIndex)
-  
-  nTasa = mProdTasa
-    
-  Dim nPreTot As Double, nPreUn As Double, nPreDec As Double
-  
-  TxtPrecio.Text = TxtPrecio.Text + (TxtPrecio.Text * nRecargo / 100) + (TxtPrecio.Text * nValor / 100)
-   
-  Rsd!PrecioUnitario = TxtPrecio.Text
-  
-  If CmdDetalle(2).Caption = "Grabar" Then
-     If cRsl.TraerValorDeUnCampo("CondVenta", "Tipo", "CondVta=" & CmbCondPago.ItemData(CmbCondPago.ListIndex)) = 6 Then
-        Rsd!precio = TxtPrecio.Text
-     End If
-  Else
-     Rsd!precio = Format(cRsp.TraerPrecioImp(Rsd!Producto, CmbLista.ItemData(CmbLista.ListIndex)), nCantDecimales)
-     If Rsd!precio = 0 Then
-        Rsd!precio = TxtPrecio.Text
-     End If
-  End If
-  
-  Dim nImpu As Double, nPre As Double, nDes As Double, nDesL As Double
-  If TxtCantidad.Text <> 0 And TxtPrecio.Text <> 0 Then
-     If cRsl.TraerValorDeUnCampo("ListaDePrecio", "PrecioIva", "ListaPrecio=" & CmbLista.ItemData(CmbLista.ListIndex)) = 1 Then
-        If nTasa <> 0 Then
-           If cRsl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 1 Then
-              nImpu = (TxtPrecio.Text / ((nTasa / 100) + 1)) * TxtCantidad.Text
-              nDes = nImpu * LblDescuento.Caption / 100
-              nImpu = Round(nImpu, 4)
-              nDesL = nImpu * (CDbl(TxtPDesc.Text) + CDbl(LblDescuento.Caption)) / 100
-              nDes = nDes - nDesL
-              nDes = Abs(nDesL)
-              nPreDec = (TxtPrecio.Text * TxtCantidad) - nImpu - ((nDes * nTasa) / 100)
-              Rsd!Impuesto = Round(nPreDec, 4)
-           Else
-               nDes = TxtPrecio.Text * LblDescuento.Caption / 100
-               nDesL = TxtPrecio.Text * TxtPDesc.Text / 100
-               nDes = Abs(nDes + nDesL) * TxtCantidad.Text
-               nPreDec = ((TxtPrecio.Text * TxtCantidad) - nDes) - (((TxtPrecio.Text * TxtCantidad) - nDes) / ((cRsl.TraerValorDeUnCampo("Impuestos", "Porcentaje", "Impuesto=" & Rsd!Tasa) / 100) + 1))
-               Rsd!Impuesto = Round(nPreDec, 4)
-           End If
-           Rsd!Impuesto = Rsd!Impuesto
-        Else
-           nDes = (TxtPrecio.Text * TxtCantidad.Text) * LblDescuento.Caption / 100
-           nDesL = (TxtPrecio.Text * TxtCantidad.Text) * TxtPDesc.Text / 100
-           nDes = nDes + nDesL
-         ' nDes = Abs(nDesL)
-           Rsd!Impuesto = 0
-        End If
-        Rsd!Descuento = Round(nDes, 4) '* TxtCantidad.text
-        If nImpu <> 0 Then
-           nPreTot = IIf(nImpu = 0, TxtPrecio.Text, nImpu)
-           Rsd!PrecioTotal = Round(nPreTot, 4)
-           nPreUn = nImpu / TxtCantidad.Text
-           Rsd!PrecioUnitario = Round(nPreUn, 4)
-        Else
-           nPreTot = IIf(nImpu = 0, TxtPrecio.Text, nImpu) * Rsd!Cantidad
-           Rsd!PrecioTotal = Round(nPreTot, 4)
-           nPreUn = Rsd!PrecioTotal / TxtCantidad.Text
-           Rsd!PrecioUnitario = Round(nPreUn, 4)
-        End If
+  Rsd!Cantidad = CDbl(Val(TxtCantidad.Text))
+  Rsd!PDesc = CDbl(Val(TxtPDesc.Text))
 
-        If cRsl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 0 Then
-           nPreUn = (nImpu / Rsd!Cantidad) + Rsd!Impuesto
-           Rsd!PrecioUnitario = Round(nPreUn, 4)
-           nPreTot = TxtPrecio.Text * TxtCantidad.Text
-           Rsd!PrecioTotal = Round(nPreTot, 4)
-          ' Rsd!Descuento = (TxtPrecio.text * TxtCantidad.text) * LblDescuento.Caption / 100
-        End If
-     Else
-        nDes = (TxtPrecio.Text * LblDescuento.Caption / 100)
-        nDesL = TxtPrecio.Text * TxtPDesc.Text / 100
-        nDes = nDes + nDesL
-        nDes = Abs(nDes)
-        nPre = TxtPrecio.Text - nDes
-        Rsd!Descuento = nDes * TxtCantidad.Text
-        nImpu = ((nPre) * ((cRsl.TraerValorDeUnCampo("Impuestos", "Porcentaje", "Impuesto=" & Rsd!Tasa))) / 100) * TxtCantidad.Text
-        Rsd!Impuesto = Round(nImpu, 4)
-     
-        If cRsl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) = 1 Then
-           nPreTot = (TxtCantidad.Text * Rsd!PrecioUnitario)
-           Rsd!PrecioTotal = Round(nPreTot, 4)
-        Else
-           nPreTot = (TxtPrecio.Text * TxtCantidad.Text) + Rsd!Impuesto
-           Rsd!PrecioTotal = Round(nPreTot, 4)
-           nPreUn = TxtPrecio.Text + Rsd!Impuesto
-           Rsd!PrecioUnitario = Round(nPreUn, 4) ' - Rsd!Descuento
-        End If
-     End If
-     
-     Rsd!PrecioUnitario = Rsd!PrecioTotal / Rsd!Cantidad
-     Rsd!PrecioUnitario = Round(Rsd!PrecioUnitario, 4)
-     TxtPrecio.Text = Format(Rsd!PrecioUnitario, nCantDecimales)
+  Rsd!ImpId = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
+  Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
+
+  If negro Then
+      Rsd!ImpPorc = 0
+      Rsd!IntTipo = 0
+      Rsd!IntValor = 0
   Else
-     Rsd!Impuesto = 0
-     Rsd!Descuento = 0
-     Rsd!PrecioUnitario = 0
-     Rsd!PrecioTotal = 0
+      Rsd!ImpPorc = mProdTasa
+      Rsd!IntTipo = mProdIntTipo
+      Rsd!IntValor = mProdIntValor
   End If
+
+  CalcularImportesRenglon Rsd
   Rsd.Update
-  Set crs = Nothing
-Exit Sub
+
+  CalcularTotales
+  Exit Sub
 
 errHandler:
-   ManejaErrores
+  ManejaErrores
 End Sub
+
+
+Private Sub CalcularImportesRenglon(ByRef r As ADODB.Recordset)
+    On Error GoTo errHandler
+    
+    Dim tipo As String
+    tipo = UCase$(Trim$(r!IntTipo & ""))
+
+    Dim cant As Double
+    Dim precioBase As Double
+    Dim tasa As Double
+
+    Dim porcDescCli As Double, porcDescLin As Double
+    Dim porcRecCli As Double, porcRecVal As Double
+
+    Dim precioRecargado As Double
+    Dim precioConDesc As Double
+
+    Dim intUnit As Double, intTot As Double
+    Dim finalUnit As Double, netoUnit As Double
+
+    Dim neto As Double, impu As Double, tot As Double
+    Dim descMonto As Double
+
+    '--- básicos
+    cant = CDbl(Val(r!Cantidad))
+    If cant <= 0 Then cant = 0
+
+    precioBase = CDbl(Val(TxtPrecio.Text))
+    tasa = CDbl(Val(r!ImpPorc)) '0 si negro
+
+    '--- % desc/rec
+    porcDescCli = 0
+    If Not (RsCli Is Nothing) Then porcDescCli = CDbl(Val(RsCli!DescPorc & ""))
+
+    porcDescLin = CDbl(Val(r!PDesc & ""))
+
+    porcRecCli = 0
+    If Not (RsCli Is Nothing) Then porcRecCli = CDbl(Val(RsCli!PorcRecargo & ""))
+
+    porcRecVal = CDbl(Val(nPorcValor))
+
+    '--- 1) recargos
+    precioRecargado = precioBase * (1# + (porcRecCli + porcRecVal) / 100#)
+
+    '--- 2) descuentos (cliente + línea)
+    precioConDesc = precioRecargado * (1# - (porcDescCli + porcDescLin) / 100#)
+    If precioConDesc < 0 Then precioConDesc = 0
+
+    '--- descuento $ (sobre lo recargado)
+    descMonto = (precioRecargado - precioConDesc) * cant
+    If descMonto < 0 Then descMonto = 0
+
+    '--- 3) interno (se calcula sobre el precio ya con rec/desc)
+    intUnit = 0
+    If CDbl(Val(r!IntValor & "")) <> 0 Then
+      If tipo = "FIJO" Then
+        intUnit = CDbl(Val(r!IntValor & ""))
+      ElseIf tipo = "PORCENTAJE" Then
+         intUnit = precioConDesc * (CDbl(Val(r!IntValor & "")) / 100#)
+      Else
+        intUnit = 0
+      End If
+    End If
+    intTot = intUnit * cant
+
+    '--- 4) neto/final/iva
+    If Val(r!ImpIncluido & "") = 1 Then
+        'precioConDesc es FINAL (con IVA) y puede incluir interno
+        finalUnit = precioConDesc
+
+        'IVA sale del monto SIN interno: (final - interno)
+        Dim baseIvaFinal As Double
+        baseIvaFinal = finalUnit - intUnit
+        If baseIvaFinal < 0 Then baseIvaFinal = 0
+
+        If tasa > 0 Then
+            netoUnit = (baseIvaFinal / (1# + tasa / 100#)) + intUnit
+        Else
+            netoUnit = finalUnit
+        End If
+
+    Else
+        'precioConDesc es NETO (sin IVA), interno se suma al neto
+        netoUnit = precioConDesc + intUnit
+        finalUnit = netoUnit * (1# + tasa / 100#)
+    End If
+
+    '--- 5) totales
+    neto = netoUnit * cant
+    tot = finalUnit * cant
+    impu = tot - neto
+
+    '--- 6) redondeos
+    netoUnit = Round(netoUnit, nCantDecimales)
+    finalUnit = Round(finalUnit, nCantDecimales)
+
+    neto = Round(neto, 2)
+    tot = Round(tot, 2)
+    impu = Round(impu, 2)
+    descMonto = Round(descMonto, 2)
+    intUnit = Round(intUnit, nCantDecimales)
+    intTot = Round(intTot, 2)
+
+    '--- 7) asignar
+    r!PrecioUnitNeto = netoUnit
+    r!PrecioUnitFinal = finalUnit
+    r!neto = neto
+    r!Impuesto = impu
+    r!desc = descMonto
+
+    r!intUnit = intUnit
+    r!IntTotal = intTot
+
+    r!Total = tot  'tot ya incluye interno porque finalUnit lo incluye
+
+    Exit Sub
+errHandler:
+    ManejaErrores
+End Sub
+
 
 Private Sub TxtDetalle_Change()
     If mEstado = stNuevo And mDetEstado <> detIdle Then
@@ -2222,4 +2196,20 @@ Private Function DetalleOK() As Boolean
     Loop
     Rsd.Bookmark = bk
 End Function
+
+Private Function EsNegro() As Boolean
+    EsNegro = False
+    If Not (RsComp Is Nothing) Then
+        EsNegro = (Val(RsComp!Iva & "") = 0)
+    End If
+End Function
+
+Private Sub ResetDetalleMemoria()
+    If Not Rsd Is Nothing Then
+        If Rsd.State = adStateOpen Then Rsd.Close
+    End If
+    CrearRsdMemoria
+    Set Grid1.DataSource = Rsd
+    CabGrid
+End Sub
 

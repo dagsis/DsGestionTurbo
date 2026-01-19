@@ -60,7 +60,7 @@ Public Function TraerDatosCliente(sClie As String, Optional pId As Long = 0) As 
     sSql = "SELECT Clientes.*,"
     sSql = sSql & "ListaPrecio,ListaPrecio,ListadePrecio.Descripcion AS ListaDesc, ListadePrecio.Porcentaje as ListaPorc, ListadePrecio.PrecioIva, Descuentos.Porcentaje AS DescPorc, Zonas.Descripcion AS ZonaDesc,"
     sSql = sSql & "Descuentos.Descripcion AS DescDesc, Transporte.Descripcion AS TransDesc, TipoIva.Descripcion AS TIvaDesc,"
-    sSql = sSql & "Vendedores.Descripcion as VendDesc,Vendedores.Comision as VendComision "
+    sSql = sSql & "Vendedores.Descripcion as VendDesc,Vendedores.Comision as VendComision,Recargos.Porcentaje as PorcRecargo "
     sSql = sSql & "FROM Clientes LEFT OUTER JOIN "
     sSql = sSql & "Vendedores ON Clientes.Vendedor = Vendedores.Vendedor LEFT OUTER JOIN "
     sSql = sSql & "Descuentos ON Clientes.Descuento = Descuentos.Descuento LEFT OUTER JOIN "
@@ -410,7 +410,7 @@ Public Function BuscarLista(sCod As String) As Integer
   sSql = sSql & "WHERE Cliente='" & sCod & "'"
   Rs.Open sSql, db, adOpenStatic, adLockOptimistic
   If Rs.EOF = False Or Rs.BOF = False Then
-     BuscarLista = Rs!Precio
+     BuscarLista = Rs!precio
   End If
   db.Close
   
