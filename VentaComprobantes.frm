@@ -35,7 +35,7 @@ Begin VB.Form VentaComprobantes
    Begin VB.CommandButton CmdBotones 
       Caption         =   "E-Mail"
       Height          =   675
-      Index           =   10
+      Index           =   8
       Left            =   10920
       Style           =   1  'Graphical
       TabIndex        =   83
@@ -45,7 +45,7 @@ Begin VB.Form VentaComprobantes
    Begin VB.CommandButton CmdBotones 
       Caption         =   "Recibo"
       Height          =   675
-      Index           =   9
+      Index           =   7
       Left            =   10920
       Style           =   1  'Graphical
       TabIndex        =   82
@@ -118,7 +118,7 @@ Begin VB.Form VentaComprobantes
    Begin VB.CommandButton CmdBotones 
       Caption         =   "Modificar"
       Height          =   675
-      Index           =   8
+      Index           =   3
       Left            =   9840
       Style           =   1  'Graphical
       TabIndex        =   69
@@ -138,7 +138,7 @@ Begin VB.Form VentaComprobantes
    Begin VB.CommandButton CmdBotones 
       Caption         =   "&Buscar"
       Height          =   675
-      Index           =   1
+      Index           =   2
       Left            =   9840
       Style           =   1  'Graphical
       TabIndex        =   67
@@ -148,7 +148,7 @@ Begin VB.Form VentaComprobantes
    Begin VB.CommandButton CmdBotones 
       Caption         =   "&Salir"
       Height          =   675
-      Index           =   5
+      Index           =   9
       Left            =   9840
       Style           =   1  'Graphical
       TabIndex        =   66
@@ -158,7 +158,7 @@ Begin VB.Form VentaComprobantes
    Begin VB.CommandButton CmdBotones 
       Caption         =   "&Anular"
       Height          =   675
-      Index           =   6
+      Index           =   1
       Left            =   9840
       Style           =   1  'Graphical
       TabIndex        =   65
@@ -168,7 +168,7 @@ Begin VB.Form VentaComprobantes
    Begin VB.CommandButton CmdBotones 
       Caption         =   "Imprimir"
       Height          =   675
-      Index           =   7
+      Index           =   5
       Left            =   9840
       Style           =   1  'Graphical
       TabIndex        =   64
@@ -178,16 +178,17 @@ Begin VB.Form VentaComprobantes
    Begin VB.CommandButton CmdBotones 
       Caption         =   "Aplicación"
       Height          =   675
-      Index           =   4
+      Index           =   6
       Left            =   9840
       Style           =   1  'Graphical
       TabIndex        =   63
       Top             =   4674
       Width           =   1005
    End
-   Begin VB.CommandButton CmdTexto 
+   Begin VB.CommandButton CmdBotones 
       Caption         =   "Texto"
       Height          =   450
+      Index           =   4
       Left            =   9840
       TabIndex        =   62
       Top             =   3291
@@ -701,7 +702,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   159383553
+      Format          =   158793729
       CurrentDate     =   36783
    End
    Begin VB.ComboBox CmbComprobante 
@@ -721,7 +722,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   159383553
+      Format          =   158793729
       CurrentDate     =   36783
    End
    Begin VB.PictureBox Picture1 
@@ -991,6 +992,9 @@ Private mListaPrecio As Integer
 Private mCodVentaTipo As Integer
 Private nPorcValor As Double
 Private mCliePercepcion As Double
+Private mLoadingDetalle As Boolean
+Private mRefreshingUI As Boolean
+
 
 '========================
 '  RS
@@ -1038,6 +1042,7 @@ Private Sub CrearRsdMemoria()
         .Append "IntValor", adDouble
         .Append "IntUnit", adDouble
         .Append "IntTotal", adDouble
+        .Append "PrecioBase", adDouble
     End With
 
     Rsd.Open  'abre el rs en memoria
@@ -1056,7 +1061,7 @@ Private Function CabeceraOK() As Boolean
     Dim ok As Boolean
     ok = True
 
-    ok = ok And (CmbComprobante.ListIndex <> -1)
+    ok = ok And (Cmbcomprobante.ListIndex <> -1)
 
     ' Cliente: no solo TxtCliente, sino que esté linkeado (LblCliente)
     ok = ok And (Len(Trim$(TxtCliente.Text)) > 0)
@@ -1100,6 +1105,10 @@ End Function
 '  UI REFRESH (LA CLAVE)
 '========================
 Private Sub RefrescarUI()
+   If mRefreshingUI Then Exit Sub
+    mRefreshingUI = True
+    On Error GoTo salir
+  
     Select Case mEstado
 
         Case stIdle
@@ -1109,12 +1118,12 @@ Private Sub RefrescarUI()
             BotonBuscar False, False
 
             'Nuevo, Buscar, Salir
-            Botones True, False, False, True, False, False, True, False
+            Botones True, False, False, False, False, True
 
             CmdBotones(0).Caption = "Nuevo"
             CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
-            CmdBotones(5).Caption = "Salir"
-            CmdBotones(5).Picture = LoadResPicture("Salir", 0)
+            CmdBotones(9).Caption = "Salir"
+            CmdBotones(9).Picture = LoadResPicture("Salir", 0)
 
       Case stNuevo
            Dim okCab As Boolean: okCab = CabeceraOK()
@@ -1124,8 +1133,8 @@ Private Sub RefrescarUI()
             ' Cabecera: Grabar/Cancelar
            CmdBotones(0).Caption = "Grabar"
            CmdBotones(0).Picture = LoadResPicture("Grabar", 0)
-           CmdBotones(5).Caption = "Cancelar"
-           CmdBotones(5).Picture = LoadResPicture("Cancelar", 0)
+           CmdBotones(9).Caption = "Cancelar"
+           CmdBotones(9).Picture = LoadResPicture("Cancelar", 0)
         
             ' Si estás editando un detalle => NO se puede grabar cabecera todavía
            If mDetEstado <> detIdle Then
@@ -1136,12 +1145,12 @@ Private Sub RefrescarUI()
             End If
         
             ' Deshabilitá buscar/acciones mientras estás cargando
-            CmdTexto.Enabled = False
-            CmdBotones(1).Enabled = False
-            CmdBotones(7).Enabled = False
-            CmdBotones(4).Enabled = False
-            CmdBotones(9).Enabled = False
-            CmdBotones(10).Enabled = False
+'            CmdTexto.Enabled = False
+'            CmdBotones(1).Enabled = False
+'            CmdBotones(7).Enabled = False
+'            CmdBotones(4).Enabled = False
+'            CmdBotones(9).Enabled = False
+'            CmdBotones(10).Enabled = False
         
             ' ===== DETALLE =====
             If mDetEstado = detIdle Then
@@ -1179,7 +1188,7 @@ Private Sub RefrescarUI()
             HabilitarDetalles False
 
             'Nuevo, Buscar, Salir + acciones de ver
-            Botones True, True, False, True, False, True, True, False
+            Botones True, True, True, True, True, True
 
             CmdBotones(0).Caption = "Nuevo"
             CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
@@ -1189,9 +1198,13 @@ Private Sub RefrescarUI()
             BotonDetalles False, False, False, False
             BotonBuscar False, False
     End Select
+salir:
+    mRefreshingUI = False
+    
 End Sub
 
 Private Sub CmbCondPago_Click()
+  If mLoadingDetalle Then Exit Sub
   Dim RsFPago As ADODB.Recordset
   
   nPorcValor = 0
@@ -1213,29 +1226,58 @@ End Sub
 
 
 
+Private Sub LinkearDetalleDesdeRsd()
+    On Error GoTo salir
+    If mLoadingDetalle Then Exit Sub
+    If Rsd Is Nothing Then Exit Sub
+    If (Rsd.BOF Or Rsd.EOF) Then Exit Sub
+
+    mLoadingDetalle = True
+
+    TxtProducto.Text = Rsd!Producto & ""
+    TxtDetalle.Text = Rsd!Descripcion & ""
+    TxtCantidad.Text = Format(CDbl(Val(Rsd!Cantidad & "")), nDecimalCant)
+    TxtPDesc.Text = Format(CDbl(Val(Rsd!PDesc & "")), "#0.00")
+    TxtPrecio.Text = Format(CDbl(Val(Rsd!PrecioUnitFinal & "")), "#0.00")
+
+    P.SetComboByItemData CmbCuenta, CLng(Val(Rsd!Cuenta & ""))
+    P.SetComboByItemData CmbDeposito, CLng(Val(Rsd!Deposito & ""))
+    P.SetComboByItemData CmbUnidad, CLng(Val(Rsd!Medida & ""))
+    P.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!ImpId & ""))
+
+salir:
+    mLoadingDetalle = False
+End Sub
+
+
+
 Private Sub RecalcularRsd()
   On Error GoTo errHandler
+  If mLoadingDetalle Then Exit Sub
+
+  mLoadingDetalle = True
 
   Dim bk As Variant
+  Dim tieneBk As Boolean
   Dim negro As Boolean
 
-  If Rsd Is Nothing Then Exit Sub
-  If (Rsd.BOF And Rsd.EOF) Then Exit Sub
+  If Rsd Is Nothing Then GoTo salir
+  If Rsd.RecordCount <= 0 Then GoTo salir
+  If (Rsd.BOF Or Rsd.EOF) Then GoTo salir   '<<< CLAVE
 
   negro = EsNegro()
 
+  '--- Guardar bookmark solo si hay registro actual válido
+  tieneBk = True
   bk = Rsd.Bookmark
+
   Rsd.MoveFirst
-
   Do While Not Rsd.EOF
-
-      'si cambió lista (con IVA o sin IVA)
       Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
 
-      'regla negro
       If negro Then
           Rsd!ImpPorc = 0
-          Rsd!IntTipo = 0
+          Rsd!IntTipo = ""
           Rsd!IntValor = 0
       End If
 
@@ -1244,11 +1286,19 @@ Private Sub RecalcularRsd()
       Rsd.MoveNext
   Loop
 
-  Rsd.Bookmark = bk
+  '--- Restaurar si sigue válido
+  On Error Resume Next
+  If tieneBk Then Rsd.Bookmark = bk
+  err.Clear
+  On Error GoTo errHandler
+
+salir:
+  mLoadingDetalle = False
   CalcularTotales
   Exit Sub
 
 errHandler:
+  mLoadingDetalle = False
   ManejaErrores
 End Sub
 
@@ -1258,10 +1308,12 @@ Private Sub CmbCorredor_Click()
 End Sub
 
 Private Sub CmbLista_Click()
+    If mLoadingDetalle Then Exit Sub
     If mEstado = stNuevo Then RefrescarUI
     If CmbLista.ListIndex <> -1 Then
-       mListaPrecio = cRsl.TraerValorDeUnCampo("ListaDePrecio", "PrecioIva", "ListaPrecio=" & CmbLista.ItemData(CmbLista.ListIndex))
-       RecalcularRsd
+        mListaPrecio = cRsl.TraerValorDeUnCampo("ListaDePrecio", "PrecioIva", _
+                     "ListaPrecio=" & CmbLista.ItemData(CmbLista.ListIndex))
+        RecalcularRsd
     End If
 End Sub
 
@@ -1311,20 +1363,19 @@ Private Sub Form_Load()
 
     'imagenes
     CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
-    CmdBotones(1).Picture = LoadResPicture("Buscar", 0)
-    CmdBotones(5).Picture = LoadResPicture("Salir", 0)
-    CmdBotones(4).Picture = LoadResPicture("Valores", 0)
-    CmdBotones(6).Picture = LoadResPicture("Borrar", 0)
-    CmdBotones(7).Picture = LoadResPicture("Imprimir", 0)
-    CmdBotones(8).Picture = LoadResPicture("Modificar", 0)
-    CmdBotones(9).Picture = LoadResPicture("Imprimir", 0)
-    CmdBotones(10).Picture = LoadResPicture("Email", 0)
+    CmdBotones(2).Picture = LoadResPicture("Buscar", 0)
+    CmdBotones(9).Picture = LoadResPicture("Salir", 0)
+  '  CmdBotones(4).Picture = LoadResPicture("Valores", 0)
+    CmdBotones(1).Picture = LoadResPicture("Borrar", 0)
+    CmdBotones(5).Picture = LoadResPicture("Imprimir", 0)
+    CmdBotones(3).Picture = LoadResPicture("Modificar", 0)
+    CmdBotones(8).Picture = LoadResPicture("Email", 0)
 
     CmdDetalle(0).Picture = LoadResPicture("Nuevo", 0)
     CmdDetalle(1).Picture = LoadResPicture("Borrar", 0)
     CmdDetalle(2).Picture = LoadResPicture("Modificar", 0)
     CmdDetalle(3).Picture = LoadResPicture("Cancelar", 0)
-
+       
     CabGrid
     CargarCombos
 
@@ -1386,6 +1437,40 @@ End Sub
 Private Sub SeleccionarTodo(ByVal tb As TextBox)
     tb.SelStart = 0
     tb.SelLength = Len(tb.Text)
+End Sub
+
+Private Sub Grid1_RowColChange(LastRow As Variant, ByVal LastCol As Integer)
+    If mLoadingDetalle Then Exit Sub
+    If Rsd Is Nothing Then Exit Sub
+    If (Rsd.BOF Or Rsd.EOF) Then Exit Sub
+
+    If mEstado = stNuevo And mDetEstado = detIdle Then
+        LinkearDetalleActual
+        RefrescarUI
+    End If
+End Sub
+
+Private Sub LinkearDetalleActual()
+    On Error GoTo salir
+    If mLoadingDetalle Then Exit Sub
+    If Rsd Is Nothing Then Exit Sub
+    If (Rsd.BOF Or Rsd.EOF) Then Exit Sub
+
+    mLoadingDetalle = True
+
+    TxtProducto.Text = Rsd!Producto & ""
+    TxtDetalle.Text = Rsd!Descripcion & ""
+    TxtCantidad.Text = Format(Val(Rsd!Cantidad & ""), nDecimalCant)
+    TxtPDesc.Text = Format(Val(Rsd!PDesc & ""), "0.00")
+    TxtPrecio.Text = Format(Val(Rsd!PrecioUnitFinal & ""), "0.00")
+
+    P.SetComboByItemData CmbDeposito, CLng(Val(Rsd!Deposito & ""))
+    P.SetComboByItemData CmbUnidad, CLng(Val(Rsd!Medida & ""))
+    P.SetComboByItemData CmbCuenta, CLng(Val(Rsd!Cuenta & ""))
+    P.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!ImpId & ""))
+
+salir:
+    mLoadingDetalle = False
 End Sub
 
 Private Sub TxtCantidad_LostFocus()
@@ -1505,7 +1590,7 @@ Private Sub Limpiar()
         If TypeOf ctl Is TextBox Then ctl.Text = ""
     Next ctl
 
-    DtpFecha.Value = Date
+    DTPfecha.Value = Date
     DtpVenc.Value = Date
 
     LblDescuento.Caption = "0.00"
@@ -1522,9 +1607,9 @@ Private Sub Limpiar()
     TxtNoGrav.Text = "0.00"
     LblIva1.Text = "0.00"
     LblPercepcion.Caption = "0.00"
-    lblTotal.Caption = "0.00"
+    LblTotal.Caption = "0.00"
 
-    CmbComprobante.ListIndex = -1
+    Cmbcomprobante.ListIndex = -1
     CmbVend.Text = "NINGUNO"
     CmbCorredor.Text = "Ninguno"
     CmbLista.ListIndex = -1
@@ -1562,8 +1647,8 @@ Private Sub CmdBotones_Click(Index As Integer)
     Select Case Index
         Case 0
             Nuevo
-        Case 5
-            Salir
+        Case 9
+            salir
     End Select
 End Sub
 
@@ -1580,9 +1665,9 @@ Private Sub Nuevo()
         mEstado = stNuevo
 
         CmbCorredor.Text = "Ninguno"
-        P.SetComboByItemData CmbComprobante, nVentaFactura
+        P.SetComboByItemData Cmbcomprobante, nVentaFactura
        
-        CmbComprobante.SetFocus
+        Cmbcomprobante.SetFocus
     Else
         ' acá después va GRABAR
         ' GrabarCabecera + GrabarDetalles...
@@ -1598,14 +1683,16 @@ errHandler:
     MsgBox err.Description, vbCritical, "Nuevo"
 End Sub
 
-Private Sub Salir()
+Private Sub salir()
     If mEstado = stNuevo Then
         If MsgBox("Cancela la creación del comprobante?", vbYesNo + vbQuestion, "Atención") = vbNo Then Exit Sub
         mEstado = stIdle
         Limpiar
         LimpiarDetalles
+        ResetDetalleMemoria
        ' CrearRsDetalles
         RefrescarUI
+        Botones True, False, True, False, False, True
     Else
         Unload Me
     End If
@@ -1675,25 +1762,17 @@ Private Sub TxtPrecio_KeyPress(KeyAscii As Integer)
     SoloNumDecimal KeyAscii, TxtPrecio
 End Sub
 
-Private Sub Botones(bNue As Boolean, bBorr As Boolean, bMod As Boolean, bBus As Boolean, _
-  bVal As Boolean, bModi As Boolean, bSal As Boolean, Optional bPago As Boolean)
+Private Sub Botones(bNue As Boolean, bComun As Boolean, bBuscar As Boolean, bModi As Boolean, bAplica As Boolean, bSalir As Boolean)
   CmdBotones(0).Enabled = bNue
-  CmdBotones(1).Enabled = bBus
-  CmdBotones(6).Enabled = bBorr
-  CmdBotones(4).Enabled = bBus
-  CmdTexto.Enabled = bBus
-  If TxtSucursal.ForeColor = &H40C0& Then
-     CmdBotones(6).Enabled = False
-  End If
-  If TxtNumero.ForeColor = &H40C0& Then
-     CmdBotones(6).Enabled = False
-  End If
-
-  CmdBotones(5).Enabled = bSal
-  CmdBotones(7).Enabled = bBus
-  CmdBotones(8).Enabled = bModi
-  CmdBotones(9).Enabled = bBus
-  CmdBotones(10).Enabled = bBus
+  CmdBotones(1).Enabled = bComun
+  CmdBotones(2).Enabled = bBuscar
+  CmdBotones(3).Enabled = bModi
+  CmdBotones(4).Enabled = bComun
+  CmdBotones(5).Enabled = bComun
+  CmdBotones(6).Enabled = bAplica
+  CmdBotones(7).Enabled = bComun
+  CmdBotones(8).Enabled = bComun
+  CmdBotones(9).Enabled = bSalir
    
 End Sub
 
@@ -1780,6 +1859,7 @@ Private Sub CabGrid()
       .Columns(17).Visible = False
       .Columns(18).Visible = False
       .Columns(19).Visible = False
+      .Columns(20).Visible = False
  End With
 End Sub
 
@@ -1787,7 +1867,7 @@ Private Sub CargarCombos()
   On Error GoTo errHandler
   
  
-  cRsl.CargaCombo CmbComprobante, "UsuariosComprobantesVentas", "Comprobante", "Descripcion", "Valor=1 and Usuario=" & nUsuario
+  cRsl.CargaCombo Cmbcomprobante, "UsuariosComprobantesVentas", "Comprobante", "Descripcion", "Valor=1 and Usuario=" & nUsuario
   cRsl.CargaCombo CmbLista, "ListadePrecio", "ListaPrecio", "Descripcion", ""
   cRsl.CargaCombo CmbCorredor, "Clientes", "Id", "RazonSocial", "Tipo=3"
      
@@ -1817,28 +1897,29 @@ errHandler:
 End Sub
 
 Private Sub CmbComprobante_Click()
+  If mLoadingDetalle Then Exit Sub
   Dim cNum As ClsComprobantesL, nNum As String * 8, nSuc As String * 4
   On Error GoTo errHandler
   
   If mEstado = stNuevo Then
      Set cNum = New ClsComprobantesL
      
-     Set RsComp = cRsl.TraerRsCondi("Comprobantes", "Id", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex))
+     Set RsComp = cRsl.TraerRsCondi("Comprobantes", "Id", "Id=" & Cmbcomprobante.ItemData(Cmbcomprobante.ListIndex))
      
      ' Si en impresion es false Numera cuando Termina de grabar el comprobante, si es verdadero actualiza el numero aca
      
-     If cRsl.TraerValorDeUnCampo("UsuariosComprobantesVentas", "Comanda", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario) = False Then
+     If cRsl.TraerValorDeUnCampo("UsuariosComprobantesVentas", "Comanda", "Comprobante=" & Cmbcomprobante.ItemData(Cmbcomprobante.ListIndex) & " AND Usuario=" & nUsuario) = False Then
         ChkA4.Enabled = False
      Else
         ChkA4.Enabled = True
      End If
      
-     If cRsl.TraerValorDeUnCampo("Impresion", "Numero", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario) = False Then
-        nNum = Format(cNum.TraerUltimoNumeroVenta(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "00000000")
-        nSuc = Format(cNum.TraerSucursalNumero(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "0000")
+     If cRsl.TraerValorDeUnCampo("Impresion", "Numero", "Comprobante=" & Cmbcomprobante.ItemData(Cmbcomprobante.ListIndex) & " AND Usuario=" & nUsuario) = False Then
+        nNum = Format(cNum.TraerUltimoNumeroVenta(Cmbcomprobante.ItemData(Cmbcomprobante.ListIndex)), "00000000")
+        nSuc = Format(cNum.TraerSucursalNumero(Cmbcomprobante.ItemData(Cmbcomprobante.ListIndex)), "0000")
      Else
-        nNum = Format(cNum.TraerUltimoNumero(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "00000000")
-        nSuc = Format(cNum.TraerSucursalNumero(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "0000")
+        nNum = Format(cNum.TraerUltimoNumero(Cmbcomprobante.ItemData(Cmbcomprobante.ListIndex)), "00000000")
+        nSuc = Format(cNum.TraerSucursalNumero(Cmbcomprobante.ItemData(Cmbcomprobante.ListIndex)), "0000")
      End If
      TxtSucursal.Text = nSuc
      TxtNumero.Text = nNum
@@ -1859,66 +1940,62 @@ errHandler:
 End Sub
 
 Public Sub CalcularTotales()
-  On Error GoTo errHandler
+    On Error GoTo errHandler
 
-  Dim nNeto As Double, nIva As Double, nDes As Double
-  Dim nNoGrabado As Double, nPercepcion As Double, nTot As Double
-  Dim nNetoGravado As Double
-  Dim bk As Variant
-  Dim negro As Boolean
+    Dim nNeto As Double, nIva As Double, nDes As Double
+    Dim nNoGrabado As Double, nPercepcion As Double, nTot As Double
+    Dim nNetoGravado As Double
+    Dim bk As Variant
+    Dim tieneBk As Boolean
 
-  nNeto = 0: nIva = 0: nDes = 0: nNoGrabado = 0: nPercepcion = 0: nTot = 0
-  nNetoGravado = 0
+    nNeto = 0: nIva = 0: nDes = 0: nNoGrabado = 0: nPercepcion = 0: nTot = 0
+    nNetoGravado = 0
 
-  negro = EsNegro()
+    If Rsd Is Nothing Then GoTo pintar
+    If Rsd.RecordCount <= 0 Then GoTo pintar
+    If (Rsd.BOF Or Rsd.EOF) Then GoTo pintar   '<<< CLAVE
 
-  If Not (Rsd Is Nothing) Then
-     If Not (Rsd.BOF And Rsd.EOF) Then
-        bk = Rsd.Bookmark
-        Rsd.MoveFirst
-        Do While Not Rsd.EOF
-            nNeto = nNeto + CDbl(Val(Rsd!neto & ""))
-            nIva = nIva + CDbl(Val(Rsd!Impuesto & ""))
-            nDes = nDes + CDbl(Val(Rsd!desc & ""))
-            nNoGrabado = nNoGrabado + CDbl(Val(Rsd!IntTotal & "")) 'interno
-            nTot = nTot + CDbl(Val(Rsd!Total & ""))
-            Rsd.MoveNext
-        Loop
-        Rsd.Bookmark = bk
-     End If
-  End If
+    '--- guardar bookmark solo si hay registro actual válido
+    tieneBk = True
+    bk = Rsd.Bookmark
 
-  '--- neto gravado = neto - interno
-  nNetoGravado = Round(nNeto - nNoGrabado, 2)
+    Rsd.MoveFirst
+    Do While Not Rsd.EOF
+        nNeto = nNeto + CDbl(Val(Rsd!neto & ""))
+        nIva = nIva + CDbl(Val(Rsd!Impuesto & ""))
+        nDes = nDes + CDbl(Val(Rsd!desc & ""))
+        nNoGrabado = nNoGrabado + CDbl(Val(Rsd!IntTotal & ""))
+        nTot = nTot + CDbl(Val(Rsd!Total & ""))
+        Rsd.MoveNext
+    Loop
 
-  '--- percepción (si no es negro)
-  nPercepcion = 0
-  If PuedePercepcion() Then
-     nPercepcion = Round(nNetoGravado * mCliePercepcion / 100, 2)
-  End If
-  LblPercepcion.Caption = Format(nPercepcion, "#0.00")
+    '--- volver si el bookmark sigue siendo válido
+    On Error Resume Next
+    If tieneBk Then Rsd.Bookmark = bk
+    On Error GoTo errHandler
 
-  '--- redondeos finales
-  nNetoGravado = Round(nNetoGravado, 2)
-  nIva = Round(nIva, 2)
-  nDes = Round(nDes, 2)
-  nNoGrabado = Round(nNoGrabado, 2)
-  nTot = Round(nTot, 2)
+pintar:
+    nNetoGravado = Round(nNeto - nNoGrabado, 2)
 
-  '--- pintar UI
-  LblFinanciacion.Caption = "0.00"
-  TxtNoGrav.Text = Format(nNoGrabado, "#0.00")
-  LblNeto.Caption = Format(nNetoGravado, "#0.00")
-  LblBonificacion.Caption = Format(nDes, "#0.00")
-  LblIva1.Text = Format(nIva, "#0.00")
-  LblPercepcion.Caption = Format(nPercepcion, "#0.00")
+    nPercepcion = 0
+    If PuedePercepcion() Then
+        nPercepcion = Round(nNetoGravado * mCliePercepcion / 100, 2)
+    End If
 
-  lblTotal.Caption = Format(nTot + nPercepcion, "#0.00")
-  Exit Sub
+    LblFinanciacion.Caption = "0.00"
+    TxtNoGrav.Text = Format(Round(nNoGrabado, 2), "#0.00")
+    LblNeto.Caption = Format(Round(nNetoGravado, 2), "#0.00")
+    LblBonificacion.Caption = Format(Round(nDes, 2), "#0.00")
+    LblIva1.Text = Format(Round(nIva, 2), "#0.00")
+    LblPercepcion.Caption = Format(Round(nPercepcion, 2), "#0.00")
+    LblTotal.Caption = Format(Round(nTot + nPercepcion, 2), "#0.00")
+    Exit Sub
 
 errHandler:
-  ManejaErrores
+    ManejaErrores
 End Sub
+
+
 
 Private Function PuedePercepcion() As Boolean
     PuedePercepcion = False
@@ -1974,75 +2051,227 @@ End Sub
 
 Private Sub CmdDetalle_Click(Index As Integer)
     Select Case Index
-        Case 0
+        Case 0 'Nuevo/Grabar
             If mDetEstado = detIdle Then
+                'Nuevo renglón
                 mDetEstado = detnuevo
                 LimpiarDetalles
                 RefrescarUI
                 TxtProducto.SetFocus
             Else
-                ' Grabar renglón
-                GrabarDetalleActual
+                'Grabar (nuevo o edición)
+                If mDetEstado = detnuevo Then
+                    GrabarDetalleActual
+                ElseIf mDetEstado = detEditando Then
+                    ActualizarDetalleActual
+                End If
+
                 mDetEstado = detIdle
                 RefrescarUI
-                ' Dejá listo para nuevo renglón o foco donde quieras
                 CmdDetalle(0).SetFocus
             End If
 
-        Case 3
-            ' Cancelar renglón
-            mDetEstado = detIdle
-            LimpiarDetalles
+        Case 1 'Borrar
+            BorrarDetalleActual
+
+        Case 2 'Modificar
+            If Rsd Is Nothing Then Exit Sub
+            If (Rsd.BOF And Rsd.EOF) Then Exit Sub
+            mDetEstado = detEditando
             RefrescarUI
-            CmdDetalle(0).SetFocus
+            TxtDetalle.SetFocus
+
+        Case 3 'Cancelar
+            mDetEstado = detIdle
+            LinkearDetalleDesdeRsd 'volver a lo que estaba seleccionado
+            RefrescarUI
     End Select
 End Sub
 
 
-Private Sub GrabarDetalleActual()
-  On Error GoTo errHandler
+Private Sub BorrarDetalleActual()
+    On Error GoTo errHandler
 
-  Dim negro As Boolean
-  negro = EsNegro()
+    If Rsd Is Nothing Then Exit Sub
+    If (Rsd.BOF Or Rsd.EOF) Then Exit Sub
+    If Rsd.RecordCount <= 0 Then Exit Sub
 
-  Rsd.AddNew
-  Rsd!Producto = TxtProducto.Text
-  Rsd!Descripcion = TxtDetalle.Text
-  Rsd!Cuenta = CmbCuenta.ItemData(CmbCuenta.ListIndex)
-  Rsd!Deposito = CmbDeposito.ItemData(CmbDeposito.ListIndex)
-  Rsd!Medida = CmbUnidad.ItemData(CmbUnidad.ListIndex)
-  Rsd!Cantidad = CDbl(Val(TxtCantidad.Text))
-  Rsd!PDesc = CDbl(Val(TxtPDesc.Text))
+    ' 1) PREGUNTA SIEMPRE PRIMERO
+    If MsgBox("¿Eliminar el renglón seleccionado?", vbYesNo + vbQuestion, "Eliminar") = vbNo Then Exit Sub
 
-  Rsd!ImpId = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
-  Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
+    ' 2) BLOQUEAR EVENTOS (grid/combos)
+    If mLoadingDetalle Then Exit Sub
+    mLoadingDetalle = True
 
-  If negro Then
-      Rsd!ImpPorc = 0
-      Rsd!IntTipo = 0
-      Rsd!IntValor = 0
-  Else
-      Rsd!ImpPorc = mProdTasa
-      Rsd!IntTipo = mProdIntTipo
-      Rsd!IntValor = mProdIntValor
-  End If
+    ' 3) Elegir a dónde caer después del delete
+    Dim bkIr As Variant
+    bkIr = Null
 
-  CalcularImportesRenglon Rsd
-  Rsd.Update
+    If Rsd.RecordCount > 1 Then
+        Rsd.MoveNext
+        If Not Rsd.EOF Then
+            bkIr = Rsd.Bookmark
+        Else
+            Rsd.MovePrevious
+            bkIr = Rsd.Bookmark
+        End If
+        ' volver al que estaba seleccionado para borrar ESE
+        Rsd.Bookmark = bkIr
+        Rsd.MovePrevious '<<< volvemos 1 paso para borrar el que se veía (opcional según tu grid)
+        If Rsd.BOF Then Rsd.MoveFirst
+    End If
 
-  CalcularTotales
-  Exit Sub
+    ' 4) BORRAR (NO HAY Update)
+    Rsd.Delete adAffectCurrent
+
+    ' 5) Reposicionar / limpiar
+    If Rsd.RecordCount <= 0 Then
+        LimpiarDetalles
+    Else
+        On Error Resume Next
+        If Not IsNull(bkIr) Then Rsd.Bookmark = bkIr
+        If err.Number <> 0 Then
+            err.Clear
+            Rsd.MoveFirst
+        End If
+        On Error GoTo errHandler
+
+        LinkearDetalleActual
+    End If
+
+    CalcularTotales
+    RefrescarUI
+
+salir:
+    mLoadingDetalle = False
+    Exit Sub
 
 errHandler:
-  ManejaErrores
+    mLoadingDetalle = False
+    ManejaErrores
 End Sub
 
 
-Private Sub CalcularImportesRenglon(ByRef r As ADODB.Recordset)
+Private Sub IniciarEdicionDetalleActual()
+    On Error GoTo errHandler
+
+    If Rsd Is Nothing Then Exit Sub
+    If (Rsd.BOF And Rsd.EOF) Then Exit Sub
+
+    'paso a modo edición
+    mDetEstado = detEditando
+    RefrescarUI
+
+    'cargo controles desde el rs
+    TxtProducto.Text = Rsd!Producto & ""
+    TxtDetalle.Text = Rsd!Descripcion & ""
+
+    P.SetComboByItemData CmbCuenta, CLng(Val(Rsd!Cuenta & ""))
+    P.SetComboByItemData CmbDeposito, CLng(Val(Rsd!Deposito & ""))
+    P.SetComboByItemData CmbUnidad, CLng(Val(Rsd!Medida & ""))
+    P.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!ImpId & ""))
+
+    TxtCantidad.Text = Format(CDbl(Val(Rsd!Cantidad & "")), nDecimalCant)
+    TxtPDesc.Text = Format(CDbl(Val(Rsd!PDesc & "")), "0.00")
+
+    'ojo: el precio base NO lo guardás en el rs (todavía).
+    'lo más práctico: guardarlo también (te lo propongo abajo)
+    'por ahora, lo dejamos como está (o lo re-traés del producto)
+
+    TxtPrecio.SetFocus
+    Exit Sub
+
+errHandler:
+    ManejaErrores
+End Sub
+
+
+Private Sub ActualizarDetalleActual()
+    On Error GoTo errHandler
+
+    Dim negro As Boolean
+    negro = EsNegro()
+
+    If Rsd Is Nothing Then Exit Sub
+    If (Rsd.BOF Or Rsd.EOF) Then Exit Sub
+
+    Rsd!Producto = TxtProducto.Text
+    Rsd!Descripcion = TxtDetalle.Text
+    Rsd!Cuenta = CmbCuenta.ItemData(CmbCuenta.ListIndex)
+    Rsd!Deposito = CmbDeposito.ItemData(CmbDeposito.ListIndex)
+    Rsd!Medida = CmbUnidad.ItemData(CmbUnidad.ListIndex)
+    Rsd!Cantidad = CDbl(Val(TxtCantidad.Text))
+    Rsd!PDesc = CDbl(Val(TxtPDesc.Text))
+
+    Rsd!ImpId = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
+    Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
+
+    If negro Then
+        Rsd!ImpPorc = 0
+        Rsd!IntTipo = ""
+        Rsd!IntValor = 0
+    Else
+        'Si querés, acá podés respetar el impuesto elegido en combo
+        Rsd!ImpPorc = mProdTasa
+        Rsd!IntTipo = mProdIntTipo
+        Rsd!IntValor = mProdIntValor
+    End If
+
+    CalcularImportesRenglon Rsd
+    Rsd.Update
+
+    CalcularTotales
+    Exit Sub
+
+errHandler:
+    ManejaErrores
+End Sub
+
+
+Private Sub GrabarDetalleActual()
+    On Error GoTo errHandler
+
+    Dim negro As Boolean
+    negro = EsNegro()
+
+    Rsd.AddNew
+    Rsd!Producto = TxtProducto.Text
+    Rsd!Descripcion = TxtDetalle.Text
+    Rsd!Cuenta = CmbCuenta.ItemData(CmbCuenta.ListIndex)
+    Rsd!Deposito = CmbDeposito.ItemData(CmbDeposito.ListIndex)
+    Rsd!Medida = CmbUnidad.ItemData(CmbUnidad.ListIndex)
+    Rsd!Cantidad = CDbl(Val(TxtCantidad.Text))
+    Rsd!PDesc = CDbl(Val(TxtPDesc.Text))
+
+    Rsd!ImpId = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
+    Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
+
+    If negro Then
+        Rsd!ImpPorc = 0
+        Rsd!IntTipo = ""
+        Rsd!IntValor = 0
+    Else
+        Rsd!ImpPorc = mProdTasa
+        Rsd!IntTipo = mProdIntTipo
+        Rsd!IntValor = mProdIntValor
+    End If
+
+    CalcularImportesRenglon Rsd
+    Rsd.Update
+
+    CalcularTotales
+    Exit Sub
+
+errHandler:
+    ManejaErrores
+End Sub
+
+
+Private Sub CalcularImportesRenglon(ByRef R As ADODB.Recordset)
     On Error GoTo errHandler
     
     Dim tipo As String
-    tipo = UCase$(Trim$(r!IntTipo & ""))
+    tipo = UCase$(Trim$(R!IntTipo & ""))
 
     Dim cant As Double
     Dim precioBase As Double
@@ -2061,17 +2290,17 @@ Private Sub CalcularImportesRenglon(ByRef r As ADODB.Recordset)
     Dim descMonto As Double
 
     '--- básicos
-    cant = CDbl(Val(r!Cantidad))
+    cant = CDbl(Val(R!Cantidad))
     If cant <= 0 Then cant = 0
 
     precioBase = CDbl(Val(TxtPrecio.Text))
-    tasa = CDbl(Val(r!ImpPorc)) '0 si negro
+    tasa = CDbl(Val(R!ImpPorc)) '0 si negro
 
     '--- % desc/rec
     porcDescCli = 0
     If Not (RsCli Is Nothing) Then porcDescCli = CDbl(Val(RsCli!DescPorc & ""))
 
-    porcDescLin = CDbl(Val(r!PDesc & ""))
+    porcDescLin = CDbl(Val(R!PDesc & ""))
 
     porcRecCli = 0
     If Not (RsCli Is Nothing) Then porcRecCli = CDbl(Val(RsCli!PorcRecargo & ""))
@@ -2091,11 +2320,11 @@ Private Sub CalcularImportesRenglon(ByRef r As ADODB.Recordset)
 
     '--- 3) interno (se calcula sobre el precio ya con rec/desc)
     intUnit = 0
-    If CDbl(Val(r!IntValor & "")) <> 0 Then
+    If CDbl(Val(R!IntValor & "")) <> 0 Then
       If tipo = "FIJO" Then
-        intUnit = CDbl(Val(r!IntValor & ""))
+        intUnit = CDbl(Val(R!IntValor & ""))
       ElseIf tipo = "PORCENTAJE" Then
-         intUnit = precioConDesc * (CDbl(Val(r!IntValor & "")) / 100#)
+         intUnit = precioConDesc * (CDbl(Val(R!IntValor & "")) / 100#)
       Else
         intUnit = 0
       End If
@@ -2103,7 +2332,7 @@ Private Sub CalcularImportesRenglon(ByRef r As ADODB.Recordset)
     intTot = intUnit * cant
 
     '--- 4) neto/final/iva
-    If Val(r!ImpIncluido & "") = 1 Then
+    If Val(R!ImpIncluido & "") = 1 Then
         'precioConDesc es FINAL (con IVA) y puede incluir interno
         finalUnit = precioConDesc
 
@@ -2141,16 +2370,16 @@ Private Sub CalcularImportesRenglon(ByRef r As ADODB.Recordset)
     intTot = Round(intTot, 2)
 
     '--- 7) asignar
-    r!PrecioUnitNeto = netoUnit
-    r!PrecioUnitFinal = finalUnit
-    r!neto = neto
-    r!Impuesto = impu
-    r!desc = descMonto
+    R!PrecioUnitNeto = netoUnit
+    R!PrecioUnitFinal = finalUnit
+    R!neto = neto
+    R!Impuesto = impu
+    R!desc = descMonto
 
-    r!intUnit = intUnit
-    r!IntTotal = intTot
+    R!intUnit = intUnit
+    R!IntTotal = intTot
 
-    r!Total = tot  'tot ya incluye interno porque finalUnit lo incluye
+    R!Total = tot  'tot ya incluye interno porque finalUnit lo incluye
 
     Exit Sub
 errHandler:
@@ -2181,11 +2410,16 @@ Private Sub TxtPDesc_Change()
 End Sub
 
 Private Function DetalleOK() As Boolean
-    Dim bk As Variant
+    On Error GoTo salir
+
+    DetalleOK = False
     If Rsd Is Nothing Then Exit Function
+    If Rsd.RecordCount <= 0 Then Exit Function
     If (Rsd.BOF And Rsd.EOF) Then Exit Function
 
+    Dim bk As Variant
     bk = Rsd.Bookmark
+
     Rsd.MoveFirst
     Do While Not Rsd.EOF
         If Len(Trim$(Rsd!Descripcion & "")) > 0 Then
@@ -2194,7 +2428,13 @@ Private Function DetalleOK() As Boolean
         End If
         Rsd.MoveNext
     Loop
+
+    ' volver si el bookmark sigue siendo válido
+    On Error Resume Next
     Rsd.Bookmark = bk
+    On Error GoTo 0
+
+salir:
 End Function
 
 Private Function EsNegro() As Boolean

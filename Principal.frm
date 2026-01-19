@@ -1816,7 +1816,7 @@ Private Sub Permisos()
         MenuSaldoCtaCteBan.Visible = P.HasAny(67) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=67 and Usuario=" & nUsuario)
         MenuCtaCbles.Visible = P.HasAny(68) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=68 and Usuario=" & nUsuario)
         If CajaChequeTer.Visible = False And MenuSaldoCtaCteBan.Visible = False And MenuCtaCbles.Visible = False Then
-           SepCa.Visible = False
+        
         End If
      End If
      If MenuInforCaja.Visible = False Then
