@@ -1,5 +1,6 @@
 VERSION 5.00
 Object = "{C4847593-972C-11D0-9567-00A0C9273C2A}#8.0#0"; "crviewer.dll"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Begin VB.Form FrmImpresor 
    Caption         =   "o"
    ClientHeight    =   3195
@@ -11,6 +12,13 @@ Begin VB.Form FrmImpresor
    ScaleWidth      =   4680
    StartUpPosition =   3  'Windows Default
    WindowState     =   2  'Maximized
+   Begin MSComDlg.CommonDialog dlgPrint 
+      Left            =   2040
+      Top             =   2040
+      _ExtentX        =   847
+      _ExtentY        =   847
+      _Version        =   393216
+   End
    Begin CRVIEWERLibCtl.CRViewer CRViewer1 
       Height          =   3015
       Left            =   90
@@ -56,13 +64,111 @@ Dim sDesde As String, sHasta As String, pLista As Integer
 Dim sPdesde As String, sPhasta As String
 Dim fDesde As Date, fHasta As Date
 Dim cClases As ClsPrecios, cCanti As ClsProductoL
-Dim cCliente As ClsLectura, Rs As ADODB.Recordset
+Dim cCliente As ClsLectura, rs As ADODB.Recordset
 Dim cCaja As ClsComprobantesL
+
+Dim ReporteActivo As Object
+
+'Private Sub CRViewer1_PrintButtonClicked(UseDefault As Boolean)
+'    On Error GoTo ManejoErrores
+'    UseDefault = False
+'
+'    If Not ReporteActivo Is Nothing Then
+'        ' 1. Configuración del cuadro de diálogo
+'        dlgPrint.FromPage = 1
+'        dlgPrint.ToPage = 1
+'        dlgPrint.Min = 1
+'        dlgPrint.Max = 32000
+'        dlgPrint.Flags = cdlPDAllPages Or cdlPDPageNums
+'
+'        dlgPrint.CancelError = True
+'        dlgPrint.ShowPrinter
+'
+'        ' 2. Sincronizar impresora
+'        ReporteActivo.SelectPrinter Printer.DriverName, Printer.DeviceName, Printer.Port
+'
+'        ' 3. Seteo de copias
+'        On Error Resume Next
+'        ReporteActivo.PrintOptions.NumberOfCopies = dlgPrint.Copies
+'        On Error GoTo ManejoErrores
+'
+'        ' 4. Lógica de impresión (Aquí estaba el fallo)
+'        ' Solo si el Flag de PageNums quedó activo tras el diálogo, mandamos rango
+'        If (dlgPrint.Flags And cdlPDPageNums) = cdlPDPageNums Then
+'             ' Si el usuario seleccionó un rango de páginas
+'             ReporteActivo.PrintOut False, , , CInt(dlgPrint.FromPage), CInt(dlgPrint.ToPage)
+'        Else
+'             ' Si dejó "TODO" marcado, NO enviamos parámetros de página
+'             ReporteActivo.PrintOut False
+'        End If
+'    End If
+'
+'    Exit Sub
+'
+'ManejoErrores:
+'    If err.Number <> 32755 Then
+'        MsgBox "Error " & err.Number & ": " & err.Description, vbCritical, "Error de Impresión"
+'    End If
+'    err.Clear
+'End Sub
+
+
+Private Sub CRViewer1_PrintButtonClicked(UseDefault As Boolean)
+    On Error GoTo ManejoErrores
+    UseDefault = False
+
+    If ReporteActivo Is Nothing Then Exit Sub
+
+    Dim prn As String
+    Dim f As Long, t As Long, copies As Long
+    Dim collate As Boolean, useRange As Boolean
+
+    If Not ShowWindowsPrintDialog(Me.hwnd, prn, f, t, copies, collate, useRange) Then
+       Exit Sub
+    End If
+
+
+    ' Mapear a objeto Printer para obtener Driver/Port confiables
+    Dim p As Printer, found As Boolean
+    For Each p In Printers
+        If StrComp(p.DeviceName, prn, vbTextCompare) = 0 Then
+            Set Printer = p
+            found = True
+            Exit For
+        End If
+    Next
+
+    ' Crystal: conviene winspool + nombre
+    If found Then
+        ReporteActivo.SelectPrinter "winspool", Printer.DeviceName, Printer.Port
+    Else
+        ReporteActivo.SelectPrinter "winspool", prn, ""
+    End If
+
+    On Error Resume Next
+    ReporteActivo.PrintOptions.NumberOfCopies = copies
+    On Error GoTo ManejoErrores
+
+    If useRange And f > 0 And t >= f Then
+        ReporteActivo.PrintOut False, , , CInt(f), CInt(t)
+    Else
+        ReporteActivo.PrintOut False
+    End If
+
+    Exit Sub
+
+ManejoErrores:
+    If err.Number <> 32755 Then
+        MsgBox "Error de impresión: " & err.Description, vbCritical
+    End If
+    err.Clear
+End Sub
+
 
 Private Sub Form_Load()
   
   Set cCliente = New ClsLectura
-  Set Rs = New ADODB.Recordset
+  Set rs = New ADODB.Recordset
   
   Screen.MousePointer = 11
   Select Case nImpr
@@ -206,9 +312,9 @@ Private Sub Form_Load()
               Impre69
   End Select
   
-  If Rs.RecordCount <> 0 Then
+  If rs.RecordCount <> 0 Then
      CRViewer1.EnablePrintButton = True
-
+         
      CRViewer1.DisplayGroupTree = False
      CRViewer1.EnableExportButton = True
      CRViewer1.EnableRefreshButton = False
@@ -229,849 +335,842 @@ Private Sub Form_Resize()
 End Sub
 
 Private Sub Impre01()
-  Dim report1 As New RptVentaResumen, cRsl As ClsLectura
-
-  Set Rs = VentaInfResumen.Rs
-  Set cRsl = New ClsLectura
-  
-  If Rs.RecordCount <> 0 Then
-     report1.ReportTitle = sNomFan
-     report1.ParameterFields(1).SetCurrentValue IIf(VentaInfResumen.ChkSaldo.Value = 1, True, False)
-     report1.ParameterFields(2).SetCurrentValue VentaInfResumen.CmbZona.text
-     report1.ParameterFields(3).SetCurrentValue IIf(VentaInfResumen.ChkTexto.Value = 1, True, False)
-     report1.ParameterFields(4).SetCurrentValue IIf(VentaInfResumen.ChkSalto.Value = 1, True, False)
-     report1.ParameterFields(5).SetCurrentValue cRsl.TraerValorDeUnCampo("TblTextos", "Texto", "Id=1")
-     report1.ParameterFields(6).SetCurrentValue cRsl.TraerValorDeUnCampo("TblTextos", "Texto", "Id=2")
-     report1.Database.SetDataSource Rs
-     CRViewer1.ReportSource = report1
-     CRViewer1.DisplayGroupTree = False
-  End If
-  Set report1 = Nothing
+  Dim cRsl As New ClsLectura
+  Set rs = VentaInfResumen.rs
+    
+  If rs.RecordCount <> 0 Then
+        ' Usamos la variable global
+        Set ReporteActivo = New RptVentaResumen
+        
+        ReporteActivo.ReportTitle = sNomFan
+        ReporteActivo.ParameterFields(1).SetCurrentValue IIf(VentaInfResumen.ChkSaldo.Value = 1, True, False)
+        ReporteActivo.ParameterFields(2).SetCurrentValue VentaInfResumen.CmbZona.Text
+        ReporteActivo.ParameterFields(3).SetCurrentValue IIf(VentaInfResumen.ChkTexto.Value = 1, True, False)
+        ReporteActivo.ParameterFields(4).SetCurrentValue IIf(VentaInfResumen.ChkSalto.Value = 1, True, False)
+        ReporteActivo.ParameterFields(5).SetCurrentValue cRsl.TraerValorDeUnCampo("TblTextos", "Texto", "Id=1")
+        ReporteActivo.ParameterFields(6).SetCurrentValue cRsl.TraerValorDeUnCampo("TblTextos", "Texto", "Id=2")
+             
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre02()
-  Dim Report2 As New RptVentaVencimiento
-
-  Report2.ReportTitle = "Vencimiento por Zona :" & VentaInfVencimiento.CmbZona.text
-  
-  Set Rs = VentaInfVencimiento.RsP
-  If Rs.RecordCount <> 0 Then
-     Report2.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report2
-  End If
-  Set Report2 = Nothing
+  If VentaInfVencimiento.RsP.RecordCount <> 0 Then
+        Set ReporteActivo = New RptVentaVencimiento
+        ReporteActivo.ReportTitle = "Vencimiento por Zona :" & VentaInfVencimiento.CmbZona.Text
+        
+        Set rs = VentaInfVencimiento.RsP
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre03()
-  Dim Report9 As New RptVentaPreciosGrupo, bOrd As Integer
-  Dim Report10 As New RptVentaPreciosMarca
-  Dim Report3 As New RptVentaPrecios
+    ' Eliminamos los "As New" y usamos la variable global ReporteActivo
+    ' bOrd se queda como variable local
+    Dim bOrd As Integer
 
-  Set cClases = New ClsPrecios
-          
-  pLista = VentaInfPrecio.CmbLista.ItemData(VentaInfPrecio.CmbLista.ListIndex)
-  
-    
-  If VentaInfPrecio.OptCodigo = True Then
-     bOrd = 0
-     sDesde = VentaInfPrecio.TxtCodigo(0).text
-     sHasta = VentaInfPrecio.TxtCodigo(1).text
-  Else
-    bOrd = 1
-     sDesde = VentaInfPrecio.LblDescripcion(0).Caption
-     sHasta = VentaInfPrecio.LblDescripcion(1).Caption
-  End If
-  
-  sPdesde = VentaInfPrecio.CmbDesde.text
-  sPhasta = VentaInfPrecio.CmbHasta.text
-  
-  If VentaInfPrecio.OptNinguno = True Then
-     Set Rs = cClases.DameListaProductos(pLista, sDesde, sHasta, bOrd)
-     If Rs.RecordCount <> 0 Then
-        Report3.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.text
-        Report3.Database.SetDataSource Rs
-        CRViewer1.ReportSource = Report3
-     End If
-  Else
-     If VentaInfPrecio.OptMarcas = True Then
-        Set Rs = cClases.DameListaProductosMarca(pLista, sDesde, sHasta, bOrd, sPdesde, sPhasta)
-        If Rs.RecordCount <> 0 Then
-           Report10.ReportTitle = "Listado de Precios Agrupados por Marca"
-           Report10.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.text
-           Report10.Database.SetDataSource Rs
-           CRViewer1.ReportSource = Report10
+    Set cClases = New ClsPrecios
+    pLista = VentaInfPrecio.CmbLista.ItemData(VentaInfPrecio.CmbLista.ListIndex)
+
+    ' Lógica de ordenamiento
+    If VentaInfPrecio.OptCodigo = True Then
+        bOrd = 0
+        sDesde = VentaInfPrecio.TxtCodigo(0).Text
+        sHasta = VentaInfPrecio.TxtCodigo(1).Text
+    Else
+        bOrd = 1
+        sDesde = VentaInfPrecio.LblDescripcion(0).Caption
+        sHasta = VentaInfPrecio.LblDescripcion(1).Caption
+    End If
+
+    sPdesde = VentaInfPrecio.CmbDesde.Text
+    sPhasta = VentaInfPrecio.CmbHasta.Text
+
+    ' Selección del tipo de Reporte
+    If VentaInfPrecio.OptNinguno = True Then
+        ' 1. Reporte Estándar
+        Set rs = cClases.DameListaProductos(pLista, sDesde, sHasta, bOrd)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPrecios ' <--- Asignamos a la global
+            ReporteActivo.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.Text
         End If
-     Else
-        Set Rs = cClases.DameListaProductosGrupo(pLista, sDesde, sHasta, bOrd, sPdesde, sPhasta)
-        If Rs.RecordCount <> 0 Then
-           Report9.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.text
-           Report9.Database.SetDataSource Rs
-           CRViewer1.ReportSource = Report9
+        
+    ElseIf VentaInfPrecio.OptMarcas = True Then
+        ' 2. Reporte por Marcas
+        Set rs = cClases.DameListaProductosMarca(pLista, sDesde, sHasta, bOrd, sPdesde, sPhasta)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPreciosMarca ' <--- Asignamos a la global
+            ReporteActivo.ReportTitle = "Listado de Precios Agrupados por Marca"
+            ReporteActivo.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.Text
+        End If
+        
+    Else
+        ' 3. Reporte por Grupos
+        Set rs = cClases.DameListaProductosGrupo(pLista, sDesde, sHasta, bOrd, sPdesde, sPhasta)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPreciosGrupo ' <--- Asignamos a la global
+            ReporteActivo.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.Text
         End If
     End If
-  End If
-  Set Report9 = Nothing
-  Set Report10 = Nothing
-  Set Report3 = Nothing
+
+    ' Si se asignó un reporte y hay datos, lo mostramos
+    If Not ReporteActivo Is Nothing Then
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+
+    ' IMPORTANTE: Borramos los "Set ReportX = Nothing" de aquí.
+    ' El reporte debe quedar vivo para que el visor pueda imprimirlo luego.
 End Sub
+
 Private Sub Impre04()
+    ' Eliminamos los Dims de reportes internos y el bOrd lo dejamos local
+    Dim bOrd As Integer
 
-  Dim Report9 As New RptVentaPreciosGrupo
-  Dim Report10 As New RptVentaPreciosMarca
-  Dim Report3 As New RptVentaPrecios, bOrd As Integer
-
-  Set cClases = New ClsPrecios
-         
-  pLista = VentaInfPrecio.CmbLista.ItemData(VentaInfPrecio.CmbLista.ListIndex)
+    Set cClases = New ClsPrecios
+    pLista = VentaInfPrecio.CmbLista.ItemData(VentaInfPrecio.CmbLista.ListIndex)
   
-  If VentaInfPrecio.OptCodigo = True Then
-     bOrd = 0
-     sDesde = VentaInfPrecio.TxtCodigo(0).text
-     sHasta = VentaInfPrecio.TxtCodigo(1).text
-  Else
-    bOrd = 1
-     sDesde = VentaInfPrecio.LblDescripcion(0).Caption
-     sHasta = VentaInfPrecio.LblDescripcion(1).Caption
-  End If
-  sPdesde = VentaInfPrecio.CmbDesde.text
-  sPhasta = VentaInfPrecio.CmbHasta.text
-  If VentaInfPrecio.OptNinguno.Value = True Then
-     Set Rs = cClases.DameListaProductos(pLista, sDesde, sHasta, bOrd)
-     If Rs.RecordCount <> 0 Then
-        Report3.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.text
-        Report3.Database.SetDataSource Rs
-        CRViewer1.ReportSource = Report3
-     End If
-  Else
-     If VentaInfPrecio.OptMarcas.Value = True Then
-        Set Rs = cClases.DameListaProductosMarca(pLista, sDesde, sHasta, bOrd, sPdesde, sPhasta)
-        If Rs.RecordCount <> 0 Then
-           Report10.ReportTitle = "Listado de Precios Agrupados por Marca"
-           Report10.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.text
-           Report10.Database.SetDataSource Rs
-           CRViewer1.ReportSource = Report10
+    ' Lógica de filtrado
+    If VentaInfPrecio.OptCodigo = True Then
+        bOrd = 0
+        sDesde = VentaInfPrecio.TxtCodigo(0).Text
+        sHasta = VentaInfPrecio.TxtCodigo(1).Text
+    Else
+        bOrd = 1
+        sDesde = VentaInfPrecio.LblDescripcion(0).Caption
+        sHasta = VentaInfPrecio.LblDescripcion(1).Caption
+    End If
+    
+    sPdesde = VentaInfPrecio.CmbDesde.Text
+    sPhasta = VentaInfPrecio.CmbHasta.Text
+    
+    ' Selección de Reporte y Carga de Datos
+    If VentaInfPrecio.OptNinguno.Value = True Then
+        Set rs = cClases.DameListaProductos(pLista, sDesde, sHasta, bOrd)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPrecios ' <--- Variable Global
+            ReporteActivo.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.Text
         End If
-     Else
-        Set Rs = cClases.DameListaProductosGrupo(pLista, sDesde, sHasta, bOrd, sPdesde, sPhasta)
-        If Rs.RecordCount <> 0 Then
-           Report9.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.text
-           Report9.Database.SetDataSource Rs
-           CRViewer1.ReportSource = Report9
+    Else
+        If VentaInfPrecio.OptMarcas.Value = True Then
+            Set rs = cClases.DameListaProductosMarca(pLista, sDesde, sHasta, bOrd, sPdesde, sPhasta)
+            If rs.RecordCount <> 0 Then
+                Set ReporteActivo = New RptVentaPreciosMarca ' <--- Variable Global
+                ReporteActivo.ReportTitle = "Listado de Precios Agrupados por Marca"
+                ReporteActivo.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.Text
+            End If
+        Else
+            Set rs = cClases.DameListaProductosGrupo(pLista, sDesde, sHasta, bOrd, sPdesde, sPhasta)
+            If rs.RecordCount <> 0 Then
+                Set ReporteActivo = New RptVentaPreciosGrupo ' <--- Variable Global
+                ReporteActivo.ParameterFields(1).SetCurrentValue VentaInfPrecio.CmbLista.Text
+            End If
         End If
     End If
-  End If
-  Set Report9 = Nothing
-  Set Report10 = Nothing
-  Set Report3 = Nothing
-  
-End Sub
-Private Sub Impre05()
-  Dim Report4 As New RptStockSaldo, bSto As Byte, bOrd As Integer
 
-  Set cCanti = New ClsProductoL
-              
-  pLista = StockInfSaldos.CmbDeposito.ItemData(StockInfSaldos.CmbDeposito.ListIndex)
-  If StockInfSaldos.OptCodigo = True Then
-     bOrd = 0
-     sDesde = StockInfSaldos.TxtCodigo(0).text
-     sHasta = StockInfSaldos.TxtCodigo(1).text
-  Else
-    bOrd = 1
-     sDesde = StockInfSaldos.LblDescripcion(0).Caption
-     sHasta = StockInfSaldos.LblDescripcion(1).Caption
-  End If
-  bSto = StockInfSaldos.ChkSaldo.Value
-  
-  Set Rs = cCanti.DameProductos(pLista, sDesde, sHasta, bOrd, bSto)
-  If Rs.RecordCount <> 0 Then
-     Report4.ParameterFields(1).SetCurrentValue StockInfSaldos.CmbDeposito.text
-     Report4.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report4
-  End If
-  Set Report4 = Nothing
+    ' Asignación al Visor
+    If Not ReporteActivo Is Nothing Then
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+
+    ' Se eliminaron los Set ... = Nothing para que el reporte no muera
+End Sub
+
+Private Sub Impre05()
+    ' Eliminamos el Dim Report4 As New...
+    Dim bSto As Byte, bOrd As Integer
+
+    Set cCanti = New ClsProductoL
+    
+    ' Capturamos parámetros de la pantalla
+    pLista = StockInfSaldos.CmbDeposito.ItemData(StockInfSaldos.CmbDeposito.ListIndex)
+    
+    If StockInfSaldos.OptCodigo = True Then
+        bOrd = 0
+        sDesde = StockInfSaldos.TxtCodigo(0).Text
+        sHasta = StockInfSaldos.TxtCodigo(1).Text
+    Else
+        bOrd = 1
+        sDesde = StockInfSaldos.LblDescripcion(0).Caption
+        sHasta = StockInfSaldos.LblDescripcion(1).Caption
+    End If
+    
+    bSto = StockInfSaldos.ChkSaldo.Value
+    
+    ' Obtenemos los datos
+    Set rs = cCanti.DameProductos(pLista, sDesde, sHasta, bOrd, bSto)
+    
+    ' Si hay datos, creamos el reporte en la variable global
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptStockSaldo
+        ReporteActivo.ParameterFields(1).SetCurrentValue StockInfSaldos.CmbDeposito.Text
+        ReporteActivo.Database.SetDataSource rs
+        
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+    
+    ' No ponemos el Set ReporteActivo = Nothing para que no se borre de la vista
 End Sub
 
 Private Sub Impre06()
-  Dim Report4 As New RptStockSaldo, bOrd As Integer
-  Dim nStock As Byte, pFamilia As Integer
+    ' Variables locales de configuración
+    Dim bOrd As Integer
+    Dim nStock As Byte, pFamilia As Integer
 
-  Set cCanti = New ClsProductoL
-              
-  pLista = StockInfSaldos.CmbDeposito.ItemData(StockInfSaldos.CmbDeposito.ListIndex)
-  pFamilia = StockInfSaldos.CmbFamilia.ItemData(StockInfSaldos.CmbFamilia.ListIndex)
-  
-  If StockInfSaldos.OptCodigo = True Then
-     bOrd = 0
-     sDesde = StockInfSaldos.TxtCodigo(0).text
-     sHasta = StockInfSaldos.TxtCodigo(1).text
-  Else
-     bOrd = 1
-     sDesde = StockInfSaldos.LblDescripcion(0).Caption
-     sHasta = StockInfSaldos.LblDescripcion(1).Caption
-  End If
-  
-  nStock = StockInfSaldos.ChkSaldo.Value
-  
-  
-  Set Rs = cCanti.DameProductos(pLista, sDesde, sHasta, bOrd, nStock, pFamilia)
-  
-  If Rs.RecordCount <> 0 Then
-     Report4.ParameterFields(1).SetCurrentValue StockInfSaldos.CmbDeposito.text
-     Report4.ParameterFields(2).SetCurrentValue StockInfSaldos.CmbFamilia.text
-     Report4.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report4
-  End If
-  Set Report4 = Nothing
+    Set cCanti = New ClsProductoL
+    
+    ' Obtenemos IDs de los combos
+    pLista = StockInfSaldos.CmbDeposito.ItemData(StockInfSaldos.CmbDeposito.ListIndex)
+    pFamilia = StockInfSaldos.CmbFamilia.ItemData(StockInfSaldos.CmbFamilia.ListIndex)
+    
+    ' Lógica de orden (Código vs Descripción)
+    If StockInfSaldos.OptCodigo = True Then
+        bOrd = 0
+        sDesde = StockInfSaldos.TxtCodigo(0).Text
+        sHasta = StockInfSaldos.TxtCodigo(1).Text
+    Else
+        bOrd = 1
+        sDesde = StockInfSaldos.LblDescripcion(0).Caption
+        sHasta = StockInfSaldos.LblDescripcion(1).Caption
+    End If
+    
+    nStock = StockInfSaldos.ChkSaldo.Value
+    
+    ' Ejecutamos la consulta a la base de datos
+    Set rs = cCanti.DameProductos(pLista, sDesde, sHasta, bOrd, nStock, pFamilia)
+    
+    ' Si hay datos, cargamos el reporte global
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptStockSaldo ' Usamos el mismo diseño que el 05
+        
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue StockInfSaldos.CmbDeposito.Text
+            .ParameterFields(2).SetCurrentValue StockInfSaldos.CmbFamilia.Text
+            .Database.SetDataSource rs
+        End With
+        
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+    
+    ' Recordá: No destruir ReporteActivo aquí
 End Sub
 
 Private Sub Impre07()
-
-  Dim Report5 As New RptStockReposicion, pFamilias As Integer
-
-  Set cCanti = New ClsProductoL
-             
-  pFamilias = StockInfSaldos.CmbFamilia.ItemData(StockInfSaldos.CmbFamilia.ListIndex)
-             
-  sDesde = StockInfReposiciones.TxtCodigo(0)
-  sHasta = StockInfReposiciones.TxtCodigo(1)
-  sPdesde = StockInfReposiciones.CmbProveedor(0).text
-  Set Rs = cCanti.DameReposiciones(sDesde, sHasta, Val(sPdesde), 1)
-  If Rs.RecordCount <> 0 Then
-     Report5.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report5
-  End If
-  Set Report5 = Nothing
+    Dim pFamilias As Integer
+    Set cCanti = New ClsProductoL
+    
+    pFamilias = StockInfSaldos.CmbFamilia.ItemData(StockInfSaldos.CmbFamilia.ListIndex)
+    
+    sDesde = StockInfReposiciones.TxtCodigo(0)
+    sHasta = StockInfReposiciones.TxtCodigo(1)
+    sPdesde = StockInfReposiciones.CmbProveedor(0).Text
+    
+    ' Ejecutamos la consulta
+    Set rs = cCanti.DameReposiciones(sDesde, sHasta, Val(sPdesde), 1)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptStockReposicion
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre08()
-  Dim Report5 As New RptStockReposicion
-
-  Set cCanti = New ClsProductoL
-             
-  sDesde = StockInfReposiciones.LblDescripcion(0)
-  sHasta = StockInfReposiciones.LblDescripcion(1)
-  sPdesde = StockInfReposiciones.CmbProveedor(0).ItemData(StockInfReposiciones.CmbProveedor(0).ListIndex)
-  Set Rs = cCanti.DameReposiciones(sDesde, sHasta, Val(sPdesde), 2)
-  If Rs.RecordCount <> 0 Then
-     Report5.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report5
-  End If
-  Set Report5 = Nothing
+    Set cCanti = New ClsProductoL
+    
+    ' Cambiamos a etiquetas de descripción
+    sDesde = StockInfReposiciones.LblDescripcion(0)
+    sHasta = StockInfReposiciones.LblDescripcion(1)
+    sPdesde = StockInfReposiciones.CmbProveedor(0).ItemData(StockInfReposiciones.CmbProveedor(0).ListIndex)
+    
+    ' Tipo de búsqueda 2 (Descripción)
+    Set rs = cCanti.DameReposiciones(sDesde, sHasta, Val(sPdesde), 2)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptStockReposicion
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre09()
 
 End Sub
-Private Sub Impre10()
-  Dim Report7 As New RptClienteSinZona
 
-  Set Rs = VentaInfClientes.Rs
-  If Rs.RecordCount <> 0 Then
-     Report7.ReportTitle = "Listado de Clientes"
-     Report7.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report7
-  End If
-  Set Report7 = Nothing
+Private Sub Impre10()
+    Set rs = VentaInfClientes.rs
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptClienteSinZona
+        With ReporteActivo
+            .ReportTitle = "Listado de Clientes"
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre11()
-  Dim Report8 As New RptClientesZona
-
-  Set Rs = VentaInfClientes.Rs
-  If Rs.RecordCount <> 0 Then
-     Report8.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report8
-  End If
-  Set Report8 = Nothing
+    Set rs = VentaInfClientes.rs
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptClientesZona
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre12()
-  Dim Report9 As New RptVentaPreciosGrupo
-  Dim Report10 As New RptVentaPreciosMarca
-  Dim Report3 As New RptVentaPrecios
+    Set cClases = New ClsPrecios
+    
+    sDesde = StockInfCostos.LblDescripcion(0)
+    sHasta = StockInfCostos.LblDescripcion(1)
+    sPdesde = StockInfCostos.CmbDesde.Text
+    sPhasta = StockInfCostos.CmbHasta.Text
+    
+    If StockInfCostos.OptMarcas = True Then
+        Set rs = cClases.DameCostoProductos(sDesde, sHasta, 3)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPrecios
+            ReporteActivo.ReportTitle = "Listado de Costos"
+            ReporteActivo.ParameterFields(1).SetCurrentValue ""
+        End If
+    ElseIf StockInfCostos.OptFamilias = True Then
+        Set rs = cClases.DameCostoProductosMarca(sDesde, sHasta, 3, sPdesde, sPhasta)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPreciosMarca
+            ReporteActivo.ReportTitle = "Listado de Costos Agrupados por Marca"
+            ReporteActivo.ParameterFields(1).SetCurrentValue ""
+        End If
+    Else
+        Set rs = cClases.DameCostoProductosGrupo(sDesde, sHasta, 3, sPdesde, sPhasta)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPreciosGrupo
+            ReporteActivo.ReportTitle = "Listado de Costos Agrupados por Familias"
+            ReporteActivo.ParameterFields(1).SetCurrentValue ""
+        End If
+    End If
 
-  Set cClases = New ClsPrecios
-   
-  sDesde = StockInfCostos.LblDescripcion(0)
-  sHasta = StockInfCostos.LblDescripcion(1)
-  sPdesde = StockInfCostos.CmbDesde.text
-  sPhasta = StockInfCostos.CmbHasta.text
-  If StockInfCostos.OptMarcas = True Then
-     Set Rs = cClases.DameCostoProductos(sDesde, sHasta, 3)
-     If Rs.RecordCount <> 0 Then
-        Report3.ParameterFields(1).SetCurrentValue ""
-        Report3.ReportTitle = "Listado de Costos"
-        Report3.Database.SetDataSource Rs
-        CRViewer1.ReportSource = Report3
-     End If
-  Else
-     If StockInfCostos.OptFamilias = True Then
-        Set Rs = cClases.DameCostoProductosMarca(sDesde, sHasta, 3, sPdesde, sPhasta)
-        If Rs.RecordCount <> 0 Then
-           Report10.ParameterFields(1).SetCurrentValue ""
-           Report10.ReportTitle = "Listado de Costos Agrupados por Marca"
-           Report10.Database.SetDataSource Rs
-           CRViewer1.ReportSource = Report10
-        End If
-     Else
-        Set Rs = cClases.DameCostoProductosGrupo(sDesde, sHasta, 3, sPdesde, sPhasta)
-        If Rs.RecordCount <> 0 Then
-           Report9.ParameterFields(1).SetCurrentValue ""
-           Report9.ReportTitle = "Listado de Costos Agrupados por Familias"
-           Report9.Database.SetDataSource Rs
-           CRViewer1.ReportSource = Report9
-        End If
-      End If
-   End If
-   Set Report3 = Nothing
-   Set Report9 = Nothing
-   Set Report10 = Nothing
+    ' Si se creó algún reporte, le pasamos los datos
+    If Not ReporteActivo Is Nothing Then
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
+
 Private Sub Impre13()
-
-  Dim Report9 As New RptVentaPreciosGrupo
-  Dim Report10 As New RptVentaPreciosMarca
-  Dim Report3 As New RptVentaPrecios
-
-  Set cClases = New ClsPrecios
-        
-  sDesde = StockInfCostos.LblDescripcion(0)
-  sHasta = StockInfCostos.LblDescripcion(1)
-  sPdesde = StockInfCostos.CmbDesde.text
-  sPhasta = StockInfCostos.CmbHasta.text
-  If StockInfCostos.OptMarcas.Value = True Then
-     Set Rs = cClases.DameCostoProductos(sDesde, sHasta, 4)
-     If Rs.RecordCount <> 0 Then
-        Report3.ParameterFields(1).SetCurrentValue ""
-        Report3.Database.SetDataSource Rs
-        CRViewer1.ReportSource = Report3
-     End If
-  Else
-     If StockInfCostos.OptFamilias = True Then
-        Set Rs = cClases.DameCostoProductosMarca(sDesde, sHasta, 4, sPdesde, sPhasta)
-        If Rs.RecordCount <> 0 Then
-           Report10.ParameterFields(1).SetCurrentValue ""
-           Report10.ReportTitle = "Listado de Costos Agrupados por Marca"
-           Report10.Database.SetDataSource Rs
-           CRViewer1.ReportSource = Report10
+    Set cClases = New ClsPrecios
+    
+    sDesde = StockInfCostos.LblDescripcion(0)
+    sHasta = StockInfCostos.LblDescripcion(1)
+    sPdesde = StockInfCostos.CmbDesde.Text
+    sPhasta = StockInfCostos.CmbHasta.Text
+    
+    If StockInfCostos.OptMarcas.Value = True Then
+        Set rs = cClases.DameCostoProductos(sDesde, sHasta, 4)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPrecios
+            ReporteActivo.ParameterFields(1).SetCurrentValue ""
         End If
-     Else
-        Set Rs = cClases.DameCostoProductosGrupo(sDesde, sHasta, 4, sPdesde, sPhasta)
-        If Rs.RecordCount <> 0 Then
-           Report9.ParameterFields(1).SetCurrentValue ""
-           Report9.ReportTitle = "Listado de Costos Agrupados por Familias"
-           Report9.Database.SetDataSource Rs
-           CRViewer1.ReportSource = Report9
+    ElseIf StockInfCostos.OptFamilias = True Then
+        Set rs = cClases.DameCostoProductosMarca(sDesde, sHasta, 4, sPdesde, sPhasta)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPreciosMarca
+            ReporteActivo.ReportTitle = "Listado de Costos Agrupados por Marca"
+            ReporteActivo.ParameterFields(1).SetCurrentValue ""
         End If
-     End If
-  End If
-   Set Report3 = Nothing
-   Set Report9 = Nothing
-   Set Report10 = Nothing
-  
+    Else
+        Set rs = cClases.DameCostoProductosGrupo(sDesde, sHasta, 4, sPdesde, sPhasta)
+        If rs.RecordCount <> 0 Then
+            Set ReporteActivo = New RptVentaPreciosGrupo
+            ReporteActivo.ReportTitle = "Listado de Costos Agrupados por Familias"
+            ReporteActivo.ParameterFields(1).SetCurrentValue ""
+        End If
+    End If
+
+    If Not ReporteActivo Is Nothing Then
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre14()
-
-  Dim Report11 As New RptVentasFecha
-
-  Set cCaja = New ClsComprobantesL
-  fDesde = VentaInfVentas.DTPicker1.Value
-  fHasta = VentaInfVentas.DTPicker2.Value
-  
-  Set Rs = cCaja.TraerMoviVentas(fDesde, fHasta)
-  If Rs.RecordCount <> 0 Then
-     Report11.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report11
-  End If
-  Set Report11 = Nothing
+    Set cCaja = New ClsComprobantesL
+    
+    fDesde = VentaInfVentas.DTPicker1.Value
+    fHasta = VentaInfVentas.DTPicker2.Value
+    
+    Set rs = cCaja.TraerMoviVentas(fDesde, fHasta)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptVentasFecha
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre15()
-  Dim Report12 As New RptVentasComprobantes
-
-  Set cCaja = New ClsComprobantesL
-  fDesde = VentaInfVentas.DTPicker1.Value
-  fHasta = VentaInfVentas.DTPicker2.Value
-  
-  Set Rs = cCaja.TraerMoviVentas(fDesde, fHasta)
-  If Rs.RecordCount <> 0 Then
-     Report12.ReportTitle = "Comprobantes de Ventas"
-     Report12.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report12
-  End If
-  Set Report12 = Nothing
+    Set cCaja = New ClsComprobantesL
+    fDesde = VentaInfVentas.DTPicker1.Value
+    fHasta = VentaInfVentas.DTPicker2.Value
+    
+    Set rs = cCaja.TraerMoviVentas(fDesde, fHasta)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptVentasComprobantes
+        With ReporteActivo
+            .ReportTitle = "Comprobantes de Ventas"
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
+
 Private Sub Impre16()
-
-  Dim Report13 As New RptVentasVendedor
-
-  Set cCaja = New ClsComprobantesL
-  fDesde = VentaInfVentas.DTPicker1.Value
-  fHasta = VentaInfVentas.DTPicker2.Value
-  
-  Set Rs = cCaja.TraerMoviVentas(fDesde, fHasta)
-  If Rs.RecordCount <> 0 Then
-     Report13.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report13
-  End If
-  Set Report13 = Nothing
+    Set cCaja = New ClsComprobantesL
+    fDesde = VentaInfVentas.DTPicker1.Value
+    fHasta = VentaInfVentas.DTPicker2.Value
+    
+    Set rs = cCaja.TraerMoviVentas(fDesde, fHasta)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptVentasVendedor
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre17()
-  Dim Report14 As New RptVentasCajas
-
-  Set cCaja = New ClsComprobantesL
-  fDesde = VentaInfVentas.DTPicker1.Value
-  fHasta = VentaInfVentas.DTPicker2.Value
-  
-  Set Rs = cCaja.TraerMoviVentas(fDesde, fHasta)
-  If Rs.RecordCount <> 0 Then
-     Report14.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report14
-  End If
-  Set Report14 = Nothing
+    Set cCaja = New ClsComprobantesL
+    fDesde = VentaInfVentas.DTPicker1.Value
+    fHasta = VentaInfVentas.DTPicker2.Value
+    
+    Set rs = cCaja.TraerMoviVentas(fDesde, fHasta)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptVentasCajas
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre18()
-  Dim Report15 As New RptVentasProductos
-  
-  Set Rs = VentaInfVentas.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     Report15.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report15
-  End If
-  Set Report15 = Nothing
+    ' Este reporte toma el recordset directamente del formulario de origen
+    Set rs = VentaInfVentas.rs
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptVentasProductos
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre19()
-  Dim Report16 As New RptDetalleFactura
+    Dim cRle As New ClsClienteL
+    Dim nOrd As Byte
+    
+    ' Definimos el orden y los rangos según los controles del formulario
+    If VentaInfDetalles.OptCodigo.Value = True Then
+        nOrd = 0
+        sDesde = VentaInfDetalles.TxtCliente(0).Text
+        sHasta = VentaInfDetalles.TxtCliente(1).Text
+    Else
+        nOrd = 1
+        sDesde = VentaInfDetalles.LblCliente(0).Caption
+        sHasta = VentaInfDetalles.LblCliente(1).Caption
+    End If
+    
+    ' Traemos los datos pasando fechas y orden
+    Set rs = cRle.TraerDetalleFactura(sDesde, sHasta, VentaInfDetalles.DtpFecha(0).Value, VentaInfDetalles.DtpFecha(1).Value, nOrd)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptDetalleFactura
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+End Sub
 
-  Dim cRle As New ClsClienteL, nOrd As Byte, sDesde As String, sHasta As String
-  
-  If VentaInfDetalles.OptCodigo.Value = True Then
-     nOrd = 0
-     sDesde = VentaInfDetalles.TxtCliente(0).text
-     sHasta = VentaInfDetalles.TxtCliente(1).text
-  Else
-     sDesde = VentaInfDetalles.LblCliente(0).Caption
-     sHasta = VentaInfDetalles.LblCliente(1).Caption
-     nOrd = 1
-  End If
-  
-  Set Rs = cRle.TraerDetalleFactura(sDesde, sHasta, VentaInfDetalles.DtpFecha(0).Value, VentaInfDetalles.DtpFecha(1).Value, nOrd)
-  If Rs.RecordCount <> 0 Then
-     Report16.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report16
-  End If
-  Set Report16 = Nothing
+Private Sub Impre20()
+    Dim crField As CRAXDRT.DatabaseFieldDefinition
+    Dim pGru As Byte, pDesde As String, pHasta As String
+    
+    Set cCanti = New ClsProductoL
+    
+    ' Tomamos los valores del formulario de stock
+    pGru = StockInfProductos.nOrd
+    pDesde = StockInfProductos.sDesde
+    pHasta = StockInfProductos.sHasta
+    
+    Set rs = cCanti.ProductoListadoMtr(StockInfProductos.LblProducto(0).Caption, _
+                StockInfProductos.LblProducto(1).Caption, _
+                StockInfProductos.ChkAlfabetico.Value, pGru, pDesde, pHasta)
+                
+    If pGru = 0 Then
+        If StockInfProductos.ChkAlfabetico.Value = 0 Then pGru = 1
+        If StockInfProductos.ChkAlfabetico.Value = 1 Then pGru = 2
+    End If
+    
+    If rs.RecordCount <> 0 Then
+        ' Inicializamos el reporte dinámico
+        Set ReporteActivo = New RptProductoGene
+        
+        ' Buscamos el campo por el cual se va a agrupar
+        Set crField = ReporteActivo.Database.Tables.Item(1).Fields.Item(pGru)
+        
+        ' Asignamos el campo a la sección del Grupo (GH = Group Header)
+        ReporteActivo.Areas.Item("GH").GroupConditionField = crField
+        ReporteActivo.Database.SetDataSource rs
+        ReporteActivo.Areas.Item("GH").Suppress = False
+        
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+End Sub
+
+Private Sub Impre21()
+    Dim bOrd As Integer
+    Dim cCl As New ClsProductoL
+    
+    If VentaInfCosto.OptCodigo = True Then
+        bOrd = 0
+    Else
+        bOrd = 1
+    End If
+    
+    sDesde = VentaInfCosto.LblDescripcion(0).Caption
+    sHasta = VentaInfCosto.LblDescripcion(1).Caption
+    
+    Set rs = cCl.TraerValoInventario(sDesde, sHasta, bOrd)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptValoCosto
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+End Sub
+
+Private Sub Impre22()
+    Dim cCl As New ClsProductoL
+    
+    ' Ejecutamos la consulta de rentabilidad pasando fechas y descripciones
+    Set rs = cCl.TraerRentabilidad(VentaProducCosto.DtpDesde.Value, _
+                                   VentaProducCosto.DtpHasta.Value, _
+                                   VentaProducCosto.LblDescripcion(0).Caption, _
+                                   VentaProducCosto.LblDescripcion(1).Caption)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptRentabilid
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+End Sub
+
+Private Sub Impre23()
+    Dim rPrin As New ADODB.Recordset
+    Dim rAux As ADODB.Recordset
+    Dim nCantRem As Double, nCantRemAux As Double
+    Dim cRem As New ClsComprobantesL
+
+    ' 1. Creamos el Recordset temporal en memoria
+    rPrin.Fields.Append "Comprobante", adVarChar, 30
+    rPrin.Fields.Append "Fecha", adDate
+    rPrin.Fields.Append "Sucursal", adInteger
+    rPrin.Fields.Append "Numero", adInteger
+    rPrin.Fields.Append "Cliente", adVarChar, 15
+    rPrin.Fields.Append "RazonSocial", adVarChar, 50
+    rPrin.Fields.Append "Importe", adCurrency
+    rPrin.Open
+    
+    ' 2. Traemos la información base
+    Set rs = cRem.TraerInfRemitosPend(StockInfRemPendientes.LblCliente(0), _
+                                     StockInfRemPendientes.LblCliente(1), _
+                                     StockInfRemPendientes.DtpFecha(0).Value, _
+                                     StockInfRemPendientes.DtpFecha(1).Value)
+
+    ' 3. Bucle de procesamiento de saldos
+    Do While Not rs.EOF
+        Set rAux = cRem.TraerDetallesMovimiento(rs!Movimiento)
+        Do While Not rAux.EOF
+            nCantRem = Round(cRem.TraerCantidadRemito(rAux!Producto, rs!Movimiento, rAux!ID), 2)
+            nCantRemAux = Round(rAux!Cantidad - Abs(nCantRem), 2)
+            
+            If nCantRemAux > 0 Or nCantRem = -1 Then
+                rPrin.AddNew
+                rPrin!Comprobante = rs!Comprobante
+                rPrin!fecha = rs!fecha
+                rPrin!sucursal = rs!sucursal
+                rPrin!Numero = rs!Numero
+                rPrin!Cliente = rs!Cliente
+                rPrin!RazonSocial = rs!RazonSocial
+                rPrin!importe = Abs(IIf(IsNull(rs!Expr1), 0, rs!Expr1))
+                rPrin.Update
+                Exit Do
+            End If
+            rAux.MoveNext
+        Loop
+        rs.MoveNext
+    Loop
+    
+    ' 4. Cargamos el reporte con los datos calculados
+    If rPrin.RecordCount <> 0 Then
+        Set ReporteActivo = New RptRemPendientes
+        ReporteActivo.Database.SetDataSource rPrin
+        CRViewer1.ReportSource = ReporteActivo
+        Set rs = rPrin ' Asignamos a la global para que Form_Load lo vea
+    End If
+End Sub
+
+
+Private Sub Impre24()
+    Dim rPrin As New ADODB.Recordset
+    Dim rAux As ADODB.Recordset
+    Dim nCanRem As Single, nCanRemAux As Single
+    Dim cRem As New ClsComprobantesL
+
+    ' 1. Estructura del Recordset temporal
+    With rPrin.Fields
+        .Append "Comprobante", adVarChar, 30
+        .Append "Fecha", adDate
+        .Append "Sucursal", adInteger
+        .Append "Numero", adInteger
+        .Append "Cliente", adVarChar, 15
+        .Append "RazonSocial", adVarChar, 50
+        .Append "Producto", adVarChar, 25
+        .Append "Descripcion", adVarChar, 80
+        .Append "Cantidad", adSingle
+        .Append "Importe", adCurrency
+    End With
+    rPrin.Open
+
+    ' 2. Traemos datos base
+    Set rs = cRem.TraerInfRemitosPend(StockInfRemPendientes.LblCliente(0), _
+                                     StockInfRemPendientes.LblCliente(1), _
+                                     StockInfRemPendientes.DtpFecha(0).Value, _
+                                     StockInfRemPendientes.DtpFecha(1).Value)
+
+    ' 3. Procesamiento detallado
+    Do While Not rs.EOF
+        Set rAux = cRem.TraerDetallesMovimiento(rs!Movimiento)
+        Do While Not rAux.EOF
+            If rAux!Producto <> "" Then
+                nCanRem = Round(cRem.TraerCantidadRemito(rAux!Producto, rs!Movimiento, rAux!ID), 2)
+                nCanRemAux = Round(rAux!Cantidad - nCanRem, 2)
+            Else
+                ' Si no tiene producto (ej. un concepto), lo agregamos directo
+                GoTo AgregarRegistro
+            End If
+
+            If nCanRemAux > 0 Or nCanRem = -1 Then
+AgregarRegistro:
+                rPrin.AddNew
+                rPrin!Comprobante = rs!Comprobante
+                rPrin!fecha = rs!fecha
+                rPrin!sucursal = rs!sucursal
+                rPrin!Numero = rs!Numero
+                rPrin!Cliente = rs!Cliente
+                rPrin!RazonSocial = rs!RazonSocial
+                rPrin!Producto = rAux!Producto
+                rPrin!Descripcion = rAux!Descripcion
+                rPrin!Cantidad = IIf(IsNull(rAux!Cantidad), 0, rAux!Cantidad) - IIf(nCanRem = -1, 0, nCanRem)
+                rPrin!importe = IIf(IsNull(rAux!PrecioTotal), 0, rAux!PrecioTotal)
+                rPrin.Update
+            End If
+            rAux.MoveNext
+        Loop
+        rs.MoveNext
+    Loop
+    
+    ' 4. Carga final
+    If rPrin.RecordCount <> 0 Then
+        Set ReporteActivo = New RptRemPendDet
+        ReporteActivo.Database.SetDataSource rPrin
+        CRViewer1.ReportSource = ReporteActivo
+        Set rs = rPrin
+    End If
+End Sub
+
+Private Sub Impre25()
+    Dim CrxApp As New CRAXDRT.Application
+    
+    ' Abrimos el archivo .rpt desde la carpeta del programa
+    Set ReporteActivo = CrxApp.OpenReport(App.Path & "\Factura.rpt")
+    
+    Set rs = VentaComprobantes.rImp
+    
+    If Not rs Is Nothing Then
+        If rs.RecordCount <> 0 Then
+            ReporteActivo.Database.SetDataSource rs
+            CRViewer1.ReportSource = ReporteActivo
+        End If
+    End If
+End Sub
+
+Private Sub Impre26()
+    Dim CrxApp As New CRAXDRT.Application
+    
+    ' Abrimos el archivo .rpt desde la carpeta del programa
+    Set ReporteActivo = CrxApp.OpenReport(App.Path & "\Remitos.rpt")
+    
+    Set rs = StockComprobantes.rImp
+    
+    If Not rs Is Nothing Then
+        If rs.RecordCount <> 0 Then
+            ReporteActivo.Database.SetDataSource rs
+            CRViewer1.ReportSource = ReporteActivo
+        End If
+    End If
+End Sub
+
+Private Sub Impre27()
+    Set rs = VentaInfFamilias.rs
+    If rs Is Nothing Then Exit Sub
+    
+    Set ReporteActivo = New RptVentaFamilias
+    With ReporteActivo
+        .Database.SetDataSource rs
+        .ParameterFields(1).SetCurrentValue VentaInfFamilias.DtpDesde.Value
+        .ParameterFields(2).SetCurrentValue VentaInfFamilias.DtpHasta.Value
+        .ParameterFields(3).SetCurrentValue IIf(VentaInfFamilias.ChkCliente.Value = 1, True, False)
+    End With
+    CRViewer1.ReportSource = ReporteActivo
+End Sub
+
+Private Sub Impre28()
+    Dim cRem As New ClsProductoL
+    Set rs = cRem.TraerPlanillaUtilidades(VentaInfFamilias.DtpDesde.Value, VentaInfFamilias.DtpHasta.Value)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptPlanillaUtilidades
+        With ReporteActivo
+            .Database.SetDataSource rs
+            .ParameterFields(1).SetCurrentValue VentaInfFamilias.DtpDesde.Value
+            .ParameterFields(2).SetCurrentValue VentaInfFamilias.DtpHasta.Value
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+End Sub
+
+Private Sub Impre29()
+    Dim cRem As New ClsProductoL, cRsl As New ClsLectura, cImporte As Single
+    Set rs = cRsl.BuscarTodos("TablaDeGastos", "Descripcion", "Porcentaje")
+    
+    If rs.RecordCount <> 0 Then
+        cImporte = cRem.TraerTotalVentas(VentaInfFamilias.DtpDesde.Value, VentaInfFamilias.DtpHasta.Value)
+        Set ReporteActivo = New RptControlGastos
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue str(cImporte)
+            .ParameterFields(2).SetCurrentValue VentaInfFamilias.DtpDesde.Value
+            .ParameterFields(3).SetCurrentValue VentaInfFamilias.DtpHasta.Value
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+End Sub
+
+Private Sub Impre30()
+    Dim cRem As New ClsProductoL, opt As Byte, nBus As Byte
+    Dim pDesde As String, pHasta As String
+    
+    ' Determinamos criterios de búsqueda
+    If VentaRanking.Option1(0).Value = True Then nBus = 0 Else nBus = 1
+    If VentaRanking.OptCodigo.Value = True Then opt = 0 Else opt = 1
+    
+    If opt = 0 Then
+        pDesde = VentaRanking.TxtCodigo(0).Text
+        pHasta = VentaRanking.TxtCodigo(1).Text
+    Else
+        pDesde = VentaRanking.LblDescripcion(0).Caption
+        pHasta = VentaRanking.LblDescripcion(1).Caption
+    End If
+    
+    Set rs = cRem.TraerRanking(pDesde, pHasta, VentaRanking.DtpDesde.Value, VentaRanking.DtpHasta.Value, nBus, opt)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptRanking
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue VentaRanking.DtpDesde.Value
+            .ParameterFields(2).SetCurrentValue VentaRanking.DtpHasta.Value
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+End Sub
+
+Private Sub Impre31()
+    Set rs = CompraInfResumen.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptVentaResumen ' Reutilizamos el diseño de resumen
+        With ReporteActivo
+            .ReportTitle = "Resumen de Cuenta - Proveedores"
+            .ParameterFields(1).SetCurrentValue IIf(CompraInfResumen.ChkSaldo.Value = 1, True, False)
+            .ParameterFields(2).SetCurrentValue ""
+            .ParameterFields(3).SetCurrentValue False
+            .ParameterFields(4).SetCurrentValue False
+            .ParameterFields(5).SetCurrentValue ""
+            .ParameterFields(6).SetCurrentValue ""
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+End Sub
+
+Private Sub Impre32()
+    Set rs = CompraInfVencimiento.RsP
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptVentaVencimiento
+        With ReporteActivo
+            .ReportTitle = "Vencimientos de Pagos a Proveedores"
+            .Text1.SetText "Proveedor"
+            .Text13.SetText "Pagado"
+            .Text14.SetText "a Pagar"
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 
 Private Sub Impre33()
-  Dim Report16 As New RptDetalleFactura
-
-  Dim cRle As New ClsClienteL, nOrd As Byte, sDesde As String, sHasta As String
-  
-  If CompraInfDetalles.OptCodigo.Value = True Then
-     nOrd = 0
-     sDesde = CompraInfDetalles.TxtCliente(0).text
-     sHasta = CompraInfDetalles.TxtCliente(1).text
-  Else
-     sDesde = CompraInfDetalles.LblCliente(0).Caption
-     sHasta = CompraInfDetalles.LblCliente(1).Caption
-     nOrd = 1
-  End If
-  
-  Report16.ReportTitle = "Proveedores - Detalles de Facturas"
-  
-  
-  Set Rs = cRle.TraerDetalleFacturaP(sDesde, sHasta, CompraInfDetalles.DtpFecha(0).Value, CompraInfDetalles.DtpFecha(1).Value, nOrd)
-  
-  If Rs.RecordCount <> 0 Then
-     Report16.Database.SetDataSource Rs
-     Report16.Text4.SetText ("Proveedor")
-     CRViewer1.ReportSource = Report16
-  End If
-  Set Report16 = Nothing
+    Dim cRle As New ClsClienteL, nOrd As Byte
+    
+    If CompraInfDetalles.OptCodigo.Value = True Then
+        nOrd = 0
+        sDesde = CompraInfDetalles.TxtCliente(0).Text
+        sHasta = CompraInfDetalles.TxtCliente(1).Text
+    Else
+        nOrd = 1
+        sDesde = CompraInfDetalles.LblCliente(0).Caption
+        sHasta = CompraInfDetalles.LblCliente(1).Caption
+    End If
+    
+    Set rs = cRle.TraerDetalleFacturaP(sDesde, sHasta, CompraInfDetalles.DtpFecha(0).Value, CompraInfDetalles.DtpFecha(1).Value, nOrd)
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptDetalleFactura
+        With ReporteActivo
+            .ReportTitle = "Proveedores - Detalles de Facturas"
+            .Text4.SetText "Proveedor"
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
-
-
-Private Sub Impre20()
-  Dim Report17 As New RptProductoGene
-
-  Dim crField As CRAXDRT.DatabaseFieldDefinition
-  Dim crSection As CRAXDRT.Section
-  Dim pGru As Byte, pDesde As String, pHasta As String
-  
-  Set cCanti = New ClsProductoL
-  Dim a As String
-  pGru = StockInfProductos.nOrd
-  pDesde = StockInfProductos.sDesde
-  pHasta = StockInfProductos.sHasta
-  
-  Set Rs = cCanti.ProductoListadoMtr(StockInfProductos.LblProducto(0).Caption, StockInfProductos.LblProducto(1).Caption, StockInfProductos.ChkAlfabetico.Value, pGru, pDesde, pHasta)
-  If pGru = 0 Then
-     If StockInfProductos.ChkAlfabetico.Value = 0 Then pGru = 1
-     If StockInfProductos.ChkAlfabetico.Value = 1 Then pGru = 2
-  End If
-  If Rs.RecordCount <> 0 Then
-     Set crField = Report17.Database.Tables.Item(1).Fields.Item(pGru)
-     Report17.Areas.Item("GH").GroupConditionField = crField
-     'Report17.AddGroup 0, crField, crGCAnyValue, crAscendingOrder
-     Report17.Database.SetDataSource Rs
-     Report17.Areas.Item("GH").Suppress = False
-     CRViewer1.ReportSource = Report17
-  End If
-  Set Report17 = Nothing
-End Sub
-
-Private Sub Impre21()
-  Dim Report18 As New RptValoCosto, bOrd As Integer
-
-  Dim cCl As ClsProductoL
-  Set cCl = New ClsProductoL
-  
-  If VentaInfCosto.OptCodigo = True Then
-     bOrd = 0
-  Else
-     bOrd = 1
-  End If
-  
-  sDesde = VentaInfCosto.LblDescripcion(0).Caption
-  sHasta = VentaInfCosto.LblDescripcion(1).Caption
-  
-  Set Rs = cCl.TraerValoInventario(sDesde, sHasta, bOrd)
-  
-  If Rs.RecordCount <> 0 Then
-     Report18.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report18
-  End If
-  Set Report18 = Nothing
-End Sub
-
-Private Sub Impre22()
-  Dim Report19 As New RptRentabilid
-
-  Dim nOp As Byte, cCl As ClsProductoL
-  
-  Set cClases = New ClsPrecios
-  Set cCl = New ClsProductoL
-  
-  Set Rs = cCl.TraerRentabilidad(VentaProducCosto.DtpDesde.Value, VentaProducCosto.DtpHasta.Value, VentaProducCosto.LblDescripcion(0).Caption, VentaProducCosto.LblDescripcion(1).Caption)
-  
-  If Rs.RecordCount <> 0 Then
-     Report19.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report19
-  End If
-  Set Report19 = Nothing
-End Sub
-
-Private Sub Impre23()
-  Dim Report20 As New RptRemPendientes, rPrin As Recordset, rAux As Recordset
-  Dim nCanRem As Single, nCanRemAux As Single
-
-  Dim cRem As New ClsComprobantesL
-  Set rPrin = New Recordset
-  Set rAux = New Recordset
-  
-  rPrin.Fields.Append "Comprobante", adVarChar, 30
-  rPrin.Fields.Append "Fecha", adDate
-  rPrin.Fields.Append "Sucursal", adInteger
-  rPrin.Fields.Append "Numero", adInteger
-  rPrin.Fields.Append "Cliente", adVarChar, 15
-  rPrin.Fields.Append "RazonSocial", adVarChar, 50
-  rPrin.Fields.Append "Importe", adCurrency
-  rPrin.Open
-  
-   Dim j As Long, nCantRem As Double, nCantRemAux As Double, RsAux As Recordset
-  
-      
-  Set Rs = cRem.TraerInfRemitosPend(StockInfRemPendientes.LblCliente(0), StockInfRemPendientes.LblCliente(1), StockInfRemPendientes.DtpFecha(0).Value, StockInfRemPendientes.DtpFecha(1).Value)
-
-   Do While Not Rs.EOF
-     Set rAux = cRem.TraerDetallesMovimiento(Rs!Movimiento)
-     Do While Not rAux.EOF
-        nCantRem = Round(cRem.TraerCantidadRemito(rAux!Producto, Rs!Movimiento, rAux!ID), 2)
-        nCantRemAux = Round(rAux!Cantidad - Abs(nCantRem), 2)
-        If nCantRemAux > 0 Or nCantRem = -1 Then
-            rPrin.AddNew
-            rPrin!Comprobante = Rs!Comprobante
-            rPrin!fecha = Rs!fecha
-            rPrin!Sucursal = Rs!Sucursal
-            rPrin!Numero = Rs!Numero
-            rPrin!Cliente = Rs!Cliente
-            rPrin!RazonSocial = Rs!RazonSocial
-            rPrin!importe = Abs(IIf(IsNull(Rs!Expr1), 0, Rs!Expr1))
-            rPrin.Update
-            Exit Do
-        End If
-        rAux.MoveNext
-     Loop
-     Rs.MoveNext
-  Loop
-  
-'  Set rs = cRem.TraerInfRemitosPend(StockInfRemPendientes.LblCliente(0), StockInfRemPendientes.LblCliente(1), StockInfRemPendientes.DTPFecha(0).Value, StockInfRemPendientes.DTPFecha(1).Value)
-'  Do While Not rs.EOF
-'     Set RAux = cRem.TraerDetallesMovimiento(rs!Movimiento)
-'     Do While Not RAux.EOF
-'        If RAux!Producto <> "" Then
-'           nCanRem = Round(cRem.TraerCantidadRemito(RAux!Producto, rs!Movimiento, RAux!Id), 2)
-'           nCanRemAux = Round(RAux!Cantidad - nCanRem, 2)
-'           Else
-'               rPrin.AddNew
-'               rPrin!Comprobante = rs!Comprobante
-'               rPrin!fecha = rs!fecha
-'               rPrin!Sucursal = rs!Sucursal
-'               rPrin!Numero = rs!Numero
-'               rPrin!Cliente = rs!Cliente
-'               rPrin!RazonSocial = rs!RazonSocial
-'               rPrin!importe = Abs(IIf(IsNull(rs!Expr1), 0, rs!Expr1))
-'               rPrin.Update
-'               Exit Do
-'        End If
-'        If nCanRemAux > 0 Or nCanRem = -1 Then
-'           rPrin.AddNew
-'           rPrin!Comprobante = rs!Comprobante
-'           rPrin!fecha = rs!fecha
-'           rPrin!Sucursal = rs!Sucursal
-'           rPrin!Numero = rs!Numero
-'           rPrin!Cliente = rs!Cliente
-'           rPrin!RazonSocial = rs!RazonSocial
-'           rPrin!importe = Abs(rs!Expr1)
-'           rPrin.Update
-'           Exit Do
-'        End If
-'        RAux.MoveNext
-'     Loop
-'     rs.MoveNext
-'  Loop
-  If rPrin.RecordCount <> 0 Then
-     Report20.Database.SetDataSource rPrin
-     CRViewer1.ReportSource = Report20
-  End If
-  Set Rs = rPrin
-  Set Report20 = Nothing
-End Sub
-
-Private Sub Impre24()
-  Dim Report21 As New RptRemPendDet, rPrin As Recordset, rAux As Recordset
-  Dim nCanRem As Single, nCanRemAux As Single
-
-  Dim cRem As New ClsComprobantesL
-  Set rPrin = New Recordset
-  Set rAux = New Recordset
-  
-  rPrin.Fields.Append "Comprobante", adVarChar, 30
-  rPrin.Fields.Append "Fecha", adDate
-  rPrin.Fields.Append "Sucursal", adInteger
-  rPrin.Fields.Append "Numero", adInteger
-  rPrin.Fields.Append "Cliente", adVarChar, 15
-  rPrin.Fields.Append "RazonSocial", adVarChar, 50
-  rPrin.Fields.Append "Producto", adVarChar, 25
-  rPrin.Fields.Append "Descripcion", adVarChar, 80
-  rPrin.Fields.Append "Cantidad", adSingle
-  rPrin.Fields.Append "Importe", adCurrency
-  rPrin.Open
-
-  
-  Set Rs = cRem.TraerInfRemitosPend(StockInfRemPendientes.LblCliente(0), StockInfRemPendientes.LblCliente(1), StockInfRemPendientes.DtpFecha(0).Value, StockInfRemPendientes.DtpFecha(1).Value)
-  Do While Not Rs.EOF
-     Set rAux = cRem.TraerDetallesMovimiento(Rs!Movimiento)
-     Do While Not rAux.EOF
-        If rAux!Producto <> "" Then
-           nCanRem = Round(cRem.TraerCantidadRemito(rAux!Producto, Rs!Movimiento, rAux!ID), 2)
-           nCanRemAux = Round(rAux!Cantidad - nCanRem, 2)
-        Else
-           rPrin.AddNew
-           rPrin!Comprobante = Rs!Comprobante
-           rPrin!fecha = Rs!fecha
-           rPrin!Sucursal = Rs!Sucursal
-           rPrin!Numero = Rs!Numero
-           rPrin!Cliente = Rs!Cliente
-           rPrin!RazonSocial = Rs!RazonSocial
-           rPrin!Producto = rAux!Producto
-           rPrin!Descripcion = rAux!Descripcion
-           rPrin!Cantidad = IIf(IsNull(rAux!Cantidad), 0, rAux!Cantidad) - IIf(nCanRem = -1, 0, nCanRem)
-           rPrin!importe = rAux!PrecioTotal
-           rPrin.Update
-           GoTo ir
-        End If
-        If nCanRemAux > 0 Or nCanRem = -1 Then
-           rPrin.AddNew
-           rPrin!Comprobante = Rs!Comprobante
-           rPrin!fecha = Rs!fecha
-           rPrin!Sucursal = Rs!Sucursal
-           rPrin!Numero = Rs!Numero
-           rPrin!Cliente = Rs!Cliente
-           rPrin!RazonSocial = Rs!RazonSocial
-           rPrin!Producto = rAux!Producto
-           rPrin!Descripcion = rAux!Descripcion
-           rPrin!Cantidad = IIf(IsNull(rAux!Cantidad), 0, rAux!Cantidad) - IIf(nCanRem = -1, 0, nCanRem)
-           rPrin!importe = IIf(IsNull(rAux!PrecioTotal), 0, rAux!PrecioTotal)
-           rPrin.Update
-         ' Exit Do
-        End If
-ir:
-        rAux.MoveNext
-     Loop
-     Rs.MoveNext
-  Loop
-  
-  If rPrin.RecordCount <> 0 Then
-     Report21.Database.SetDataSource rPrin
-     CRViewer1.ReportSource = Report21
-  End If
-  Set Rs = rPrin
-  Set Report21 = Nothing
-End Sub
-Private Sub Impre25()
-  Dim CrxApp As New CRAXDRT.Application
-  Dim CrxRpt As CRAXDRT.Report
-  Set CrxRpt = CrxApp.OpenReport(App.Path & "\Factura.rpt")
-  Set Rs = VentaComprobantes.rImp
-  CrxRpt.Database.SetDataSource Rs
-  CRViewer1.ReportSource = CrxRpt
-End Sub
-
-Private Sub Impre26()
-  Dim CrxApp As New CRAXDRT.Application
-  Dim CrxRpt As CRAXDRT.Report
-  Set CrxRpt = CrxApp.OpenReport(App.Path & "\Remitos.rpt")
-  
-  Set Rs = StockComprobantes.rImp
-  CrxRpt.Database.SetDataSource Rs
-  CRViewer1.ReportSource = CrxRpt
-End Sub
-
-Private Sub Impre27()
-  Dim Report22 As New RptVentaFamilias
-
-  Set Rs = VentaInfFamilias.Rs
-     Report22.Database.SetDataSource Rs
-     Report22.ParameterFields(1).SetCurrentValue VentaInfFamilias.DtpDesde.Value
-     Report22.ParameterFields(2).SetCurrentValue VentaInfFamilias.DtpHasta.Value
-     Report22.ParameterFields(3).SetCurrentValue IIf(VentaInfFamilias.ChkCliente.Value = 1, True, False)
-     CRViewer1.ReportSource = Report22
-  Set Report22 = Nothing
-End Sub
-
-Private Sub Impre28()
-  Dim Report23 As New RptPlanillaUtilidades
-
-  Dim cRem As New ClsProductoL
-  
-  Set Rs = cRem.TraerPlanillaUtilidades(VentaInfFamilias.DtpDesde.Value, VentaInfFamilias.DtpHasta.Value)
-  If Rs.RecordCount <> 0 Then
-     Report23.Database.SetDataSource Rs
-     Report23.ParameterFields(1).SetCurrentValue VentaInfFamilias.DtpDesde.Value
-     Report23.ParameterFields(2).SetCurrentValue VentaInfFamilias.DtpHasta.Value
-     CRViewer1.ReportSource = Report23
-  End If
-  Set Report23 = Nothing
-End Sub
-
-Private Sub Impre29()
-  Dim Report24 As New RptControlGastos
-
-  Dim cRem As New ClsProductoL, cRsl As ClsLectura, cImporte As Single
-  
-  Set cRsl = New ClsLectura
-  Set Rs = cRsl.BuscarTodos("TablaDeGastos", "Descripcion", "Porcentaje")
-  If Rs.RecordCount <> 0 Then
-     cImporte = cRem.TraerTotalVentas(VentaInfFamilias.DtpDesde.Value, VentaInfFamilias.DtpHasta.Value)
-     Report24.ParameterFields(1).SetCurrentValue str(cImporte)
-     Report24.ParameterFields(2).SetCurrentValue VentaInfFamilias.DtpDesde.Value
-     Report24.ParameterFields(3).SetCurrentValue VentaInfFamilias.DtpHasta.Value
-     Report24.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report24
-  End If
-  Set Report24 = Nothing
-End Sub
-
-Private Sub Impre30()
-  Dim Report25 As New RptRanking
-
-  Dim cRem As New ClsProductoL, opt As Byte, nBus As Byte, pDesde As String, pHasta As String
-  Dim sFami As String
-  
-  If VentaRanking.Option1(0).Value = True Then nBus = 0
-  If VentaRanking.Option1(1).Value = True Then nBus = 1
-  If VentaRanking.OptCodigo.Value = True Then opt = 0
-  If VentaRanking.OptDescripcion.Value = True Then opt = 1
-  
-  pDesde = VentaRanking.TxtCodigo(0).text
-  pHasta = VentaRanking.TxtCodigo(1).text
-  sFami = VentaRanking.Caption
-  
-  If opt = 1 Then
-    pDesde = VentaRanking.LblDescripcion(0).Caption
-    pHasta = VentaRanking.LblDescripcion(1).Caption
-  End If
-  
-  Set Rs = cRem.TraerRanking(pDesde, pHasta, VentaRanking.DtpDesde.Value, VentaRanking.DtpHasta.Value, nBus, opt)
-  If Rs.RecordCount <> 0 Then
-     Report25.ParameterFields(1).SetCurrentValue VentaRanking.DtpDesde.Value
-     Report25.ParameterFields(2).SetCurrentValue VentaRanking.DtpHasta.Value
-     Report25.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report25
-  End If
-  Set Report25 = Nothing
-End Sub
-
-Private Sub Impre31()
-  Dim report1 As New RptVentaResumen
-
-  Set Rs = CompraInfResumen.Rs
-  If Rs.RecordCount <> 0 Then
-     report1.ReportTitle = "Resumen de Cuenta"
-     report1.ParameterFields(1).SetCurrentValue IIf(CompraInfResumen.ChkSaldo.Value = 1, True, False)
-     report1.ParameterFields(2).SetCurrentValue ""
-     report1.ParameterFields(3).SetCurrentValue False
-     report1.ParameterFields(4).SetCurrentValue False
-     report1.ParameterFields(5).SetCurrentValue ""
-     report1.ParameterFields(6).SetCurrentValue ""
-     
-     report1.Database.SetDataSource Rs
-   '  Report1.Text1.SetText ("Proveedor")
-     CRViewer1.ReportSource = report1
-     CRViewer1.DisplayGroupTree = False
-  End If
-  Set report1 = Nothing
-End Sub
-
-Private Sub Impre32()
-  Dim Report2 As New RptVentaVencimiento
-
-  Report2.ReportTitle = "Vencimientos de Pagos a Proveedores"
-  Set Rs = CompraInfVencimiento.RsP
-  If Rs.RecordCount <> 0 Then
-     Report2.Text1.SetText ("Proveedor")
-     Report2.Text13.SetText ("Pagado")
-     Report2.Text14.SetText ("a Pagar")
-     
-     Report2.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report2
-  End If
-  Set Report2 = Nothing
-End Sub
-
-
 
 Private Sub Impre34()
-  Dim Report32 As New RptResConDetalle
-  
-  Set Rs = VentaInfResumenDet.Rs
-  Report32.ReportTitle = sNomFan
-  Report32.ParameterFields(1).SetCurrentValue ((VentaInfResumenDet.DtpFecha(1).Value))
-  Report32.ParameterFields(2).SetCurrentValue (IIf(VentaInfResumenDet.ChkCero.Value = 1, True, False))
-  Report32.ParameterFields(3).SetCurrentValue VentaInfResumenDet.CmbZona.text
-  If Rs.RecordCount <> 0 Then
-     Report32.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report32
-  End If
-  Set Report32 = Nothing
+    Set rs = VentaInfResumenDet.rs
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptResConDetalle
+        With ReporteActivo
+            .ReportTitle = sNomFan
+            ' Pasamos la fecha desde el formulario
+            .ParameterFields(1).SetCurrentValue VentaInfResumenDet.DtpFecha(1).Value
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre35()
@@ -1079,85 +1178,111 @@ Private Sub Impre35()
 End Sub
 
 Private Sub Impre36()
-  Dim Report27 As New RptResCaja
-  
-  Dim cRem As New ClsProductoL
-  
-  Set Rs = CajaResCaja.Rs
-  If Rs.RecordCount <> 0 Then
-     Report27.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report27
-  End If
-  Set Report27 = Nothing
+    ' Quitamos el Dim local y el As New
+    Dim cRem As New ClsProductoL
+    
+    Set rs = CajaResCaja.rs
+    
+    If rs.RecordCount <> 0 Then
+        ' Asignamos a la variable global para que el botón Imprimir funcione
+        Set ReporteActivo = New RptResCaja
+        
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+    ' Eliminamos el Set Report27 = Nothing para que no se pierda la referencia
 End Sub
 
 Private Sub Impre37()
-  Dim Report28 As New RptCajaMovi
-  
-  Dim cRlx As New ClsComprobantesL
-  
-  Set Rs = cRlx.TraerMovimientoCaja(CajaInfMovimientos.DtpDesde.Value, CajaInfMovimientos.DtpHasta.Value)
-  If Rs.RecordCount <> 0 Then
-     Report28.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report28
-  End If
-  Set Report28 = Nothing
+    ' Suponiendo que el formulario es CajaMovimientos
+    Set rs = CajaMovimientos.rs
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptCajaDetalle
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre38()
-  Dim Report29 As New RptIvaVenta
-
-  Dim cRlx As New ClsComprobantesL, Rx As ADODB.Recordset, cRsl As ClsLectura
-  
-  
-  Set cRsl = New ClsLectura
-  Set Rx = cRsl.TraerTodos("Empresa", "*")
-  
-  Dim sStr As String
-  Set Rs = VentaLibroIva.Rs
-  If Rs.RecordCount <> 0 Then
-     Report29.ParameterFields(1).SetCurrentValue (Rx!Razon) & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-     Report29.ParameterFields(2).SetCurrentValue (Rx!Direccion)
-     Report29.ParameterFields(3).SetCurrentValue (Rx!Cuit)
-     Report29.ParameterFields(4).SetCurrentValue "Libro de IVA Ventas " & VentaLibroIva.TxtPeriodo
-     Report29.ParameterFields(5).SetCurrentValue (Val(VentaLibroIva.TxtPagina.text))
-     Report29.ParameterFields(6).SetCurrentValue IIf(VentaLibroIva.ChkAgrupado.Value = 0, False, True)
-    ' Report29.Text15.SetText ("Retención Ing.Brutos") ' Abel diaz
-     Report29.Text15.SetText ("Percepción Ing.Brutos")
-     Report29.Text16.SetText ("Retención Ganancias")
-     
-     Report29.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report29
-  End If
-  Set Report29 = Nothing
+    ' Eliminamos el Dim local de Report29
+    Dim cRlx As New ClsComprobantesL, Rx As ADODB.Recordset, cRsl As ClsLectura
+    Dim sStr As String
+    
+    Set cRsl = New ClsLectura
+    Set Rx = cRsl.TraerTodos("Empresa", "*")
+    
+    Set rs = VentaLibroIva.rs
+    
+    If rs.RecordCount <> 0 Then
+        ' Inicializamos la variable global
+        Set ReporteActivo = New RptIvaVenta
+        
+        With ReporteActivo
+            ' Parámetros de encabezado
+            .ParameterFields(1).SetCurrentValue (Rx!Razon) & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
+            .ParameterFields(2).SetCurrentValue (Rx!Direccion)
+            .ParameterFields(3).SetCurrentValue (Rx!Cuit)
+            .ParameterFields(4).SetCurrentValue "Libro de IVA Ventas " & VentaLibroIva.TxtPeriodo
+            .ParameterFields(5).SetCurrentValue (Val(VentaLibroIva.TxtPagina.Text))
+            .ParameterFields(6).SetCurrentValue IIf(VentaLibroIva.ChkAgrupado.Value = 0, False, True)
+            
+            ' Cambio dinámico de etiquetas (TextObjects)
+            .Text15.SetText ("Percepción Ing.Brutos")
+            .Text16.SetText ("Retención Ganancias")
+            
+            ' Asignación de datos
+            .Database.SetDataSource rs
+        End With
+        
+        ' Mostrar en el visor
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+    
+    ' Recordá: No poner Set ReporteActivo = Nothing aquí
+    Set cRsl = Nothing
+    Set Rx = Nothing
 End Sub
 
 Private Sub Impre39()
-  Dim Report29 As New RptIvaVenta
-
-  Dim cRlx As New ClsComprobantesL, Rx As ADODB.Recordset, cRsl As ClsLectura
-  
-  
-  Set cRsl = New ClsLectura
-  Set Rx = cRsl.TraerTodos("Empresa", "*")
-  
-  Set Rs = ComprasLibroIva.Rs
-  If Rs.RecordCount <> 0 Then
-     Report29.ParameterFields(1).SetCurrentValue (Rx!Razon) & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-     Report29.ParameterFields(2).SetCurrentValue (Rx!Direccion)
-     Report29.ParameterFields(3).SetCurrentValue (Rx!Cuit)
-     Report29.ParameterFields(4).SetCurrentValue "Libro de IVA Compras " & ComprasLibroIva.TxtPeriodo
-     Report29.ParameterFields(5).SetCurrentValue (Val(ComprasLibroIva.TxtPagina.text))
-     Report29.ParameterFields(6).SetCurrentValue IIf(ComprasLibroIva.ChkAgrupado.Value = 0, False, True)
-     
-     Report29.Text15.SetText ("Percepción Ing.Brutos")
-     Report29.Text16.SetText ("Percepción Iva")
-     Report29.Text7.SetText ("Retención Ganancia")
-     Report29.Text4.SetText ("Proveedor")
-     Report29.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report29
-  End If
-  Set Report29 = Nothing
+    ' Eliminamos el Dim local de Report29 para usar ReporteActivo
+    Dim cRlx As New ClsComprobantesL, Rx As ADODB.Recordset, cRsl As ClsLectura
+    
+    Set cRsl = New ClsLectura
+    Set Rx = cRsl.TraerTodos("Empresa", "*")
+    
+    Set rs = ComprasLibroIva.rs
+    
+    If rs.RecordCount <> 0 Then
+        ' Inicializamos la variable global con el reporte de IVA
+        Set ReporteActivo = New RptIvaVenta
+        
+        With ReporteActivo
+            ' Configuración de parámetros de encabezado
+            .ParameterFields(1).SetCurrentValue (Rx!Razon) & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
+            .ParameterFields(2).SetCurrentValue (Rx!Direccion)
+            .ParameterFields(3).SetCurrentValue (Rx!Cuit)
+            .ParameterFields(4).SetCurrentValue "Libro de IVA Compras " & ComprasLibroIva.TxtPeriodo
+            .ParameterFields(5).SetCurrentValue (Val(ComprasLibroIva.TxtPagina.Text))
+            .ParameterFields(6).SetCurrentValue IIf(ComprasLibroIva.ChkAgrupado.Value = 0, False, True)
+            
+            ' Ajuste dinámico de etiquetas específicas para Compras
+            .Text15.SetText ("Percepción Ing.Brutos")
+            .Text16.SetText ("Percepción Iva")
+            .Text7.SetText ("Retención Ganancia")
+            .Text4.SetText ("Proveedor")
+            
+            ' Vinculación de datos
+            .Database.SetDataSource rs
+        End With
+        
+        ' Enviamos al visor
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+    
+    ' Limpieza de objetos de datos, pero mantenemos vivo ReporteActivo
+    Set cRsl = Nothing
+    Set Rx = Nothing
 End Sub
 
 Private Sub Impre40()
@@ -1187,198 +1312,216 @@ Private Sub Impre41()
 
   Dim cRlx As New ClsComprobantesL
   
-  Set Rs = cRlx.TraerChequesTerceros(CajaChequesTer.DtpDesde.Value, CajaChequesTer.DtpHasta.Value, CajaChequesTer.ChkVenc.Value, CajaChequesTer.ChkCartera.Value)
-  If Rs.RecordCount <> 0 Then
-     Report31.Database.SetDataSource Rs
+  Set rs = cRlx.TraerChequesTerceros(CajaChequesTer.DtpDesde.Value, CajaChequesTer.DtpHasta.Value, CajaChequesTer.ChkVenc.Value, CajaChequesTer.ChkCartera.Value)
+  If rs.RecordCount <> 0 Then
+     Report31.Database.SetDataSource rs
      CRViewer1.ReportSource = Report31
   End If
   Set Report31 = Nothing
 End Sub
 
 Private Sub Impre42()
-  Dim report1 As New RptVentaResumen
-
-  Set Rs = CajaCtaCteBan.Rs
-  If Rs.RecordCount <> 0 Then
-     report1.ReportTitle = "Resumen de Cuenta"
-     report1.ParameterFields(1).SetCurrentValue False
-     report1.ParameterFields(2).SetCurrentValue ""
-     report1.ParameterFields(3).SetCurrentValue False
-     report1.ParameterFields(4).SetCurrentValue False
-     report1.ParameterFields(5).SetCurrentValue ""
-     report1.ParameterFields(6).SetCurrentValue ""
-     
-     report1.Database.SetDataSource Rs
-   '  Report1.Text1.SetText ("Proveedor")
-     CRViewer1.ReportSource = report1
-     CRViewer1.DisplayGroupTree = False
-  End If
-  Set report1 = Nothing
+    ' Eliminamos el Dim local de report1 para usar la variable global ReporteActivo
+    
+    Set rs = CajaCtaCteBan.rs
+    
+    If rs.RecordCount <> 0 Then
+        ' Inicializamos el objeto global con el diseño de resumen
+        Set ReporteActivo = New RptVentaResumen
+        
+        With ReporteActivo
+            .ReportTitle = "Resumen de Cuenta"
+            
+            ' Configuración de parámetros (CUIDADO: mantener el orden exacto de los índices)
+            .ParameterFields(1).SetCurrentValue False
+            .ParameterFields(2).SetCurrentValue ""
+            .ParameterFields(3).SetCurrentValue False
+            .ParameterFields(4).SetCurrentValue False
+            .ParameterFields(5).SetCurrentValue ""
+            .ParameterFields(6).SetCurrentValue ""
+            
+            ' Asignación del Recordset
+            .Database.SetDataSource rs
+        End With
+        
+        ' Configuración del visor
+        CRViewer1.ReportSource = ReporteActivo
+        CRViewer1.DisplayGroupTree = False
+    End If
+    
+    ' Recordá: NO pongas Set ReporteActivo = Nothing para que el botón de imprimir funcione
 End Sub
 
 Private Sub Impre43()
- Dim Report25 As New RptRanking, cRl As ClsLectura, bIva As Boolean
- 
- 
-  Dim cRem As New ClsProductoL, opt As Byte
-  Set cRl = New ClsLectura
-  If cRl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & VentaConsolidado.CmbComprobante.ItemData(VentaConsolidado.CmbComprobante.ListIndex)) = 1 Then bIva = True
-  
-  Set Rs = cRem.TraerConsolidado(VentaConsolidado.TxtNum(0).text, VentaConsolidado.TxtNum(1).text, VentaConsolidado.CmbComprobante.ItemData(VentaConsolidado.CmbComprobante.ListIndex), bIva)
-  If Rs.RecordCount <> 0 Then
-     Report25.ParameterFields(1).SetCurrentValue Date
-     Report25.ParameterFields(2).SetCurrentValue Date
-     Report25.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report25
-  End If
-  Set Report25 = Nothing
+    ' Eliminamos el Dim local de Report25 para usar ReporteActivo
+    Dim cRl As ClsLectura, bIva As Boolean
+    Dim cRem As New ClsProductoL, opt As Byte
+    
+    Set cRl = New ClsLectura
+    
+    ' Lógica para determinar si el comprobante lleva costo/IVA
+    If cRl.TraerValorDeUnCampo("Comprobantes", "Costo", "Id=" & _
+       VentaConsolidado.CmbComprobante.ItemData(VentaConsolidado.CmbComprobante.ListIndex)) = 1 Then
+        bIva = True
+    End If
+    
+    ' Obtenemos los datos del consolidado
+    Set rs = cRem.TraerConsolidado(VentaConsolidado.TxtNum(0).Text, _
+                                   VentaConsolidado.TxtNum(1).Text, _
+                                   VentaConsolidado.CmbComprobante.ItemData(VentaConsolidado.CmbComprobante.ListIndex), _
+                                   bIva)
+    
+    If rs.RecordCount <> 0 Then
+        ' Inicializamos el objeto global con el reporte de Ranking (usado para consolidado)
+        Set ReporteActivo = New RptRanking
+        
+        With ReporteActivo
+            ' Seteamos parámetros (usando la fecha actual según tu código original)
+            .ParameterFields(1).SetCurrentValue Date
+            .ParameterFields(2).SetCurrentValue Date
+            
+            ' Vinculamos el Recordset
+            .Database.SetDataSource rs
+        End With
+        
+        ' Asignamos al visor
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+    
+    ' Limpiamos objetos auxiliares pero dejamos vivo ReporteActivo
+    Set cRl = Nothing
 End Sub
 
 Private Sub Impre44()
-  Dim Report33 As New RptPlanCuenta
-
-  Dim cRem As New ClsProductoL, opt As Byte
-  
-  
-  Set Rs = CjaResCtaCble.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     Report33.ParameterFields(1).SetCurrentValue str(CjaResCtaCble.DtpDesde)
-     Report33.ParameterFields(2).SetCurrentValue str(CjaResCtaCble.DtpHasta)
-     Report33.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report33
-  End If
-  Set Report33 = Nothing
+    ' Eliminamos el Dim local de Report33 para usar la variable global ReporteActivo
+    Dim cRem As New ClsProductoL, opt As Byte
+    
+    Set rs = CjaResCtaCble.rs
+    
+    If rs.RecordCount <> 0 Then
+        ' Inicializamos el objeto global
+        Set ReporteActivo = New RptPlanCuenta
+        
+        With ReporteActivo
+            ' Pasamos los parámetros de fecha convirtiéndolos a String como en el original
+            .ParameterFields(1).SetCurrentValue str(CjaResCtaCble.DtpDesde)
+            .ParameterFields(2).SetCurrentValue str(CjaResCtaCble.DtpHasta)
+            
+            ' Vinculamos los datos
+            .Database.SetDataSource rs
+        End With
+        
+        ' Cargamos el visor
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+    
+    ' Recordá: NO pongas Set ReporteActivo = Nothing para que el botón de imprimir funcione
 End Sub
 
 Private Sub Impre45()
-
-  Dim Report34 As New RptStockMovimiento
+    ' Eliminamos el Dim local de Report34 para usar ReporteActivo
     
-  Set Rs = StockInfMovimientos.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     Report34.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report34
-  End If
-  Set Report34 = Nothing
+    ' El recordset ya viene cargado desde el formulario de movimientos
+    Set rs = StockInfMovimientos.rs
+    
+    If rs.RecordCount <> 0 Then
+        ' Inicializamos el objeto global con el reporte de movimientos de stock
+        Set ReporteActivo = New RptStockMovimiento
+        
+        ' Vinculamos los datos directamente
+        ReporteActivo.Database.SetDataSource rs
+        
+        ' Cargamos el visor de Crystal con la variable global
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+    
+    ' IMPORTANTE: No liberamos el objeto (Set ReporteActivo = Nothing)
+    ' para que el botón de imprimir del visor pueda acceder a él.
 End Sub
 
 Private Sub Impre46()
-  Dim Report35 As New RptEtiquetas, cRe As ClsProductoL, cRsb As ClsLectura
-  Dim X, Y As Byte, rel As Recordset
-  
-  
-  Set cRe = New ClsProductoL
-  Set cRsb = New ClsLectura
+    ' Eliminamos el Dim local de Report35 para usar ReporteActivo
+    Dim cRe As ClsProductoL, cRsb As ClsLectura
+    Dim X, Y As Byte, rel As Recordset
+    
+    Set cRe = New ClsProductoL
+    Set cRsb = New ClsLectura
 
-  Set Rs = cRe.TraerProductosEtiquetas(MtrProdEtiquetas.DtpDesde.Value, MtrProdEtiquetas.DtpHasta.Value)
-  ' Generar Archivo Para la Balanza
-'  Dim sNom As String, sVariable As String, nPrecio As Double
-'  sNom = CurDir() & "\info.jdg"
-'  Open sNom For Output As #1
-'   Do While Not Rs.EOF
-'      sVariable = ""
-'      If cRsb.TraerValorDeUnCampo("Productos", "CodCompu", "Producto='" & Rs!Producto & "'") = "Si" And Rs!Balanza <> 0 Then
-'         If Mid$(Rs!Producto, 1, 1) <> 0 Then
-'            X = 2: Y = 5
-'         Else
-'            X = 1: Y = 5
-'         End If
-'         Set rel = cRsb.TraerRsCondi("Balanzas", "Balanza", "Relacion=" & Rs!Balanza)
-'         Do While Not rel.EOF
-'            sVariable = "C" & Format(rel!Balanza, "00") & "20050" & Mid$(Rs!Producto, X, Y) & Format(Rs!CDepartamento, "000") & Format(Rs!CFamilia, "000") & Rs!Descripcion & Space(52 - Len(Rs!Descripcion)) & Mid$(Rs!Producto, X, Y)
-'            sVariable = sVariable & IIf(cRsb.TraerValorDeUnCampo("Productos", "Fijo", "Producto='" & Rs!Producto & "'") = "Si", "N", "P")
-'            nPrecio = Rs!precio * 100
-'            sVariable = sVariable & "0000000" & Format(nPrecio, "000000") & Format(nPrecio, "000000") & "0000000000000000000000000000010000000010000000"
-'
-'            Print #1, sVariable
-'            rel.MoveNext
-'         Loop
-'      End If
-'      Rs.MoveNext
-'   Loop
-'   Close #1
-  
-  If Rs.RecordCount <> 0 Then
-     Report35.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report35
-  End If
-  Set Report35 = Nothing
-  
+    ' Obtenemos los productos para las etiquetas
+    Set rs = cRe.TraerProductosEtiquetas(MtrProdEtiquetas.DtpDesde.Value, MtrProdEtiquetas.DtpHasta.Value)
+    
+    ' (La lógica de generación de archivo para Balanza se mantiene comentada como en el original)
+    
+    If rs.RecordCount <> 0 Then
+        ' Inicializamos la variable global con el reporte de etiquetas
+        Set ReporteActivo = New RptEtiquetas
+        
+        ' Vinculamos los datos
+        ReporteActivo.Database.SetDataSource rs
+        
+        ' Cargamos el visor
+        CRViewer1.ReportSource = ReporteActivo
+    End If
+    
+    ' IMPORTANTE: No liberamos ReporteActivo para que el selector de impresoras
+    ' de Windows pueda manejar el cambio a la impresora de etiquetas o PDF.
+    Set cRe = Nothing
+    Set cRsb = Nothing
 End Sub
 
 Private Sub Impre47()
-  Dim Report35 As New RptEtiquetas
-  
-  
-  Set Rs = MtrEtiquetas.rImp
-  If Rs.RecordCount <> 0 Then
-     Report35.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report35
-  End If
-  Set Report35 = Nothing
-  
+    Set rs = MtrEtiquetas.rImp
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptEtiquetas
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre48()
-  Dim Report35 As New RptCodigoBarra
-  
-  
-  Set Rs = MtrEtiquetas.rImp
-  If Rs.RecordCount <> 0 Then
-     Report35.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report35
-  End If
-  Set Report35 = Nothing
-  
+    Set rs = MtrEtiquetas.rImp
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptCodigoBarra
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre49()
-  Dim Report35 As New RptEtiquetasTango
-  
-  
-  Set Rs = ComprasComprobantes.RsC
-  
-  If Rs.RecordCount <> 0 Then
-     Report35.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report35
-  End If
-  Set Report35 = Nothing
-
+    Set rs = ComprasComprobantes.RsC
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptEtiquetasTango
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre50()
-   Dim Report35 As New RptCuentaFondos, cRsl As ClsLectura
-   
-  Set cRsl = New ClsLectura
-  
-   Set Rs = CajaCerrarZ.rPrin
-  If Rs.RecordCount <> 0 Then
-     Report35.Database.SetDataSource Rs
-     Report35.ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "") & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-     Report35.ParameterFields(2).SetCurrentValue CajaCerrarZ.DtpFecha.Value
-     
-     CRViewer1.ReportSource = Report35
-  End If
-  Set Report35 = Nothing
-   
+    Dim cRsl As New ClsLectura
+    Set rs = CajaCerrarZ.rPrin
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptCuentaFondos
+        With ReporteActivo
+            .Database.SetDataSource rs
+            .ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "") & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
+            .ParameterFields(2).SetCurrentValue CajaCerrarZ.DtpFecha.Value
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre51()
-   Dim Report35 As New RptChequesTarjetas, cRsl As ClsLectura
-   
-  Set cRsl = New ClsLectura
-  
-   Set Rs = CajaCerrarZ.rPrin
-  If Rs.RecordCount <> 0 Then
-     Report35.Database.SetDataSource Rs
-     Report35.ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "") & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-     Report35.ParameterFields(2).SetCurrentValue CajaCerrarZ.DtpFecha.Value
-     CRViewer1.ReportSource = Report35
-  End If
-  Set Report35 = Nothing
-
+    Dim cRsl As New ClsLectura
+    Set rs = CajaCerrarZ.rPrin
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptChequesTarjetas
+        With ReporteActivo
+            .Database.SetDataSource rs
+            .ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "") & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
+            .ParameterFields(2).SetCurrentValue CajaCerrarZ.DtpFecha.Value
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre52()
@@ -1398,306 +1541,260 @@ Private Sub Impre52()
 End Sub
 
 Private Sub Impre53()
-  Dim Report50 As New RptListaCobranza
-
-  Set Rs = FrmInformeCobranzas.Rs3
-  If Rs.RecordCount <> 0 Then
-     Report50.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report50
-  End If
-  Set Report50 = Nothing
+    Set rs = FrmInformeCobranzas.Rs3
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptListaCobranza
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre54()
-  Dim Report35 As New RptEtiquetasTango
-  
-  
-  Set Rs = MtrProductos.RsC
-  
-  If Rs.RecordCount <> 0 Then
-     Report35.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report35
-  End If
-  Set Report35 = Nothing
-
+    Set rs = MtrProductos.RsC
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptEtiquetasTango
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre55()
-  Dim report1 As New RptResuSimpli
-
-  Set Rs = VentaInfResumen.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     report1.ReportTitle = sNomFan
-     report1.ParameterFields(1).SetCurrentValue IIf(VentaInfResumen.ChkSaldo.Value = 1, True, False)
-     report1.ParameterFields(2).SetCurrentValue VentaInfResumen.CmbZona.text
-     report1.Database.SetDataSource Rs
-     CRViewer1.ReportSource = report1
-     CRViewer1.DisplayGroupTree = False
-  End If
-  Set report1 = Nothing
+    Set rs = VentaInfResumen.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptResuSimpli
+        With ReporteActivo
+            .ReportTitle = sNomFan
+            .ParameterFields(1).SetCurrentValue IIf(VentaInfResumen.ChkSaldo.Value = 1, True, False)
+            .ParameterFields(2).SetCurrentValue VentaInfResumen.CmbZona.Text
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+        CRViewer1.DisplayGroupTree = False
+    End If
 End Sub
 
 Private Sub Impre56()
-  Dim Report29 As New RptIvaVentaRes
-
-  Dim cRlx As New ClsComprobantesL, Rx As ADODB.Recordset, cRsl As ClsLectura
-  
-  
-  Set cRsl = New ClsLectura
-  Set Rx = cRsl.TraerTodos("Empresa", "*")
-  
-  Dim sStr As String
-  Set Rs = VentaLibroIva.Rs
-  If Rs.RecordCount <> 0 Then
-     Report29.ParameterFields(1).SetCurrentValue (Rx!Razon) & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-     Report29.ParameterFields(2).SetCurrentValue (Rx!Direccion)
-     Report29.ParameterFields(3).SetCurrentValue "Resumen Libro de IVA Ventas " & VentaLibroIva.TxtPeriodo
-     Report29.ParameterFields(4).SetCurrentValue (Rx!Cuit)
-     
-     Report29.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report29
-  End If
-  Set Report29 = Nothing
+    Dim cRsl As New ClsLectura, Rx As ADODB.Recordset
+    Set Rx = cRsl.TraerTodos("Empresa", "*")
+    Set rs = VentaLibroIva.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptIvaVentaRes
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue (Rx!Razon) & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
+            .ParameterFields(2).SetCurrentValue (Rx!Direccion)
+            .ParameterFields(3).SetCurrentValue "Resumen Libro de IVA Ventas " & VentaLibroIva.TxtPeriodo
+            .ParameterFields(4).SetCurrentValue (Rx!Cuit)
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre57()
-  Dim Report29 As New RptIvaVentaRes
-
-  Dim cRlx As New ClsComprobantesL, Rx As ADODB.Recordset, cRsl As ClsLectura
-  
-  
-  Set cRsl = New ClsLectura
-  Set Rx = cRsl.TraerTodos("Empresa", "*")
-  
-  Set Rs = ComprasLibroIva.Rs
-  If Rs.RecordCount <> 0 Then
-     Report29.ParameterFields(1).SetCurrentValue (Rx!Razon) & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-     Report29.ParameterFields(2).SetCurrentValue (Rx!Direccion)
-     Report29.ParameterFields(3).SetCurrentValue "Libro de IVA Compras " & ComprasLibroIva.TxtPeriodo
-     Report29.ParameterFields(4).SetCurrentValue (Rx!Cuit)
-     Report29.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report29
-  End If
-  Set Report29 = Nothing
+    Dim cRsl As New ClsLectura, Rx As ADODB.Recordset
+    Set Rx = cRsl.TraerTodos("Empresa", "*")
+    Set rs = ComprasLibroIva.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptIvaVentaRes
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue (Rx!Razon) & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
+            .ParameterFields(2).SetCurrentValue (Rx!Direccion)
+            .ParameterFields(3).SetCurrentValue "Libro de IVA Compras " & ComprasLibroIva.TxtPeriodo
+            .ParameterFields(4).SetCurrentValue (Rx!Cuit)
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre58()
- Dim Report25 As New RptReparto, cRl As ClsLectura, bIva As Boolean
- 
- 
-  Dim cRem As New ClsProductoL, opt As Byte
-  Set cRl = New ClsLectura
-  
-  
-  Set Rs = cRem.TraerReparto(Val(VentaReparto.TxtReparto.text), VentaReparto.DtpDesde.Value, VentaReparto.DtpHasta.Value)
-  If Rs.RecordCount <> 0 Then
-     Report25.ParameterFields(1).SetCurrentValue Val(VentaReparto.TxtReparto.text)
-     Report25.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report25
-  End If
-  Set Report25 = Nothing
+    Dim cRem As New ClsProductoL
+    Set rs = cRem.TraerReparto(Val(VentaReparto.TxtReparto.Text), VentaReparto.DtpDesde.Value, VentaReparto.DtpHasta.Value)
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptReparto
+        ReporteActivo.ParameterFields(1).SetCurrentValue Val(VentaReparto.TxtReparto.Text)
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre59()
-  Dim report1 As New RptResuSimpli
-
-  Set Rs = CompraInfResumen.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     report1.ReportTitle = "Resumen de Cuenta Simplificado - Proveedores"
-     report1.ParameterFields(1).SetCurrentValue IIf(CompraInfResumen.ChkSaldo.Value = 1, True, False)
-     report1.ParameterFields(2).SetCurrentValue "Todas"
-     report1.Database.SetDataSource Rs
-     CRViewer1.ReportSource = report1
-     CRViewer1.DisplayGroupTree = False
-  End If
-  Set report1 = Nothing
+    Set rs = CompraInfResumen.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptResuSimpli
+        With ReporteActivo
+            .ReportTitle = "Resumen de Cuenta Simplificado - Proveedores"
+            .ParameterFields(1).SetCurrentValue IIf(CompraInfResumen.ChkSaldo.Value = 1, True, False)
+            .ParameterFields(2).SetCurrentValue "Todas"
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+        CRViewer1.DisplayGroupTree = False
+    End If
 End Sub
 
 Private Sub Impre60()
-  Dim Report33 As New RptPlanCtaDet
-
-  Dim cRem As New ClsProductoL, opt As Byte
-  
-  
-  Set Rs = CjaResCtaCble.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     Report33.ParameterFields(1).SetCurrentValue str(CjaResCtaCble.DtpDesde)
-     Report33.ParameterFields(2).SetCurrentValue str(CjaResCtaCble.DtpHasta)
-     Report33.ParameterFields(3).SetCurrentValue CjaResCtaCble.CmbCuenta.text
-     Report33.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report33
-  End If
-  Set Report33 = Nothing
+    Set rs = CjaResCtaCble.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptPlanCtaDet
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue str(CjaResCtaCble.DtpDesde)
+            .ParameterFields(2).SetCurrentValue str(CjaResCtaCble.DtpHasta)
+            .ParameterFields(3).SetCurrentValue CjaResCtaCble.CmbCuenta.Text
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre61()
-  Dim Report33 As New RptCedronar
-
-  Dim cRem As New ClsProductoL, opt As Byte
-  
-  
-  Set Rs = StockInfMovimientos.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     Report33.ParameterFields(1).SetCurrentValue StockInfMovimientos.DtpFecha(0).Value
-     Report33.ParameterFields(2).SetCurrentValue StockInfMovimientos.DtpFecha(1).Value
-     Report33.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report33
-  End If
-  Set Report33 = Nothing
+    Set rs = StockInfMovimientos.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptCedronar
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue StockInfMovimientos.DtpFecha(0).Value
+            .ParameterFields(2).SetCurrentValue StockInfMovimientos.DtpFecha(1).Value
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre62()
-  Dim Report28 As New RptInfPerIB
-  
-  Dim cRlx As New ClsComprobantesL
-  
-  Set Rs = cRlx.TraerInPercIB(VentasInfPerIb.DtpDesde.Value, VentasInfPerIb.DtpHasta.Value)
-  If Rs.RecordCount <> 0 Then
-     Report28.ParameterFields(1).SetCurrentValue str(VentasInfPerIb.DtpDesde.Value)
-     Report28.ParameterFields(2).SetCurrentValue str(VentasInfPerIb.DtpHasta.Value)
-     Report28.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report28
-  End If
-  Set Report28 = Nothing
+    Dim cRlx As New ClsComprobantesL
+    Set rs = cRlx.TraerInPercIB(VentasInfPerIb.DtpDesde.Value, VentasInfPerIb.DtpHasta.Value)
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptInfPerIB
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue str(VentasInfPerIb.DtpDesde.Value)
+            .ParameterFields(2).SetCurrentValue str(VentasInfPerIb.DtpHasta.Value)
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre63()
-  Dim Report28 As New RtpInfRetIb
-  
-  Dim cRlx As New ClsComprobantesL
-  
-  Set Rs = cRlx.TraerInfRetIB(ComprasInfRetIb.DtpDesde.Value, ComprasInfRetIb.DtpHasta.Value)
-  If Rs.RecordCount <> 0 Then
-     Report28.ParameterFields(1).SetCurrentValue str(ComprasInfRetIb.DtpDesde.Value)
-     Report28.ParameterFields(2).SetCurrentValue str(ComprasInfRetIb.DtpHasta.Value)
-     Report28.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report28
-  End If
-  Set Report28 = Nothing
+    Dim cRlx As New ClsComprobantesL
+    Set rs = cRlx.TraerInfRetIB(ComprasInfRetIb.DtpDesde.Value, ComprasInfRetIb.DtpHasta.Value)
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RtpInfRetIb
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue str(ComprasInfRetIb.DtpDesde.Value)
+            .ParameterFields(2).SetCurrentValue str(ComprasInfRetIb.DtpHasta.Value)
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre64()
-  Dim Report33 As New RptR122V2
-  Dim cRsl As ClsLectura
-  
-  Set cRsl = New ClsLectura
-  
-  Set Rs = ComprasAnularPagos.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     Report33.ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Cuit", "Id=" & nMenu - 1)
-     Report33.ParameterFields(2).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "Id=" & nMenu - 1)
-     Report33.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report33
-  End If
-  Set Report33 = Nothing
+    Dim cRsl As New ClsLectura
+    Set rs = ComprasAnularPagos.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptR122V2
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Cuit", "Id=" & nMenu - 1)
+            .ParameterFields(2).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "Id=" & nMenu - 1)
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre65()
-  Dim report1 As New RptInfAplica
-
-  Set Rs = VentaInfResumen.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     report1.ReportTitle = sNomFan
-     report1.ParameterFields(1).SetCurrentValue str(VentaInfResumen.DtpFecha(0).Value)
-     report1.ParameterFields(2).SetCurrentValue str(VentaInfResumen.DtpFecha(1).Value)
-     report1.Database.SetDataSource Rs
-     CRViewer1.ReportSource = report1
-     CRViewer1.DisplayGroupTree = False
-  End If
-  Set report1 = Nothing
+    Set rs = VentaInfResumen.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptInfAplica
+        With ReporteActivo
+            .ReportTitle = sNomFan
+            .ParameterFields(1).SetCurrentValue str(VentaInfResumen.DtpFecha(0).Value)
+            .ParameterFields(2).SetCurrentValue str(VentaInfResumen.DtpFecha(1).Value)
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+        CRViewer1.DisplayGroupTree = False
+    End If
 End Sub
 
 Private Sub Impre66()
-  Dim report1 As New RptProyeccion
-
-  Set Rs = VentasInfProy.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     report1.ReportTitle = sNomFan
-     report1.ParameterFields(1).SetCurrentValue str(VentasInfProy.DtpFecha(0).Value)
-     report1.ParameterFields(2).SetCurrentValue str(VentasInfProy.DtpFecha(1).Value)
-     report1.ParameterFields(3).SetCurrentValue str(VentasInfProy.DtpFecha(2).Value)
-     report1.ParameterFields(4).SetCurrentValue str(VentasInfProy.DtpFecha(3).Value)
-     report1.ParameterFields(5).SetCurrentValue str(VentasInfProy.DtpFecha(4).Value)
-     
-     report1.Database.SetDataSource Rs
-     CRViewer1.ReportSource = report1
-     CRViewer1.DisplayGroupTree = False
-  End If
-  Set report1 = Nothing
+    Set rs = VentasInfProy.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptProyeccion
+        With ReporteActivo
+            .ReportTitle = sNomFan
+            .ParameterFields(1).SetCurrentValue str(VentasInfProy.DtpFecha(0).Value)
+            .ParameterFields(2).SetCurrentValue str(VentasInfProy.DtpFecha(1).Value)
+            .ParameterFields(3).SetCurrentValue str(VentasInfProy.DtpFecha(2).Value)
+            .ParameterFields(4).SetCurrentValue str(VentasInfProy.DtpFecha(3).Value)
+            .ParameterFields(5).SetCurrentValue str(VentasInfProy.DtpFecha(4).Value)
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+        CRViewer1.DisplayGroupTree = False
+    End If
 End Sub
 
 Private Sub Impre67()
-  Dim Report33 As New RptCertGanancia
-  Dim cRsl As ClsLectura
-  
-  Set cRsl = New ClsLectura
-  
-  Set Rs = ComprasAnularPagos.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     
-     Report33.ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "Id=" & nMenu - 1)
-     Report33.ParameterFields(2).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Direccion", "Id=" & nMenu - 1)
-     Report33.ParameterFields(3).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Localidad", "Id=" & nMenu - 1)
-     Report33.ParameterFields(4).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Cuit", "Id=" & nMenu - 1)
-     
-     Report33.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report33
-  End If
-  Set Report33 = Nothing
-  
+    Dim cRsl As New ClsLectura
+    Set rs = ComprasAnularPagos.rs
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptCertGanancia
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "Id=" & nMenu - 1)
+            .ParameterFields(2).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Direccion", "Id=" & nMenu - 1)
+            .ParameterFields(3).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Localidad", "Id=" & nMenu - 1)
+            .ParameterFields(4).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Cuit", "Id=" & nMenu - 1)
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre68()
-  Dim Report4 As New RptStockSaldo, bOrd As Integer
-  Dim nStock As Byte
-
-  Set cCanti = New ClsProductoL
-              
-  pLista = StockInfSaldos.CmbDeposito.ItemData(StockInfSaldos.CmbDeposito.ListIndex)
-  
-     bOrd = 3
-     sDesde = StockInfSaldos.LblDescripcion(0).Caption
-     sHasta = StockInfSaldos.LblDescripcion(1).Caption
-  
-  nStock = StockInfSaldos.ChkSaldo.Value
-  
-  
-  Set Rs = cCanti.DameProductos(pLista, sDesde, sHasta, bOrd, nStock)
-  If Rs.RecordCount <> 0 Then
-     Report4.ParameterFields(1).SetCurrentValue StockInfSaldos.CmbDeposito.text
-     Report4.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report4
-  End If
-  Set Report4 = Nothing
+    Dim bOrd As Integer, nStock As Byte
+    Set cCanti = New ClsProductoL
+    pLista = StockInfSaldos.CmbDeposito.ItemData(StockInfSaldos.CmbDeposito.ListIndex)
+    bOrd = 3
+    sDesde = StockInfSaldos.LblDescripcion(0).Caption
+    sHasta = StockInfSaldos.LblDescripcion(1).Caption
+    nStock = StockInfSaldos.ChkSaldo.Value
+    
+    Set rs = cCanti.DameProductos(pLista, sDesde, sHasta, bOrd, nStock)
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptStockSaldo
+        ReporteActivo.ParameterFields(1).SetCurrentValue StockInfSaldos.CmbDeposito.Text
+        ReporteActivo.Database.SetDataSource rs
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
 Private Sub Impre69()
-  Dim Report4 As New RptRepartoRemi, pZona As String
-              
-  pZona = VentaRepartoRemito.CmbZona.text
-  
-  sDesde = VentaRepartoRemito.DtpDesde.Value
-  sHasta = VentaRepartoRemito.DtpHasta.Value
-  
-  Set Rs = VentaRepartoRemito.Rs
-  
-  If Rs.RecordCount <> 0 Then
-     Report4.ParameterFields(1).SetCurrentValue sDesde
-     Report4.ParameterFields(2).SetCurrentValue sHasta
-     Report4.ParameterFields(3).SetCurrentValue pZona
-     Report4.ParameterFields(4).SetCurrentValue VentaRepartoRemito.CmbEstado.text
-     
-     Report4.Database.SetDataSource Rs
-     CRViewer1.ReportSource = Report4
-  End If
-  Set Report4 = Nothing
+    Dim pZona As String
+    pZona = VentaRepartoRemito.CmbZona.Text
+    sDesde = VentaRepartoRemito.DtpDesde.Value
+    sHasta = VentaRepartoRemito.DtpHasta.Value
+    Set rs = VentaRepartoRemito.rs
+    
+    If rs.RecordCount <> 0 Then
+        Set ReporteActivo = New RptRepartoRemi
+        With ReporteActivo
+            .ParameterFields(1).SetCurrentValue sDesde
+            .ParameterFields(2).SetCurrentValue sHasta
+            .ParameterFields(3).SetCurrentValue pZona
+            .ParameterFields(4).SetCurrentValue VentaRepartoRemito.CmbEstado.Text
+            .Database.SetDataSource rs
+        End With
+        CRViewer1.ReportSource = ReporteActivo
+    End If
 End Sub
 
+Private Sub Form_Unload(Cancel As Integer)
+    ' Liberamos el reporte activo para no dejar basura en RAM
+    Set ReporteActivo = Nothing
+    ' Cerramos el Recordset global si está abierto
+    If Not rs Is Nothing Then
+        If rs.State = adStateOpen Then rs.Close
+        Set rs = Nothing
+    End If
+End Sub

@@ -213,6 +213,7 @@ Form=MtrProveedores.frm
 Form=CajaVerTurnos.frm
 Form=CompraInfDetalles.frm
 ResFile32="ds1.RES"
+Module=modPrintDlg; modPrintDlg.bas
 IconForm="FrmUsuario"
 Startup="Principal"
 HelpFile=""

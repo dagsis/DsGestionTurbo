@@ -702,7 +702,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   63766529
+      Format          =   159580161
       CurrentDate     =   36783
    End
    Begin VB.ComboBox CmbComprobante 
@@ -722,7 +722,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   63766529
+      Format          =   159580161
       CurrentDate     =   36783
    End
    Begin VB.PictureBox Picture1 
@@ -952,6 +952,7 @@ Private RsCv As ADODB.Recordset  'Cabecera
 Private Rsd  As ADODB.Recordset  'Detalle
 Private RsCli As ADODB.Recordset 'Cliente Elegido
 Private RsComp As ADODB.Recordset 'Comprobante elegido
+Private RsValor As ADODB.Recordset
 
 Private cRsl As ClsLectura
 Private P    As ClsPrograma
@@ -1212,18 +1213,139 @@ Private Sub CmbCondPago_Click()
   nPorcValor = 0
   
   Set RsFPago = cRsl.TraerRsCondi("CondVenta", "CondVta", "CondVta=" & CmbCondPago.ItemData(CmbCondPago.ListIndex))
-  mCodVentaTipo = RsFPago!tipo
-    
-  If RsFPago!tipo = 7 Then
   
-  Else
-     nPorcValor = RsFPago!RgTarjeta
-     RecalcularRsd
+  If RsFPago.RecordCount <> 0 Then
+      mCodVentaTipo = RsFPago!tipo
+          
+     If RsFPago!tipo = 7 Then
+        ResetValores              'deja todo limpio
+        If RsValor Is Nothing Then CrearRsValorMemoria Else VaciarRsValor
+    
+        nPorcValor = 0
+        RecalcularRsd
+    
+        'Abrir FrmValores (después lo hacemos)
+    Else
+        'Si venís de pago mixto, borrar valores
+        ResetValores
+    
+        nPorcValor = RsFPago!RgTarjeta
+        RecalcularRsd
+    End If
+
   End If
    
   If mEstado = stNuevo Then RefrescarUI
 End Sub
 
+Private Sub CrearRsValorMemoria()
+    On Error GoTo errHandler
+
+    If Not RsValor Is Nothing Then
+        If RsValor.State = adStateOpen Then RsValor.Close
+    End If
+
+    Set RsValor = New ADODB.Recordset
+    RsValor.CursorLocation = adUseClient
+
+    With RsValor.Fields
+        .Append "FormaPagoId", adInteger
+        .Append "FormaPagoDesc", adVarChar, 50
+        .Append "Importe", adDouble
+
+        .Append "Nombre", adVarChar, 100
+        .Append "BancoId", adInteger
+        .Append "BancoDesc", adVarChar, 60
+        .Append "NroCheque", adVarChar, 30
+        .Append "FechaAcreditacion", adDate
+
+        .Append "NroTarjeta", adVarChar, 30
+        .Append "Vencimiento", adDate
+        .Append "NroCupon", adVarChar, 30
+        .Append "NroAutorizacion", adVarChar, 30
+
+        .Append "Observaciones", adVarChar, 255
+    End With
+
+    RsValor.Open
+    Exit Sub
+
+errHandler:
+    ManejaErrores
+End Sub
+
+Private Sub VaciarRsValor()
+    On Error GoTo errHandler
+
+    If RsValor Is Nothing Then Exit Sub
+    If RsValor.State <> adStateOpen Then Exit Sub
+    If RsValor.RecordCount <= 0 Then Exit Sub
+
+    RsValor.MoveFirst
+    Do While Not RsValor.EOF
+        RsValor.Delete
+        RsValor.MoveNext
+    Loop
+
+    Exit Sub
+errHandler:
+    ManejaErrores
+End Sub
+
+Private Sub ResetValores()
+    On Error GoTo errHandler
+
+    '1) No permitir que quede recargo “pegado”
+    nPorcValor = 0
+
+    '2) Vaciar valores (si existe)
+    If RsValor Is Nothing Then
+        'nada
+    Else
+        If RsValor.State <> adStateOpen Then
+            'si por alguna razón está cerrado, lo recreamos
+            CrearRsValorMemoria
+        Else
+            VaciarRsValor
+        End If
+    End If
+
+    '3) Si tenés labels extra de financiación/valores, resetealos acá
+    'LblFinanciacion.Caption = "0.00"
+
+    Exit Sub
+errHandler:
+    ManejaErrores
+End Sub
+
+Private Function SumaValores(ByRef rs As ADODB.Recordset) As Double
+    On Error GoTo errHandler
+
+    Dim s As Double, bk As Variant
+    s = 0
+
+    If rs Is Nothing Then Exit Function
+    If rs.State <> adStateOpen Then Exit Function
+    If rs.RecordCount <= 0 Then Exit Function
+    If (rs.BOF And rs.EOF) Then Exit Function
+
+    bk = rs.Bookmark
+    rs.MoveFirst
+    Do While Not rs.EOF
+        s = s + CDbl(Val(rs!importe & ""))
+        rs.MoveNext
+    Loop
+
+    On Error Resume Next
+    rs.Bookmark = bk
+    On Error GoTo errHandler
+
+    SumaValores = Round(s, 2)
+    Exit Function
+
+errHandler:
+    ManejaErrores
+End Function
 
 
 Private Sub LinkearDetalleDesdeRsd()
@@ -1666,24 +1788,20 @@ Private Sub Nuevo()
 
     If mEstado <> stNuevo Then
         ' pasar a nuevo
-        ResetDetalleMemoria
-        LimpiarDetalles
-        CalcularTotales
-        RefrescarUI
+       mEstado = stNuevo
+       ResetDetalleMemoria
+       ResetValores          '<<< ACÁ
+       LimpiarDetalles
+       CalcularTotales
+       RefrescarUI
+        
+       CmbCorredor.Text = "Ninguno"
+       P.SetComboByItemData CmbComprobante, nVentaFactura
        
-        mEstado = stNuevo
-
-        CmbCorredor.Text = "Ninguno"
-        P.SetComboByItemData CmbComprobante, nVentaFactura
-       
-        CmbComprobante.SetFocus
+       CmbComprobante.SetFocus
     Else
-        ' acá después va GRABAR
-        ' GrabarCabecera + GrabarDetalles...
-        ' Si grabó OK:
         mEstado = stIdle
         Limpiar
-       ' CrearRsDetalles
         RefrescarUI
     End If
     Exit Sub
@@ -1693,15 +1811,14 @@ errHandler:
 End Sub
 
 Private Sub Salir()
-    If mEstado = stNuevo Then
-        If MsgBox("Cancela la creación del comprobante?", vbYesNo + vbQuestion, "Atención") = vbNo Then Exit Sub
-        mEstado = stIdle
-        Limpiar
-        LimpiarDetalles
-        ResetDetalleMemoria
-       ' CrearRsDetalles
-        RefrescarUI
-        Botones True, False, True, False, False, True
+   If mEstado = stNuevo Then
+    If MsgBox("Cancela la creación del comprobante?", vbYesNo + vbQuestion, "Atención") = vbNo Then Exit Sub
+    mEstado = stIdle
+    Limpiar
+    LimpiarDetalles
+    ResetDetalleMemoria
+    ResetValores          '<<< ACÁ
+    RefrescarUI
     Else
         Unload Me
     End If
@@ -1712,6 +1829,8 @@ Private Sub CmbFormaPago_Click()
    If CmbFormaPago.Text <> "CONTADO" Then
       CmbCondPago.Enabled = False
       CmbCondPago.Text = "Ninguno"
+      nPorcValor = 0
+      If Rsd.RecordCount <> 0 Then RecalcularRsd
    Else
       CmbCondPago.Enabled = True
       CmbCondPago.Text = "EFECTIVO"
@@ -2111,25 +2230,25 @@ Private Sub BorrarDetalleActual()
 
     Dim bkActual As Variant
     Dim bkIr As Variant
-    Dim rsC As ADODB.Recordset
+    Dim RsC As ADODB.Recordset
 
     bkActual = Rsd.Bookmark
     bkIr = Null
 
     '--- calcular bkIr sin tocar el Rsd real
-    Set rsC = Rsd.Clone
-    rsC.Bookmark = bkActual
+    Set RsC = Rsd.Clone
+    RsC.Bookmark = bkActual
 
-    rsC.MoveNext
-    If Not rsC.EOF Then
-        bkIr = rsC.Bookmark
+    RsC.MoveNext
+    If Not RsC.EOF Then
+        bkIr = RsC.Bookmark
     Else
-        rsC.MovePrevious
-        If Not rsC.BOF Then bkIr = rsC.Bookmark
+        RsC.MovePrevious
+        If Not RsC.BOF Then bkIr = RsC.Bookmark
     End If
 
-    rsC.Close
-    Set rsC = Nothing
+    RsC.Close
+    Set RsC = Nothing
 
     '--- volver al actual y borrar ESE
     Rsd.Bookmark = bkActual
@@ -2411,24 +2530,23 @@ Private Function DetalleOK() As Boolean
     If Rsd.RecordCount <= 0 Then Exit Function
     If (Rsd.BOF And Rsd.EOF) Then Exit Function
 
-    Dim rsC As ADODB.Recordset
-    Set rsC = Rsd.Clone   '<<< no toca el recordset del grid
+    Dim RsC As ADODB.Recordset
+    Set RsC = Rsd.Clone   '<<< no toca el recordset del grid
 
-    rsC.MoveFirst
-    Do While Not rsC.EOF
-        If Len(Trim$(rsC!Descripcion & "")) > 0 Then
+    RsC.MoveFirst
+    Do While Not RsC.EOF
+        If Len(Trim$(RsC!Descripcion & "")) > 0 Then
             DetalleOK = True
             Exit Do
         End If
-        rsC.MoveNext
+        RsC.MoveNext
     Loop
 
-    rsC.Close
-    Set rsC = Nothing
+    RsC.Close
+    Set RsC = Nothing
 
 Salir:
 End Function
-
 
 Private Sub TxtDetalle_Change()
     If mEstado = stNuevo And mDetEstado <> detIdle Then
@@ -2451,8 +2569,6 @@ End Sub
 Private Sub TxtPDesc_Change()
     If mEstado = stNuevo And mDetEstado <> detIdle Then RefrescarUI
 End Sub
-
-
 
 Private Function EsNegro() As Boolean
     EsNegro = False
