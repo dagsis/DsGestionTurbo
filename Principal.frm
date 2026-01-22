@@ -951,6 +951,7 @@ Private Sub MDIForm_Load()
        
     nCondPago = rRsReg!CPago
     nFormaPago = rRsReg!FormaCob
+    nBanco = rRsReg!Banco
     bAutoNumera = rRsReg!CliProvAut
     bRedondeaLista = rRsReg!Redondea
     bAnulaPres = rRsReg!AnulaPres
@@ -1536,10 +1537,10 @@ End Sub
 Private Sub Permisos()
   On Error GoTo Errores:
 
-  Dim cRsl As ClsLectura, RsPermisos As Recordset, P As ClsPrograma
+  Dim cRsl As ClsLectura, RsPermisos As Recordset, p As ClsPrograma
   
   Set cRsl = New ClsLectura
-  Set P = New ClsPrograma
+  Set p = New ClsPrograma
     
   MenuHerramientas.Visible = False
   Caja.Visible = False
@@ -1550,7 +1551,7 @@ Private Sub Permisos()
     
   
   Set RsPermisos = cRsl.TraerRsCondi("UsuariosPermisos", "Id", "Usuario=" & nUsuario)
-  P.LoadFromRecordset RsPermisos, nUsuario
+  p.LoadFromRecordset RsPermisos, nUsuario
   
   pEdit = True ' cRsl.PuedoHacer("Edicion", 1)
   pBorr = True ' cRsl.PuedoHacer("Borrar", 1)
@@ -1561,36 +1562,36 @@ Private Sub Permisos()
  ' Clientes.Visible = True ' cRsl.PuedoHacer("Ver", 2)
  
  
-  Toolbar1.Buttons(1).Visible = P.HasAny(81) 'cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=81 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 2)
+  Toolbar1.Buttons(1).Visible = p.HasAny(81) 'cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=81 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 2)
   ' Productos
   pEdit2 = True ' cRsl.PuedoHacer("Edicion", 3)
   pBorr2 = True ' cRsl.PuedoHacer("Borrar", 3)
-  Toolbar1.Buttons(2).Visible = P.HasAny(82) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=82 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 3)
+  Toolbar1.Buttons(2).Visible = p.HasAny(82) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=82 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 3)
 
   ' Proveedores
   pEdit3 = True ' cRsl.PuedoHacer("Edicion", 4)
   pBorr3 = True ' cRsl.PuedoHacer("Borrar", 4)
-  Toolbar1.Buttons(3).Visible = P.HasAny(83) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=83 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 4)
+  Toolbar1.Buttons(3).Visible = p.HasAny(83) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=83 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 4)
  
   Toolbar1.Buttons(5).Visible = False
   Toolbar1.Buttons(6).Visible = False
   
   
-  Toolbar1.Buttons(5).Visible = P.HasAny(83)
+  Toolbar1.Buttons(5).Visible = p.HasAny(83)
   
   
-  If P.HasAny(37) = True Then
+  If p.HasAny(37) = True Then
      Toolbar1.Buttons(6).Visible = True
-  ElseIf P.HasAny(86) Then
+  ElseIf p.HasAny(86) Then
       Toolbar1.Buttons(6).Visible = True
   End If
     
-  Toolbar1.Buttons(8).Visible = P.HasAny(42) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=42 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 4)
-  Toolbar1.Buttons(9).Visible = P.HasAny(41) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=41 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 4)
-  Toolbar1.Buttons(10).Visible = P.HasAny(41) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=41 and Usuario=" & nUsuario) ' cRsl.PuedoHacer("Ver", 4)
+  Toolbar1.Buttons(8).Visible = p.HasAny(42) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=42 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 4)
+  Toolbar1.Buttons(9).Visible = p.HasAny(41) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=41 and Usuario=" & nUsuario)  ' cRsl.PuedoHacer("Ver", 4)
+  Toolbar1.Buttons(10).Visible = p.HasAny(41) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=41 and Usuario=" & nUsuario) ' cRsl.PuedoHacer("Ver", 4)
    
     
-  Tablas.Visible = P.HasAny(1) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=1 and Usuario=" & nUsuario)
+  Tablas.Visible = p.HasAny(1) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=1 and Usuario=" & nUsuario)
   
 
   If Tablas.Visible = False Then
@@ -1598,17 +1599,17 @@ Private Sub Permisos()
   End If
     
   
-  If P.HasAny(81) = False Then
+  If p.HasAny(81) = False Then
      MClientes.Visible = False
 '     Clientes.Visible = False
 '     SepCli.Visible = False
   Else
-     If P.HasAny(2) = False Then
+     If p.HasAny(2) = False Then
         MClientes.Visible = False
      Else
         Maestros.Visible = True
-        Clientes.Visible = P.HasAny(2) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=2 and Usuario=" & nUsuario)
-        CliInformes.Visible = P.HasAny(3) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=3 and Usuario=" & nUsuario)
+        Clientes.Visible = p.HasAny(2) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=2 and Usuario=" & nUsuario)
+        CliInformes.Visible = p.HasAny(3) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=3 and Usuario=" & nUsuario)
      End If
   End If
   
@@ -1616,29 +1617,29 @@ Private Sub Permisos()
      MClientes.Visible = False
   End If
   
-  If P.HasAny(82) = False Then
+  If p.HasAny(82) = False Then
      MProductos.Visible = False
   Else
     Maestros.Visible = True
-    Productos.Visible = P.HasAny(4) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=4 and Usuario=" & nUsuario)
+    Productos.Visible = p.HasAny(4) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=4 and Usuario=" & nUsuario)
   
-    MenProdUnidades.Visible = P.HasAny(7) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=7 and Usuario=" & nUsuario)
+    MenProdUnidades.Visible = p.HasAny(7) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=7 and Usuario=" & nUsuario)
   
     If Productos.Visible = False And MenProdUnidades.Visible = False Then
        SepProd1.Visible = False
     End If
   
-    ListProduc.Visible = P.HasAny(8) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=8 and Usuario=" & nUsuario)
+    ListProduc.Visible = p.HasAny(8) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=8 and Usuario=" & nUsuario)
     
     If ListProduc.Visible = False Then
        SepProd.Visible = False
       
     End If
   
-    MenuCodBarra.Visible = P.HasAny(11) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=11 and Usuario=" & nUsuario)
+    MenuCodBarra.Visible = p.HasAny(11) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=11 and Usuario=" & nUsuario)
   
-    MenuEtiquetas.Visible = P.HasAny(10) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=10 and Usuario=" & nUsuario)
-    MenuEtiMovi.Visible = P.HasAny(9) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=9 and Usuario=" & nUsuario)
+    MenuEtiquetas.Visible = p.HasAny(10) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=10 and Usuario=" & nUsuario)
+    MenuEtiMovi.Visible = p.HasAny(9) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=9 and Usuario=" & nUsuario)
   
   
    If MenuCodBarra.Visible = False Then
@@ -1658,71 +1659,71 @@ Private Sub Permisos()
   End If
 '
 
-  If P.HasAny(83) = False Then
+  If p.HasAny(83) = False Then
      MProveedores.Visible = False
    Else
      Maestros.Visible = True
-     Proveedores.Visible = P.HasAny(83) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=83 and Usuario=" & nUsuario) '
-     If Proveedores.Visible = False And P.HasAny(13) = False Then
+     Proveedores.Visible = p.HasAny(83) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=83 and Usuario=" & nUsuario) '
+     If Proveedores.Visible = False And p.HasAny(13) = False Then
         MProveedores.Visible = False
      End If
   End If
   
   
-  MenuStock.Visible = P.HasAny(72) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=72 and Usuario=" & nUsuario)
+  MenuStock.Visible = p.HasAny(72) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=72 and Usuario=" & nUsuario)
   If MenuStock.Visible = True Then
-     StockComprobante.Visible = P.HasAny(14) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=14 and Usuario=" & nUsuario)
-     StockInformes.Visible = P.HasAny(15) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=15 and Usuario=" & nUsuario)
+     StockComprobante.Visible = p.HasAny(14) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=14 and Usuario=" & nUsuario)
+     StockInformes.Visible = p.HasAny(15) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=15 and Usuario=" & nUsuario)
      If StockInformes.Visible = True Then
-        RemitosPendientes.Visible = P.HasAny(16) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=16 and Usuario=" & nUsuario)
+        RemitosPendientes.Visible = p.HasAny(16) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=16 and Usuario=" & nUsuario)
         If RemitosPendientes.Visible = False Then
            MStockSep1.Visible = False
         End If
-        MenuStockSaldos.Visible = P.HasAny(17) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=17 and Usuario=" & nUsuario)
-        StockFaltantesStock.Visible = P.HasAny(18) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=18 and Usuario=" & nUsuario)
-        Kardex.Visible = P.HasAny(19) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=19 and Usuario=" & nUsuario)
+        MenuStockSaldos.Visible = p.HasAny(17) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=17 and Usuario=" & nUsuario)
+        StockFaltantesStock.Visible = p.HasAny(18) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=18 and Usuario=" & nUsuario)
+        Kardex.Visible = p.HasAny(19) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=19 and Usuario=" & nUsuario)
         If MenuStockSaldos.Visible = False And StockFaltantesStock.Visible = False And Kardex.Visible = False Then
            MStockSep1.Visible = False
         End If
-        MStockCostos.Visible = P.HasAny(20) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=20 and Usuario=" & nUsuario)
-        MenuConciliar.Visible = P.HasAny(94) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=94 and Usuario=" & nUsuario)
+        MStockCostos.Visible = p.HasAny(20) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=20 and Usuario=" & nUsuario)
+        MenuConciliar.Visible = p.HasAny(94) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=94 and Usuario=" & nUsuario)
         If MStockCostos.Visible = False Then
           MStockSep2.Visible = False
         End If
      End If
   End If
 
-     MenuCompras.Visible = P.HasAny(73) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=73 and Usuario=" & nUsuario)
+     MenuCompras.Visible = p.HasAny(73) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=73 and Usuario=" & nUsuario)
   If MenuCompras.Visible = True Then
-     ComprasFacturacion.Visible = P.HasAny(21) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=21 and Usuario=" & nUsuario)
-     CompRemitos.Visible = P.HasAny(22) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=22 and Usuario=" & nUsuario)
-     ComprasPagos.Visible = P.HasAny(23) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=23 and Usuario=" & nUsuario)
-     MenuAdeProv.Visible = P.HasAny(24) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=24 and Usuario=" & nUsuario)
-     ComprasAnular.Visible = P.HasAny(25) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=25 and Usuario=" & nUsuario)
-     ComprasPrecios.Visible = P.HasAny(26) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=26 and Usuario=" & nUsuario)
-     MenuComprasPrecios.Visible = P.HasAny(27) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=27 and Usuario=" & nUsuario)
+     ComprasFacturacion.Visible = p.HasAny(21) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=21 and Usuario=" & nUsuario)
+     CompRemitos.Visible = p.HasAny(22) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=22 and Usuario=" & nUsuario)
+     ComprasPagos.Visible = p.HasAny(23) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=23 and Usuario=" & nUsuario)
+     MenuAdeProv.Visible = p.HasAny(24) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=24 and Usuario=" & nUsuario)
+     ComprasAnular.Visible = p.HasAny(25) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=25 and Usuario=" & nUsuario)
+     ComprasPrecios.Visible = p.HasAny(26) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=26 and Usuario=" & nUsuario)
+     MenuComprasPrecios.Visible = p.HasAny(27) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=27 and Usuario=" & nUsuario)
      If ComprasPrecios.Visible = False And MenuComprasPrecios.Visible = False Then
         ComprasSep.Visible = False
      End If
-     ComprasInformes.Visible = P.HasAny(28) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=28 and Usuario=" & nUsuario)
+     ComprasInformes.Visible = p.HasAny(28) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=28 and Usuario=" & nUsuario)
      If ComprasInformes.Visible = False Then
         ComprasSep2.Visible = False
      End If
      If ComprasInformes.Visible = True Then
-        ComprasResCta.Visible = P.HasAny(29) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=29 and Usuario=" & nUsuario)
-        ComprasVencimientos.Visible = P.HasAny(30) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=30 and Usuario=" & nUsuario)
-        MenuIvaCompras.Visible = P.HasAny(31) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=31 and Usuario=" & nUsuario)
-        MenuDetCompras.Visible = P.HasAny(29) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=29 and Usuario=" & nUsuario)
-        MCitiCompras.Visible = P.HasAny(32) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=32 and Usuario=" & nUsuario)
+        ComprasResCta.Visible = p.HasAny(29) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=29 and Usuario=" & nUsuario)
+        ComprasVencimientos.Visible = p.HasAny(30) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=30 and Usuario=" & nUsuario)
+        MenuIvaCompras.Visible = p.HasAny(31) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=31 and Usuario=" & nUsuario)
+        MenuDetCompras.Visible = p.HasAny(29) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=29 and Usuario=" & nUsuario)
+        MCitiCompras.Visible = p.HasAny(32) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=32 and Usuario=" & nUsuario)
         If MenuIvaCompras.Visible = False And MCitiCompras.Visible = False Then
            SepCompras.Visible = False
         End If
-        InfRetIb.Visible = P.HasAny(33) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=33 and Usuario=" & nUsuario)
-        InfRetGanancia.Visible = P.HasAny(89) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=89 and Usuario=" & nUsuario)
+        InfRetIb.Visible = p.HasAny(33) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=33 and Usuario=" & nUsuario)
+        InfRetGanancia.Visible = p.HasAny(89) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=89 and Usuario=" & nUsuario)
         If InfRetIb.Visible = False Then
            SepIvaCompras.Visible = False
         End If
-        MnuChequeCart.Visible = P.HasAny(34) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=34 and Usuario=" & nUsuario)
+        MnuChequeCart.Visible = p.HasAny(34) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=34 and Usuario=" & nUsuario)
         If MnuChequeCart.Visible = False Then
            SepChe.Visible = False
         End If
@@ -1730,79 +1731,79 @@ Private Sub Permisos()
   End If
 
 
-  MenuVentas.Visible = P.HasAny(74) 'cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=74 and Usuario=" & nUsuario)
+  MenuVentas.Visible = p.HasAny(74) 'cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=74 and Usuario=" & nUsuario)
   If MenuVentas.Visible = True Then
-     VentaComprobante.Visible = P.HasAny(35) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=35 and Usuario=" & nUsuario)
-     VentaRemitos.Visible = P.HasAny(36) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=36 and Usuario=" & nUsuario)
-     MVentaCobranzas.Visible = P.HasAny(37) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=37 and Usuario=" & nUsuario)
-     MenuAdeClientes.Visible = P.HasAny(38) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=38 and Usuario=" & nUsuario)
-     MeVentaAnularCobranza.Visible = P.HasAny(39) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=39 and Usuario=" & nUsuario)
-     VentaPrecios.Visible = P.HasAny(40) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=40 and Usuario=" & nUsuario)
-     MenuPreciosGrid.Visible = P.HasAny(41) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=41 and Usuario=" & nUsuario)
-     ConsultoPrecios.Visible = P.HasAny(42) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=42 and Usuario=" & nUsuario)
+     VentaComprobante.Visible = p.HasAny(35) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=35 and Usuario=" & nUsuario)
+     VentaRemitos.Visible = p.HasAny(36) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=36 and Usuario=" & nUsuario)
+     MVentaCobranzas.Visible = p.HasAny(37) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=37 and Usuario=" & nUsuario)
+     MenuAdeClientes.Visible = p.HasAny(38) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=38 and Usuario=" & nUsuario)
+     MeVentaAnularCobranza.Visible = p.HasAny(39) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=39 and Usuario=" & nUsuario)
+     VentaPrecios.Visible = p.HasAny(40) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=40 and Usuario=" & nUsuario)
+     MenuPreciosGrid.Visible = p.HasAny(41) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=41 and Usuario=" & nUsuario)
+     ConsultoPrecios.Visible = p.HasAny(42) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=42 and Usuario=" & nUsuario)
      If VentaPrecios.Visible = False And VentaPrecios.Visible = False And MenuPreciosGrid.Visible = False Then
         VentaSep7.Visible = False
      End If
-     VentasInformes.Visible = P.HasAny(84) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=84 and Usuario=" & nUsuario)
+     VentasInformes.Visible = p.HasAny(84) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=84 and Usuario=" & nUsuario)
      If VentasInformes.Visible = False Then
         VentaSep5.Visible = False
      End If
      If VentasInformes.Visible = True Then
-        MenuResCuenta.Visible = P.HasAny(43) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=43 and Usuario=" & nUsuario)
-        MenuResCueDet.Visible = P.HasAny(44) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=44 and Usuario=" & nUsuario)
-        MenResCtaFlia.Visible = P.HasAny(45) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=45 and Usuario=" & nUsuario)
-        MenuVencimientos.Visible = P.HasAny(46) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=46 and Usuario=" & nUsuario)
-        MVenProy.Visible = P.HasAny(47) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=47 and Usuario=" & nUsuario)
-        MenuDetalles.Visible = P.HasAny(48) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=48 and Usuario=" & nUsuario)
-        MenuDetCob.Visible = P.HasAny(49) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=49 and Usuario=" & nUsuario)
-        MenuInfVenta.Visible = P.HasAny(50) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=50 and Usuario=" & nUsuario)
-        VentaInfFami.Visible = P.HasAny(51) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=51 and Usuario=" & nUsuario)
-        VentasUtilidades.Visible = P.HasAny(52) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=52 and Usuario=" & nUsuario)
-        ControlGastos.Visible = P.HasAny(53) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=53 and Usuario=" & nUsuario)
-        Ranking.Visible = P.HasAny(51) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=54 and Usuario=" & nUsuario)
-        Consolidados.Visible = P.HasAny(55) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=55 and Usuario=" & nUsuario)
-        MenuReparto.Visible = P.HasAny(56) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=56 and Usuario=" & nUsuario)
-        MenuRepRemi.Visible = P.HasAny(91) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=91 and Usuario=" & nUsuario)
-        MenuRepEntregas.Visible = P.HasAny(92) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=92 and Usuario=" & nUsuario)
+        MenuResCuenta.Visible = p.HasAny(43) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=43 and Usuario=" & nUsuario)
+        MenuResCueDet.Visible = p.HasAny(44) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=44 and Usuario=" & nUsuario)
+        MenResCtaFlia.Visible = p.HasAny(45) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=45 and Usuario=" & nUsuario)
+        MenuVencimientos.Visible = p.HasAny(46) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=46 and Usuario=" & nUsuario)
+        MVenProy.Visible = p.HasAny(47) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=47 and Usuario=" & nUsuario)
+        MenuDetalles.Visible = p.HasAny(48) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=48 and Usuario=" & nUsuario)
+        MenuDetCob.Visible = p.HasAny(49) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=49 and Usuario=" & nUsuario)
+        MenuInfVenta.Visible = p.HasAny(50) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=50 and Usuario=" & nUsuario)
+        VentaInfFami.Visible = p.HasAny(51) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=51 and Usuario=" & nUsuario)
+        VentasUtilidades.Visible = p.HasAny(52) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=52 and Usuario=" & nUsuario)
+        ControlGastos.Visible = p.HasAny(53) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=53 and Usuario=" & nUsuario)
+        Ranking.Visible = p.HasAny(51) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=54 and Usuario=" & nUsuario)
+        Consolidados.Visible = p.HasAny(55) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=55 and Usuario=" & nUsuario)
+        MenuReparto.Visible = p.HasAny(56) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=56 and Usuario=" & nUsuario)
+        MenuRepRemi.Visible = p.HasAny(91) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=91 and Usuario=" & nUsuario)
+        MenuRepEntregas.Visible = p.HasAny(92) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=92 and Usuario=" & nUsuario)
         
         If MenuInfVenta.Visible = False And VentaInfFami.Visible = False And VentasUtilidades.Visible = False _
            And ControlGastos.Visible = False And Ranking.Visible = False And Consolidados.Visible = False And MenuReparto.Visible = False Then
            VentaSep1(1).Visible = False
         End If
 
-        VentaFactLine.Visible = P.HasAny(87) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=87 and Usuario=" & nUsuario)
-        MenuIvaVenta.Visible = P.HasAny(57) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=57 and Usuario=" & nUsuario)
-        MCitiVentas.Visible = P.HasAny(58) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=58 and Usuario=" & nUsuario)
+        VentaFactLine.Visible = p.HasAny(87) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=87 and Usuario=" & nUsuario)
+        MenuIvaVenta.Visible = p.HasAny(57) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=57 and Usuario=" & nUsuario)
+        MCitiVentas.Visible = p.HasAny(58) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=58 and Usuario=" & nUsuario)
         If MenuIvaVenta.Visible = False And MCitiVentas.Visible = False Then
           SepVent.Visible = False
         End If
-        InfPerIB.Visible = P.HasAny(59) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=59 and Usuario=" & nUsuario)
+        InfPerIB.Visible = p.HasAny(59) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=59 and Usuario=" & nUsuario)
         If InfPerIB.Visible = False Then
            SepIva.Visible = False
         End If
-        VentaCosteos.Visible = P.HasAny(60) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=60 and Usuario=" & nUsuario)
+        VentaCosteos.Visible = p.HasAny(60) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=60 and Usuario=" & nUsuario)
         If VentaCosteos.Visible = False Then
            VentaSep.Visible = False
         End If
-        VentaListaPrecios.Visible = P.HasAny(61) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=61 and Usuario=" & nUsuario)
+        VentaListaPrecios.Visible = p.HasAny(61) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=61 and Usuario=" & nUsuario)
         If VentaListaPrecios.Visible = False Then
            VentaSep2.Visible = False
         End If
      End If
   End If
 
-  Caja.Visible = P.HasAny(75) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=75 and Usuario=" & nUsuario)
+  Caja.Visible = p.HasAny(75) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=75 and Usuario=" & nUsuario)
   If Caja.Visible = True Then
 
-     MCajaRap.Visible = P.HasAny(85) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=85 and Usuario=" & nUsuario)
-     MCobSaldos.Visible = P.HasAny(86) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=86 and Usuario=" & nUsuario)
+     MCajaRap.Visible = p.HasAny(85) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=85 and Usuario=" & nUsuario)
+     MCobSaldos.Visible = p.HasAny(86) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=86 and Usuario=" & nUsuario)
      
      If MCajaRap.Visible = False And MCobSaldos.Visible = False Then
         SepCaja.Visible = False
      End If
            
-     MenuComprobanteCaja.Visible = P.HasAny(62) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=62 and Usuario=" & nUsuario)
-     MenuInforCaja.Visible = P.HasAny(63) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=63 and Usuario=" & nUsuario)
+     MenuComprobanteCaja.Visible = p.HasAny(62) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=62 and Usuario=" & nUsuario)
+     MenuInforCaja.Visible = p.HasAny(63) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=63 and Usuario=" & nUsuario)
      If MenuInforCaja.Visible = False Then
         VentaSep.Visible = False
      End If
@@ -1810,11 +1811,11 @@ Private Sub Permisos()
        CajaSep2.Visible = False
      End If
      If MenuInforCaja.Visible = True Then
-        MenuInforMoviCaja.Visible = P.HasAny(64) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=64 and Usuario=" & nUsuario)
-        MenSalCaja.Visible = P.HasAny(65) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=65 and Usuario=" & nUsuario)
-        CajaChequeTer.Visible = P.HasAny(66) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=66 and Usuario=" & nUsuario)
-        MenuSaldoCtaCteBan.Visible = P.HasAny(67) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=67 and Usuario=" & nUsuario)
-        MenuCtaCbles.Visible = P.HasAny(68) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=68 and Usuario=" & nUsuario)
+        MenuInforMoviCaja.Visible = p.HasAny(64) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=64 and Usuario=" & nUsuario)
+        MenSalCaja.Visible = p.HasAny(65) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=65 and Usuario=" & nUsuario)
+        CajaChequeTer.Visible = p.HasAny(66) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=66 and Usuario=" & nUsuario)
+        MenuSaldoCtaCteBan.Visible = p.HasAny(67) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=67 and Usuario=" & nUsuario)
+        MenuCtaCbles.Visible = p.HasAny(68) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=68 and Usuario=" & nUsuario)
         If CajaChequeTer.Visible = False And MenuSaldoCtaCteBan.Visible = False And MenuCtaCbles.Visible = False Then
         
         End If
@@ -1826,10 +1827,10 @@ Private Sub Permisos()
      End If
 
      
-     MenuCierreTurno.Visible = P.HasAny(90) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=90 and Usuario=" & nUsuario)
+     MenuCierreTurno.Visible = p.HasAny(90) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=90 and Usuario=" & nUsuario)
      
-     MenuCajaSaldo.Visible = P.HasAny(93) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=93 and Usuario=" & nUsuario)
-     CierreManual.Visible = P.HasAny(71) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=71 and Usuario=" & nUsuario)
+     MenuCajaSaldo.Visible = p.HasAny(93) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=93 and Usuario=" & nUsuario)
+     CierreManual.Visible = p.HasAny(71) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=71 and Usuario=" & nUsuario)
 
      If CierreManual.Visible = False Then
         SepCierre.Visible = False
@@ -1837,14 +1838,14 @@ Private Sub Permisos()
   End If
 
 
-  MenuHerramientas.Visible = P.HasAny(76) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=76 and Usuario=" & nUsuario)
+  MenuHerramientas.Visible = p.HasAny(76) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=76 and Usuario=" & nUsuario)
   If MenuHerramientas.Visible = True Then
-    MHerrPer.Visible = P.HasAny(88) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=88 and Usuario=" & nUsuario)
+    MHerrPer.Visible = p.HasAny(88) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=88 and Usuario=" & nUsuario)
     MHerraRegDef.Visible = bAdmin
     HerrUserPer.Visible = bAdmin
-    MHerrConf.Visible = P.HasAny(79) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=79 and Usuario=" & nUsuario)
-    HerrImporProduc.Visible = P.HasAny(80) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=80 and Usuario=" & nUsuario)
-    HerrConfigCorreo.Visible = P.HasAny(96) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=96 and Usuario=" & nUsuario)
+    MHerrConf.Visible = p.HasAny(79) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=79 and Usuario=" & nUsuario)
+    HerrImporProduc.Visible = p.HasAny(80) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=80 and Usuario=" & nUsuario)
+    HerrConfigCorreo.Visible = p.HasAny(96) ' cRsl.TraerValorDeUnCampo("UsuariosPermisos", "Valor", "Opcion=96 and Usuario=" & nUsuario)
   End If
   Exit Sub
 Errores:

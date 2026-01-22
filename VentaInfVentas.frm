@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form VentaInfVentas 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Informes de Ventas"
@@ -74,7 +74,7 @@ Begin VB.Form VentaInfVentas
             _ExtentX        =   2408
             _ExtentY        =   556
             _Version        =   393216
-            Format          =   709230593
+            Format          =   159055873
             CurrentDate     =   36996
          End
          Begin MSComCtl2.DTPicker DTPicker1 
@@ -86,7 +86,7 @@ Begin VB.Form VentaInfVentas
             _ExtentX        =   2408
             _ExtentY        =   556
             _Version        =   393216
-            Format          =   709230593
+            Format          =   159055873
             CurrentDate     =   36996
          End
          Begin VB.Label Label2 
@@ -217,7 +217,7 @@ Private Sub Command1_Click()
         Rs!fecha = Rx!fecha
         Rs!Comprobante = Rx!Comprobante
         Rs!Numero = Rx!Numero
-        Rs!Sucursal = Rx!Sucursal
+        Rs!sucursal = Rx!sucursal
         Rs!Cliente = "" & Rx!RazonSocial
         Rs!Vendedor = Rx!Vendedor
         Rs!Caja = Rx!Caja
@@ -250,7 +250,16 @@ Private Sub Command1_Click()
      Loop
   End If
   Command1.Enabled = True
-  FrmImpresor.Show
+  
+  If Not (Rs Is Nothing) Then
+    If Not (Rs.EOF And Rs.BOF) Then
+        FrmImpresor.Show
+    Else
+        MsgBox "No hay Registros. Intente con Nuevos Parametros", vbCritical, "Atención"
+    End If
+   Else
+        MsgBox "No hay Registros. Intente con Nuevos Parametros", vbCritical, "Atención"
+   End If
 End Sub
 Private Sub DTPicker1_KeyDown(KeyCode As Integer, Shift As Integer)
   Dim WshShell As Object

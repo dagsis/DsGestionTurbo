@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form VentaInfResumen 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Resumen de Cuenta"
@@ -180,7 +180,7 @@ Begin VB.Form VentaInfResumen
          _ExtentX        =   2408
          _ExtentY        =   635
          _Version        =   393216
-         Format          =   709951489
+         Format          =   158793729
          CurrentDate     =   37021
       End
       Begin MSComCtl2.DTPicker DtpFecha 
@@ -193,7 +193,7 @@ Begin VB.Form VentaInfResumen
          _ExtentX        =   2408
          _ExtentY        =   635
          _Version        =   393216
-         Format          =   709951489
+         Format          =   158793729
          CurrentDate     =   37021
       End
       Begin VB.Label Label5 
@@ -294,7 +294,8 @@ Dim cRsl As ClsClienteL
 Public Rs As ADODB.Recordset
 
 Private Sub CmdAplicar_Click()
-  If Option1(0).Value = True Then
+
+ If Option1(0).Value = True Then
      If ChkSimpli.Value = 0 Then
         CrearRs
         If ChkDesde.Value = 0 Then
@@ -320,6 +321,7 @@ Private Sub CmdAplicar_Click()
   Else
      
   End If
+  
 End Sub
 
 Private Sub CrearRsApli()
@@ -349,14 +351,14 @@ Private Sub TraerRsApli()
   Set cRsl = New ClsLectura
   Set cRx = New ClsComprobantesL
 
-  If TxtCliente(0).text <> TxtCliente(1).text Then
+  If TxtCliente(0).Text <> TxtCliente(1).Text Then
      sOrden = "Cliente"
      If ChkAbc.Value = 1 Then
         sOrden = "RazonSocial"
      End If
      Set RsAux = cRsl.TraerRsCondi("Clientes", sOrden, "RazonSocial>='" & LblCliente(0).Caption & "' AND RazonSocial<='" & LblCliente(1).Caption & "'")
   Else
-     Set RsAux = cRsl.TraerRsCondi("Clientes", "Id", "Cliente='" & TxtCliente(0).text & "'")
+     Set RsAux = cRsl.TraerRsCondi("Clientes", "Id", "Cliente='" & TxtCliente(0).Text & "'")
   End If
   j = 1
   Dim nSaldo As Double
@@ -457,7 +459,7 @@ Private Sub CmdBuscar_Click(Index As Integer)
      Set Rs = crs.TraerRS("ClienteTraerUno", nDat, True)
      LinkearTexto Index
      If Index = 0 Then
-        TxtCliente(1).text = Rs!Cliente
+        TxtCliente(1).Text = Rs!Cliente
         LblCliente(1).Caption = Rs!RazonSocial
      End If
   End If
@@ -466,7 +468,7 @@ Private Sub CmdBuscar_Click(Index As Integer)
 End Sub
 Private Sub LinkearTexto(Index As Integer)
   If Rs.RecordCount <> 0 Then
-     TxtCliente(Index).text = Rs!Cliente
+     TxtCliente(Index).Text = Rs!Cliente
      LblCliente(Index).Caption = Rs!RazonSocial
   End If
 End Sub
@@ -489,7 +491,7 @@ Private Sub Limpiar()
   Dim ctl As Control
   For Each ctl In Controls
       If TypeOf ctl Is TextBox Then
-         ctl.text = ""
+         ctl.Text = ""
       End If
   Next ctl
   DtpFecha(0).Value = Date - 30
@@ -517,10 +519,10 @@ Private Sub CargarEtiquetas()
   Set cZona = New ClsLectura
   
   Rs.MoveFirst
-  TxtCliente(0).text = Rs!Cliente
+  TxtCliente(0).Text = Rs!Cliente
   LblCliente(0).Caption = Rs!RazonSocial
   Rs.MoveLast
-  TxtCliente(1).text = Rs!Cliente
+  TxtCliente(1).Text = Rs!Cliente
   LblCliente(1).Caption = Rs!RazonSocial
   
   CmbZona.AddItem "TODAS"
@@ -536,16 +538,16 @@ Private Sub CargarEtiquetas()
 End Sub
 Private Sub TxtCliente_GotFocus(Index As Integer)
   TxtCliente(Index).SelStart = 0
-  TxtCliente(Index).SelLength = Len(TxtCliente(Index).text)
+  TxtCliente(Index).SelLength = Len(TxtCliente(Index).Text)
 End Sub
 Private Sub TxtCliente_LostFocus(Index As Integer)
   CmdAplicar.Enabled = False
   LblCliente(Index).Caption = ""
   Set cRsl = New ClsClienteL
-  If TxtCliente(Index).text <> "" Then
-     If cRsl.BuscarNombreCliente(TxtCliente(Index).text) <> "" Then
-        LblCliente(Index).Caption = cRsl.BuscarNombreCliente(TxtCliente(Index).text)
-        TxtCliente(1).text = TxtCliente(Index).text
+  If TxtCliente(Index).Text <> "" Then
+     If cRsl.BuscarNombreCliente(TxtCliente(Index).Text) <> "" Then
+        LblCliente(Index).Caption = cRsl.BuscarNombreCliente(TxtCliente(Index).Text)
+        TxtCliente(1).Text = TxtCliente(Index).Text
         LblCliente(1).Caption = LblCliente(Index).Caption
         CmdAplicar.Enabled = True
      End If
@@ -599,7 +601,7 @@ Private Sub TraerAnterior()
      Rs!fecha = Null
      Rs!Comprobante = "SALDO ANTERIOR"
      Rs!Numero = Null
-     Rs!Sucursal = Null
+     Rs!sucursal = Null
      Rs!Cuota = Null
      sSaldo = IIf(IsNull(RsAux!SumaDeDebe), 0, RsAux!SumaDeDebe) - IIf(IsNull(RsAux!SumaDeHaber), 0, RsAux!SumaDeHaber)
      Rs!Debe = sSaldo 'IIf(IsNull(RsAux!SumaDeDebe), 0, RsAux!SumaDeDebe)
@@ -638,7 +640,7 @@ Private Sub TraerSiguiente()
         Rs!fecha = RsAux!fecha
         Rs!Comprobante = RsAux!Comprobante '& " " & RsAux!Motivo
         Rs!Numero = RsAux!Numero
-        Rs!Sucursal = RsAux!Sucursal
+        Rs!sucursal = RsAux!sucursal
         Rs!Cuota = RsAux!Cuota
         Rs!Debe = IIf(IsNull(RsAux!Debe), 0, RsAux!Debe)
         Rs!Haber = IIf(IsNull(RsAux!Haber), 0, RsAux!Haber)
@@ -659,7 +661,7 @@ Private Sub TraerSiguiente()
            Rs!fecha = RsAux!fecha
            Rs!Comprobante = RsAux!Comprobante ' & " " & RsAux!Motivo
            Rs!Numero = RsAux!Numero
-           Rs!Sucursal = RsAux!Sucursal
+           Rs!sucursal = RsAux!sucursal
            Rs!Cuota = RsAux!Cuota
            Rs!Debe = IIf(IsNull(RsAux!Debe), 0, RsAux!Debe)
            Rs!Haber = IIf(IsNull(RsAux!Haber), 0, RsAux!Haber)
@@ -701,7 +703,7 @@ Private Sub TraerRemitos()
            Rs!fecha = RsAux!fecha
            Rs!Comprobante = RsAux!Comprobante
            Rs!Numero = RsAux!Numero
-           Rs!Sucursal = RsAux!Sucursal
+           Rs!sucursal = RsAux!sucursal
            Rs!Cuota = Null
            Rs!Debe = IIf(IsNull(RsAux!Expr1), 0, Abs(RsAux!Expr1))
            Rs!Haber = 0

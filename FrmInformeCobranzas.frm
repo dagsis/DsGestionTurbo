@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Begin VB.Form FrmInformeCobranzas 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Informe de Cobranzas"
@@ -37,7 +37,7 @@ Begin VB.Form FrmInformeCobranzas
          _ExtentX        =   2672
          _ExtentY        =   609
          _Version        =   393216
-         Format          =   53542913
+         Format          =   248774657
          CurrentDate     =   36983
       End
       Begin MSComCtl2.DTPicker DTPHasta 
@@ -49,7 +49,7 @@ Begin VB.Form FrmInformeCobranzas
          _ExtentX        =   2672
          _ExtentY        =   609
          _Version        =   393216
-         Format          =   53542913
+         Format          =   248774657
          CurrentDate     =   36983
       End
       Begin VB.Label Label1 
@@ -93,12 +93,21 @@ Private Sub CmdImprimir_Click()
   CrearRsFormaPago
   LlenarRs3
   nImpr = 53
-  FrmImpresor.Show
+  
+  If Not (Rs3 Is Nothing) Then
+    If Rs3.RecordCount <> 0 Then
+        FrmImpresor.Show
+    Else
+        MsgBox "No hay Registros. Intente con Nuevos Parametros", vbCritical, "Atención"
+    End If
+    Else
+        MsgBox "No hay Registros. Intente con Nuevos Parametros", vbCritical, "Atención"
+    End If
   Me.MousePointer = 0
 End Sub
 
 Private Sub LlenarRs3()
-  Dim rAux As ADODB.Recordset, cX1 As ClsComprobantesL, cRsl As ClsLectura, x As Integer
+  Dim rAux As ADODB.Recordset, cX1 As ClsComprobantesL, cRsl As ClsLectura, X As Integer
   
   Set cX1 = New ClsComprobantesL
   Set rAux = cX1.TraerCobranzaLista(DtpDesde.Value, DtpHasta.Value)
@@ -112,7 +121,7 @@ Private Sub LlenarRs3()
          Rs1.MoveFirst
          Do While Not Rs1.EOF
             Rs3.AddNew
-            Rs3!Documento = Format(rAux!Sucursal, "0000") & "-" & Format(rAux!Numero, "00000000")
+            Rs3!Documento = Format(rAux!sucursal, "0000") & "-" & Format(rAux!Numero, "00000000")
             Rs3!FechaCob = rAux!fecha
             Rs3!Cliente = cRsl.TraerValorDeUnCampo("Clientes", "RazonSocial", "Cliente='" & rAux!Cliente & "'")
             Rs3!Domicilio = cRsl.TraerValorDeUnCampo("Clientes", "Domicilio", "Cliente='" & rAux!Cliente & "'")
@@ -120,7 +129,7 @@ Private Sub LlenarRs3()
       ' Facturas
             Rs3!fecha = Rs1!fecha
             Rs3!Comprobante = Rs1!Comprobante
-            Rs3!Sucursal = Rs1!Sucursal
+            Rs3!sucursal = Rs1!sucursal
             Rs3!Numero = Rs1!Numero
             Rs3!importe = Rs1!importe
             Rs3!Cancelado = Rs1!Cancelado
@@ -139,7 +148,7 @@ Private Sub LlenarRs3()
          Rs2.MoveFirst
          Do While Not Rs2.EOF
             Rs3.AddNew
-            Rs3!Documento = Format(rAux!Sucursal, "0000") & "-" & Format(rAux!Numero, "00000000")
+            Rs3!Documento = Format(rAux!sucursal, "0000") & "-" & Format(rAux!Numero, "00000000")
             Rs3!FechaCob = rAux!fecha
             Rs3!Cliente = cRsl.TraerValorDeUnCampo("Clientes", "RazonSocial", "Cliente='" & rAux!Cliente & "'")
             Rs3!Domicilio = cRsl.TraerValorDeUnCampo("Clientes", "Domicilio", "Cliente='" & rAux!Cliente & "'")
@@ -147,7 +156,7 @@ Private Sub LlenarRs3()
           ' Facturas
             Rs3!fecha = Date
             Rs3!Comprobante = ""
-            Rs3!Sucursal = 0
+            Rs3!sucursal = 0
             Rs3!Numero = 0
             Rs3!importe = 0
             Rs3!Cancelado = 0
@@ -164,17 +173,17 @@ Private Sub LlenarRs3()
          Loop
          If Rs1.RecordCount <> 0 Then
             Rs1.MoveLast
-            For x = Rs1.RecordCount - 1 To 0 Step -1
+            For X = Rs1.RecordCount - 1 To 0 Step -1
                Rs1.Delete
                Rs1.MovePrevious
-            Next x
+            Next X
         End If
         If Rs2.RecordCount <> 0 Then
            Rs2.MoveLast
-           For x = Rs2.RecordCount - 1 To 0 Step -1
+           For X = Rs2.RecordCount - 1 To 0 Step -1
                Rs2.Delete
                Rs2.MovePrevious
-          Next x
+          Next X
        End If
      End If
      rAux.MoveNext
@@ -235,7 +244,7 @@ Private Sub CrearRsFormaPago()
 End Sub
 
 Private Sub LlenarRs1(pMovi As Long)
-  Dim cRsl As ClsLectura, rAux As Recordset, x As Integer
+  Dim cRsl As ClsLectura, rAux As Recordset, X As Integer
 
   Set cRsl = New ClsLectura
   Set rAux = cRsl.TraerRsCondi("DetallesComprobantes", "Id", "Movimiento=" & pMovi)
@@ -243,13 +252,13 @@ Private Sub LlenarRs1(pMovi As Long)
   If rAux.RecordCount <> 0 Then
      Do While Not rAux.EOF
         Rs1.AddNew
-        Rs1!fecha = cRsl.TraerValorDeUnCampo("CabComprobantes", "Fecha", "Movimiento=" & rAux!Tasa)
-        Rs1!Comprobante = cRsl.TraerValorDeUnCampo("Comprobantes", "Descripcion", "Id=" & cRsl.TraerValorDeUnCampo("CabComprobantes", "Comprobante", "Movimiento=" & rAux!Tasa))
-        Rs1!Sucursal = Format(cRsl.TraerValorDeUnCampo("CabComprobantes", "Sucursal", "Movimiento=" & rAux!Tasa), "0000")
-        Rs1!Numero = Format(cRsl.TraerValorDeUnCampo("CabComprobantes", "Numero", "Movimiento=" & rAux!Tasa), "00000000")
-        Rs1!importe = Format(cRsl.TraerValorDeUnCampo("CabComprobantes", "Debe", "Movimiento=" & rAux!Tasa), "0.00")
+        Rs1!fecha = cRsl.TraerValorDeUnCampo("CabComprobantes", "Fecha", "Movimiento=" & rAux!tasa)
+        Rs1!Comprobante = cRsl.TraerValorDeUnCampo("Comprobantes", "Descripcion", "Id=" & cRsl.TraerValorDeUnCampo("CabComprobantes", "Comprobante", "Movimiento=" & rAux!tasa))
+        Rs1!sucursal = Format(cRsl.TraerValorDeUnCampo("CabComprobantes", "Sucursal", "Movimiento=" & rAux!tasa), "0000")
+        Rs1!Numero = Format(cRsl.TraerValorDeUnCampo("CabComprobantes", "Numero", "Movimiento=" & rAux!tasa), "00000000")
+        Rs1!importe = Format(cRsl.TraerValorDeUnCampo("CabComprobantes", "Debe", "Movimiento=" & rAux!tasa), "0.00")
         Rs1!Cancelado = Format(rAux!PrecioTotal, "0.00")
-        Rs1!Movimiento = rAux!Tasa
+        Rs1!Movimiento = rAux!tasa
         Rs1.Update
         rAux.MoveNext
      Loop
@@ -257,7 +266,7 @@ Private Sub LlenarRs1(pMovi As Long)
 End Sub
 
 Private Sub LlenarRs2(pMovi As Long)
-  Dim cRsl As ClsLectura, rAux As Recordset, x As Integer
+  Dim cRsl As ClsLectura, rAux As Recordset, X As Integer
 
   Set cRsl = New ClsLectura
   Set rAux = cRsl.TraerRsCondi("Valores", "Id", "Venta=" & pMovi)

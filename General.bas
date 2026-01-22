@@ -50,6 +50,7 @@ Public nCons As Integer
 Public nVentaFactura As Integer
 Public sVentaCPago As String
 Public sConsFinal As String
+Public nBanco As Integer
 
 Public nMedDetalle As Integer
 Public nImpDetalle As Integer
