@@ -57,7 +57,7 @@ Public Function TraerProducto(sProd As String, Optional pDat As Long) As ADODB.R
 
   Dim sSql As String
     
-  sSql = "SELECT Productos.Id, Productos.Producto, Productos.Moneda, Productos.Descripcion, Productos.UMVenta, Productos.Deposito, Productos.TipoInterno, Productos.ValorInterno,"
+  sSql = "SELECT Productos.Id, Productos.Producto, Productos.Moneda, Productos.Descripcion,Productos.ActuaStock ,Productos.UMVenta, Productos.Deposito, Productos.TipoInterno, Productos.ValorInterno,"
   sSql = sSql & "Impuestos.Impuesto ,Impuestos.Porcentaje, Precios.Lista, Precios.Precio "
   sSql = sSql & "FROM Impuestos RIGHT OUTER JOIN "
   sSql = sSql & "ProductoImpuesto ON Impuestos.Impuesto = ProductoImpuesto.Impuesto RIGHT OUTER JOIN "
@@ -190,7 +190,7 @@ Public Function TraerPrecio(pLista As Integer, sProduc As String) As Single
   sSql = "SELECT Precio FROM Precios WHERE Lista=" & pLista & " and Producto='" & sProduc & "'"
   Rs.Open sSql, db, adOpenKeyset, adLockPessimistic
   If Rs.EOF = False Or Rs.BOF = False Then
-     TraerPrecio = Rs!precio
+     TraerPrecio = Rs!Precio
   End If
   db.Close
   
