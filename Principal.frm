@@ -822,7 +822,7 @@ Private Sub MDIForm_Load()
 
   Dim cRsl As ClsLectura, i As Byte, sCli As String
   
-  sVersion = " - Versión 26.6.2 Turbo"
+  sVersion = " - Versión 26.6.1 Turbo"
   
   Set cRsl = New ClsLectura
     
