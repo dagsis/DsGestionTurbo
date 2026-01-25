@@ -702,7 +702,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   159776769
+      Format          =   156827649
       CurrentDate     =   36783
    End
    Begin VB.ComboBox CmbComprobante 
@@ -722,7 +722,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   159776769
+      Format          =   156827649
       CurrentDate     =   36783
    End
    Begin VB.PictureBox Picture1 
@@ -1322,26 +1322,26 @@ errHandler:
     ManejaErrores
 End Sub
 
-Private Function SumaValores(ByRef rs As ADODB.Recordset) As Double
+Private Function SumaValores(ByRef Rs As ADODB.Recordset) As Double
     On Error GoTo errHandler
 
     Dim s As Double, bk As Variant
     s = 0
 
-    If rs Is Nothing Then Exit Function
-    If rs.State <> adStateOpen Then Exit Function
-    If rs.RecordCount <= 0 Then Exit Function
-    If (rs.BOF And rs.EOF) Then Exit Function
+    If Rs Is Nothing Then Exit Function
+    If Rs.State <> adStateOpen Then Exit Function
+    If Rs.RecordCount <= 0 Then Exit Function
+    If (Rs.BOF And Rs.EOF) Then Exit Function
 
-    bk = rs.Bookmark
-    rs.MoveFirst
-    Do While Not rs.EOF
-        s = s + CDbl(Val(rs!importe & ""))
-        rs.MoveNext
+    bk = Rs.Bookmark
+    Rs.MoveFirst
+    Do While Not Rs.EOF
+        s = s + CDbl(Val(Rs!importe & ""))
+        Rs.MoveNext
     Loop
 
     On Error Resume Next
-    rs.Bookmark = bk
+    Rs.Bookmark = bk
     On Error GoTo errHandler
 
     SumaValores = Round(s, 2)
@@ -1369,7 +1369,7 @@ Private Sub LinkearDetalleDesdeRsd()
     p.SetComboByItemData CmbCuenta, CLng(Val(Rsd!Cuenta & ""))
     p.SetComboByItemData CmbDeposito, CLng(Val(Rsd!Deposito & ""))
     p.SetComboByItemData CmbUnidad, CLng(Val(Rsd!Medida & ""))
-    p.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!ImpId & ""))
+    p.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!Impid & ""))
 
 Salir:
     mLoadingDetalle = False
@@ -1602,7 +1602,7 @@ Private Sub LinkearDetalleActual()
     p.SetComboByItemData CmbDeposito, CLng(Val(Rsd!Deposito & ""))
     p.SetComboByItemData CmbUnidad, CLng(Val(Rsd!Medida & ""))
     p.SetComboByItemData CmbCuenta, CLng(Val(Rsd!Cuenta & ""))
-    p.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!ImpId & ""))
+    p.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!Impid & ""))
 
 Salir:
     mLoadingDetalle = False
@@ -1726,7 +1726,7 @@ Private Sub Limpiar()
         If TypeOf ctl Is TextBox Then ctl.Text = ""
     Next ctl
 
-    DtpFecha.Value = Date
+    DTPFecha.Value = Date
     DtpVenc.Value = Date
 
     LblDescuento.Caption = "0.00"
@@ -1743,7 +1743,7 @@ Private Sub Limpiar()
     TxtNoGrav.Text = "0.00"
     LblIva1.Text = "0.00"
     LblPercepcion.Caption = "0.00"
-    lblTotal.Caption = "0.00"
+    LblTotal.Caption = "0.00"
 
     CmbComprobante.ListIndex = -1
     CmbVend.Text = "NINGUNO"
@@ -1857,7 +1857,7 @@ Private Sub GrabarComprobante()
      
     If mCodVentaTipo = 7 Then
         Dim totalPagar As Double
-        totalPagar = CDbl(Val(lblTotal.Caption)) 'esto ya incluye percepción en tu cálculo
+        totalPagar = CDbl(Val(LblTotal.Caption)) 'esto ya incluye percepción en tu cálculo
        
         VentaValores.Inicializar RsValor, totalPagar
         VentaValores.Show vbModal
@@ -1879,7 +1879,7 @@ Private Sub GrabarComprobante()
        RsValor.AddNew
        RsValor!FormaPagoId = CmbCondPago.ItemData(CmbCondPago.ListIndex)
        RsValor!FormaPagoDesc = CmbCondPago.Text
-       RsValor!importe = Round(CDbl(Val(lblTotal.Caption)), 2)
+       RsValor!importe = Round(CDbl(Val(LblTotal.Caption)), 2)
 
        RsValor!Nombre = LblCliente.Caption
        RsValor!BancoId = 0
@@ -1900,11 +1900,10 @@ Private Sub GrabarComprobante()
 
     GrabarTodo
     
-    mEstado = stIdle
-    Limpiar
-    LimpiarDetalles
-    ResetDetalleMemoria
-    ResetValores
+    mEstado = stViendo
+    mDetEstado = detIdle
+
+    MostrarComprobanteGrabado mMoviAfip  '<<< nuevo helper
     RefrescarUI
 
     Exit Sub
@@ -1912,6 +1911,92 @@ Private Sub GrabarComprobante()
 errHandler:
     ManejaErrores
 End Sub
+
+Private Sub MostrarComprobanteGrabado(ByVal movi As Long)
+    On Error GoTo errHandler
+
+    '1) Traer cabecera desde DB
+    Set RsCv = cRsl.TraerRsCondi("CabComprobantes", "Movimiento", "Movimiento=" & movi)
+    If RsCv.RecordCount = 0 Then Exit Sub
+
+    '2) Linkear cabecera a controles
+    TxtSucursal.Text = Format$(RsCv!sucursal, "0000")
+    TxtNumero.Text = Format$(RsCv!Numero, "00000000")
+    TxtCliente.Text = RsCv!Cliente & ""
+    DTPFecha.Value = RsCv!fecha
+    DtpVenc.Value = RsCv!FechaIva
+
+    'si necesitás setear combos por ItemData:
+    p.SetComboByItemData CmbComprobante, CLng(RsCv!Comprobante)
+    p.SetComboByItemData CmbLista, CLng(RsCv!Lista)
+    p.SetComboByItemData CmbVend, CLng(RsCv!Vendedor)
+    ' etc...
+
+    '3) Traer detalle y cargarlo en tu Rsd (memoria) para mostrar en Grid
+    ResetDetalleMemoria
+
+    Dim rsDet As ADODB.Recordset
+    Set rsDet = cRsl.TraerRsCondi("DetallesComprobantes", "Movimiento", "Movimiento=" & movi)
+
+    If Not rsDet Is Nothing Then
+        If rsDet.RecordCount > 0 Then
+            rsDet.MoveFirst
+            Do While Not rsDet.EOF
+                Rsd.AddNew
+                Rsd!Producto = rsDet!Producto & ""
+                Rsd!Descripcion = rsDet!Descripcion & ""
+                Rsd!Cantidad = CDbl(Val(rsDet!Cantidad & ""))
+                Rsd!Cuenta = CLng(Val(rsDet!Cuenta & ""))
+                Rsd!Medida = rsDet!Medida
+                Rsd!Deposito = rsDet!Deposito
+                Rsd!PDesc = CDbl(Val(rsDet!PDesc & ""))
+                Rsd!desc = CDbl(Val(rsDet!Descuento & ""))
+                Rsd!Impid = rsDet!tasa
+                Rsd!Impuesto = rsDet!Impuesto
+                Rsd!neto = rsDet!PrecioUnitario
+                Rsd!precioBase = CDbl(Val(rsDet!Precio & ""))
+                Rsd!PrecioUnitNeto = rsDet!PrecioUnitario
+                Rsd!Total = rsDet!PrecioTotal
+                'Acá mapear lo que tengas en DB a tu estructura en memoria
+                'Rsd!PrecioUnitFinal / PrecioUnitNeto / Total, etc...
+                Rsd.Update
+                rsDet.MoveNext
+            Loop
+        End If
+    End If
+
+    '4) Traer valores y dejarlos listos (si querés permitir reimprimir caja, etc.)
+    If RsValor Is Nothing Then CrearRsValorMemoria Else VaciarRsValor
+
+    Dim rsVal As ADODB.Recordset
+    Set rsVal = cRsl.TraerRsCondi("Valores", "Venta", "Venta=" & movi)
+
+    If Not rsVal Is Nothing Then
+        If rsVal.RecordCount > 0 Then
+            rsVal.MoveFirst
+            Do While Not rsVal.EOF
+                RsValor.AddNew
+                RsValor!FormaPagoId = rsVal!CodPago
+                RsValor!FormaPagoDesc = rsVal!formapago & ""
+                RsValor!importe = CDbl(Val(rsVal!importe & ""))
+                RsValor!Nombre = rsVal!Nombre & ""
+                RsValor!BancoId = CLng(Val(rsVal!Banco & ""))
+                RsValor!NroCheque = rsVal!NumeroCheque & ""
+                'fechas/tarjeta según tu tabla
+                RsValor.Update
+                rsVal.MoveNext
+            Loop
+        End If
+    End If
+
+    '5) Recalcular totales y pintar labels (si tu CalcularTotales depende de Rsd)
+    CalcularTotales
+    Exit Sub
+
+errHandler:
+    ManejaErrores
+End Sub
+
 
 Private Sub GrabarTodo()
   Dim RsCv As ADODB.Recordset
@@ -1945,7 +2030,7 @@ Private Sub GrabarTodo()
   mMoviAfip = RsCv!Movimiento
   
   RsCv!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
-  RsCv!fecha = DtpFecha.Value
+  RsCv!fecha = DTPFecha.Value
   RsCv!FechaIva = DtpVenc.Value
   RsCv!Numero = TxtNumero.Text
   RsCv!sucursal = TxtSucursal.Text
@@ -1965,11 +2050,11 @@ Private Sub GrabarTodo()
   RsCv!NoGravados = CCur(Val(TxtNoGrav.Text))
   Select Case RsComp!TipoMovimiento
          Case 1, 11
-              RsCv!Debe = CCur(Val(lblTotal.Caption))
+              RsCv!Debe = CCur(Val(LblTotal.Caption))
               RsCv!Haber = 0
          Case 2, 12, 13
               RsCv!Debe = 0
-              RsCv!Haber = CCur(Val(lblTotal.Caption))
+              RsCv!Haber = CCur(Val(LblTotal.Caption))
   End Select
   RsCv!Desde = CmbCondPago.ItemData(CmbCondPago.ListIndex)
   RsCv!Hasta = TxtReparto.Text
@@ -1994,7 +2079,7 @@ Private Sub GrabarTodo()
                   RsCd!Cuenta = Rsd!Cuenta
                   RsCd!PDesc = Rsd!PDesc
                   RsCd!Descuento = Rsd!desc
-                  RsCd!tasa = Rsd!ImpId        '<<< CONTRATO V0: tasa = ID impuesto
+                  RsCd!tasa = Rsd!Impid        '<<< CONTRATO V0: tasa = ID impuesto
                   RsCd!Deposito = Rsd!Deposito
                   RsCd!Medida = Rsd!Medida
                   RsCd!Impuesto = Rsd!Impuesto
@@ -2015,20 +2100,22 @@ Private Sub GrabarTodo()
   If RsComp!ctacte <> "No" And CmbFormaPago.ItemData(CmbFormaPago.ListIndex) = 0 Then
       rReci.AddNew
       rReci!Venta = mMoviAfip
+      rReci!fecha = DTPFecha.Value
+      rReci!Cliente = TxtCliente.Text
       rReci!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
       rReci!Numero = TxtNumero.Text
       rReci!sucursal = TxtSucursal.Text
       rReci!Cuota = 1
-     Select Case RsComp!TipoMovimiento
+      Select Case RsComp!TipoMovimiento
             Case 1, 11
-                rReci!Debe = CDbl(Val(lblTotal.Caption))
+                rReci!Debe = CDbl(Val(LblTotal.Caption))
                 rReci!Haber = 0
             Case 2, 12, 13
                  rReci!Debe = 0
-                 rReci!Haber = CDbl(Val(lblTotal.Caption))
-     End Select
-     rReci!Anulado = 0
-     rReci.Update
+                 rReci!Haber = CDbl(Val(LblTotal.Caption))
+      End Select
+      rReci!Anulado = 0
+      rReci.Update
   End If
   
   ' Si Actualiza Stock
@@ -2081,7 +2168,7 @@ Private Sub GrabarTodo()
            rCaja!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
            rCaja!Numero = TxtNumero.Text
            rCaja!sucursal = TxtSucursal.Text
-           rCaja!fecha = DtpFecha.Value
+           rCaja!fecha = DTPFecha.Value
            rCaja!Hora = Time
            rCaja!Caja = nCaja
            rCaja!formapago = RsValor!FormaPagoDesc
@@ -2406,7 +2493,7 @@ pintar:
     LblBonificacion.Caption = Format(Round(nDes, 2), "#0.00")
     LblIva1.Text = Format(Round(nIva, 2), "#0.00")
     LblPercepcion.Caption = Format(Round(nPercepcion, 2), "#0.00")
-    lblTotal.Caption = Format(Round(nTot + nPercepcion, 2), "#0.00")
+    LblTotal.Caption = Format(Round(nTot + nPercepcion, 2), "#0.00")
     Exit Sub
 
 errHandler:
@@ -2604,7 +2691,7 @@ Private Sub IniciarEdicionDetalleActual()
     p.SetComboByItemData CmbCuenta, CLng(Val(Rsd!Cuenta & ""))
     p.SetComboByItemData CmbDeposito, CLng(Val(Rsd!Deposito & ""))
     p.SetComboByItemData CmbUnidad, CLng(Val(Rsd!Medida & ""))
-    p.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!ImpId & ""))
+    p.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!Impid & ""))
 
     TxtCantidad.Text = Format(CDbl(Val(Rsd!Cantidad & "")), nDecimalCant)
     TxtPDesc.Text = Format(CDbl(Val(Rsd!PDesc & "")), "0.00")
@@ -2640,7 +2727,7 @@ Private Sub ActualizarDetalleActual()
     Rsd!ImpProduc = mProdTasa
     Rsd!precioBase = CDbl(Val(TxtPrecio.Text))
 
-    Rsd!ImpId = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
+    Rsd!Impid = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
     Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
 
     If negro Then
@@ -2682,7 +2769,7 @@ Private Sub GrabarDetalleActual()
     Rsd!ImpProduc = mProdTasa
     Rsd!precioBase = CDbl(Val(TxtPrecio.Text))
 
-    Rsd!ImpId = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
+    Rsd!Impid = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
     Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
     Rsd!ActuaStock = mprodActuaStock
 
