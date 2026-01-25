@@ -208,7 +208,7 @@ Private Sub Limpiar()
   Dim ctl As Control
   For Each ctl In Controls
       If TypeOf ctl Is TextBox Then
-         ctl.text = ""
+         ctl.Text = ""
       End If
   Next ctl
   ChkVenta.Value = 0
@@ -233,8 +233,8 @@ Private Sub LinkearTexto()
   Set cRsl = New ClsLectura
   
   Label3.Caption = Format(Rs!Deposito, "00")
-  TxtDescripcion.text = Rs!Descripcion
-  CmbEstado.text = cRsl.DatoCombo("Estados", "Estado", "Descripcion", Rs!Estado)
+  TxtDescripcion.Text = Rs!Descripcion
+  CmbEstado.Text = cRsl.DatoCombo("Estados", "Estado", "Descripcion", Rs!Estado)
   ChkVenta.Value = Rs!Venta
 End Sub
 
@@ -410,7 +410,7 @@ Private Sub Borrar()
   Set cDep = New ClsComprobantesE
   
   nList = List1.ListIndex
-  If cDep.DepositoEsta(Rs!Deposito) = False Then
+ ' If cDep.DepositoEsta(Rs!Deposito) = False Then
      If MsgBox("Borra el Deposito Seleccionado ?", 20, "Atención") = 6 Then
         sCod = Label3.Caption
         cRse.Actualizar "DepositoBorrar", Nothing, sCod, "Deposito"
@@ -424,9 +424,9 @@ Private Sub Borrar()
            LinkearTexto
         End If
      End If
- Else
-    MsgBox "Depósito con Articulos. Por favor verifique....", vbCritical, "Atención"
- End If
+' Else
+ '   MsgBox "Depósito con Articulos. Por favor verifique....", vbCritical, "Atención"
+' End If
   Set cRse = Nothing
   Exit Sub
 errHandler:
@@ -464,7 +464,7 @@ Private Sub Grabar()
   Rs1.Open
   Rs1.AddNew
   Rs1!Suc = nSucursal
-  Rs1!Descripcion = TxtDescripcion.text
+  Rs1!Descripcion = TxtDescripcion.Text
   If CmbEstado.ListIndex <> -1 Then
      Rs1!Estado = CmbEstado.ItemData(CmbEstado.ListIndex)
   Else
@@ -492,12 +492,12 @@ Private Sub TodoBien()
   If sw = False Then
      If CmdBotones(0).Caption = "Grabar" Then
         CmdBotones(0).Enabled = False
-        If Len(TxtDescripcion.text) <> 0 And Len(CmbEstado.text) <> 0 Then
+        If Len(TxtDescripcion.Text) <> 0 And Len(CmbEstado.Text) <> 0 Then
            CmdBotones(0).Enabled = True
         End If
      Else
         CmdBotones(2).Enabled = False
-        If Len(TxtDescripcion.text) <> 0 Then
+        If Len(TxtDescripcion.Text) <> 0 Then
            CmdBotones(2).Enabled = True
         End If
      End If

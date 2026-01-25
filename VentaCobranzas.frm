@@ -183,7 +183,7 @@ Begin VB.Form VentaCobranzas
          _ExtentX        =   2275
          _ExtentY        =   556
          _Version        =   393216
-         Format          =   709951489
+         Format          =   130940929
          CurrentDate     =   36821
       End
       Begin MSDataGridLib.DataGrid Grid1 
@@ -575,16 +575,16 @@ errHandler:
 End Sub
 
 Private Sub CmdAplicar_Click()
- If Grid1.SelBookmarks.Count = 1 And TxtCancelar.text <> 0 Then
-    TxtEfectivo.text = TxtEfectivo.text - TxtCancelar.text
-    LblCancelado.Caption = CDbl(LblCancelado.Caption) + CDbl(TxtCancelar.text)
-    RsC!Cancelado = TxtCancelar.text
+ If Grid1.SelBookmarks.Count = 1 And TxtCancelar.Text <> 0 Then
+    TxtEfectivo.Text = TxtEfectivo.Text - TxtCancelar.Text
+    LblCancelado.Caption = CDbl(LblCancelado.Caption) + CDbl(TxtCancelar.Text)
+    RsC!Cancelado = TxtCancelar.Text
     RsC!Cobrar = RsC!importe - RsC!Cobrado - RsC!Cancelado
     RsC.Update
-    TxtEfectivo.text = Format(TxtEfectivo.text, "#0.00")
-    TxtCancelar.text = Format(0, "#0.00")
+    TxtEfectivo.Text = Format(TxtEfectivo.Text, "#0.00")
+    TxtCancelar.Text = Format(0, "#0.00")
     LblCancelado.Caption = Format(LblCancelado, "#0.00")
-    If TxtEfectivo.text <= 0 Or Option1.Value = False Then
+    If TxtEfectivo.Text <= 0 Or Option1.Value = False Then
        Botones True, True, True
     End If
   End If
@@ -623,11 +623,11 @@ Private Sub Comanda()
   Set cNum = New ClsComprobantesL
   
   
-  Dim P As Printer
+  Dim p As Printer
   
-  For Each P In Printers
-      If P.DeviceName = cRsl.TraerValorDeUnCampo("Impresion", "Impresora", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario) Then
-         Set Printer = P
+  For Each p In Printers
+      If p.DeviceName = cRsl.TraerValorDeUnCampo("Impresion", "Impresora", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario) Then
+         Set Printer = p
       '   Printer.FontName = "Courier New"
          Printer.ScaleMode = 7
          Printer.FontBold = cRsl.TraerValorDeUnCampo("Impresion", "Negrita", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario)
@@ -639,40 +639,40 @@ Private Sub Comanda()
   For nI = 1 To nRecibo
       cSaldo = 0
       
-      Printer.font.Name = "Ms Sans Seriff"
-      Printer.font.Size = 10
-      Printer.font.bold = True
+      Printer.Font.Name = "Ms Sans Seriff"
+      Printer.Font.Size = 10
+      Printer.Font.Bold = True
       Printer.ScaleMode = 7
       Printer.CurrentY = 1.5
       Printer.CurrentX = 0
       Printer.Print cRsl.TraerValorDeUnCampo("Empresa", "Razon", "") & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-      Printer.font.Size = 10
-      Printer.font.bold = False
+      Printer.Font.Size = 10
+      Printer.Font.Bold = False
       Printer.CurrentY = 1
       Printer.CurrentX = 0
       Printer.Print "RECIBO DE COBRANZAS"
-      Printer.font.Size = 10
+      Printer.Font.Size = 10
       Printer.CurrentY = 3.5
       Printer.CurrentX = 0
       Printer.Print "Nro.de Documento :" & sNumero
       Printer.CurrentY = 4
       Printer.CurrentX = 0
-      Printer.Print "Fecha de Cobro :" & DtpFecha.Value
+      Printer.Print "Fecha de Cobro :" & DTPFecha.Value
       Printer.CurrentY = 4.5
       Printer.CurrentX = 0
-      Printer.Print "Cliente :" & Trim(TxtCliente.text) & " - " & LblCliente.Caption
+      Printer.Print "Cliente :" & Trim(TxtCliente.Text) & " - " & LblCliente.Caption
       Printer.CurrentY = 5
       Printer.CurrentX = 0
-      Printer.Print "Domicilio :" & cRsl.TraerValorDeUnCampo("Clientes", "Domicilio", "Cliente='" & TxtCliente.text & "'")
+      Printer.Print "Domicilio :" & cRsl.TraerValorDeUnCampo("Clientes", "Domicilio", "Cliente='" & TxtCliente.Text & "'")
       Printer.CurrentY = 5.5
       Printer.CurrentX = 0
-      Printer.Print "Localidad :" & cRsl.TraerValorDeUnCampo("Clientes", "Ciudad", "Cliente='" & TxtCliente.text & "'")
+      Printer.Print "Localidad :" & cRsl.TraerValorDeUnCampo("Clientes", "Ciudad", "Cliente='" & TxtCliente.Text & "'")
       Printer.CurrentY = 6
       Printer.CurrentX = 0
-      Printer.Print "CUIT :" & cRsl.TraerValorDeUnCampo("Clientes", "Cuit", "Cliente='" & TxtCliente.text & "'")
+      Printer.Print "CUIT :" & cRsl.TraerValorDeUnCampo("Clientes", "Cuit", "Cliente='" & TxtCliente.Text & "'")
       Printer.CurrentY = 6.5
       Printer.CurrentX = 0
-      Printer.font.Size = 8
+      Printer.Font.Size = 8
       Printer.Print "-----------------------------------------------------------------------"
       Printer.CurrentY = 7
       Printer.CurrentX = 0
@@ -711,7 +711,7 @@ Private Sub Comanda()
          Printer.Print Format(rReci!Asiento, "00000000")
          Printer.CurrentY = pY
          Printer.CurrentX = 0
-         Printer.Print DtpFecha.Value
+         Printer.Print DTPFecha.Value
          Printer.CurrentY = pY
          Printer.CurrentX = 2
          Printer.Print "A Cuenta"
@@ -785,7 +785,7 @@ Private Sub CmdClientes_Click()
   CrearRs
   If nDat <> 0 Then
      Set RsC = cRsl.TraerRS("ClienteTraerUno", nDat, True)
-     TxtCliente.text = RsC!Cliente
+     TxtCliente.Text = RsC!Cliente
      LblCliente.Caption = RsC!RazonSocial
      Option1.Value = True
      LlenarGrilla
@@ -819,7 +819,7 @@ Private Sub Form_KeyPress(KeyAscii As Integer)
    End If
 End Sub
 Private Sub Limpiar()
-  TxtCliente.text = ""
+  TxtCliente.Text = ""
   If CmbComprobante.ListIndex <> -1 Then
      CmbComprobante.ListIndex = 0
   End If
@@ -827,8 +827,8 @@ Private Sub Limpiar()
 '  If CmbCaja.ListIndex <> -1 Then
 '     CmbCaja.ListIndex = 0
 '  End If
-  TxtEfectivo.text = "0.00"
-  TxtCancelar.text = "0.00"
+  TxtEfectivo.Text = "0.00"
+  TxtCancelar.Text = "0.00"
   LblNumero.Caption = "0000-00000000"
   LblImporte.Caption = "0.00"
   LblCobrado.Caption = "0.00"
@@ -863,12 +863,12 @@ Private Sub Form_Load()
  CrearRs
  Botones False, False, True
  nMarca = 0
- DtpFecha.Value = Date
+ DTPFecha.Value = Date
  Option1.Value = True
  If bAbiertoVenta = True Then
-    TxtCliente.text = VentaComprobantes.TxtCliente.text
+    TxtCliente.Text = VentaComprobantes.TxtCliente.Text
     LblCliente.Caption = VentaComprobantes.LblCliente.Caption
-    TxtEfectivo.text = VentaComprobantes.lblTotal.Caption
+    TxtEfectivo.Text = VentaComprobantes.LblTotal.Caption
     LlenarGrilla
     nMarca = 1
     CmdClientes.Enabled = False
@@ -942,8 +942,8 @@ Private Sub CargarCombos()
   cRsl.CargaCombo CmbComprobante, "Comprobantes", "Id", "Descripcion", "TipoOperacion=4 and Suc=" & nSucursal
   
   cRsl.CargaCombo CmbCaja, "Cajas", "Caja", "Descripcion", ""
-  CmbComprobante.text = cRsl.TraerValorDeUnCampo("Comprobantes", "Descripcion", "Id=" & cRsl.RegPorDefecto("Cobranza"))
-  CmbCaja.text = cRsl.DatoCombo("Cajas", "Caja", "Descripcion", cRsl.RegPorDefecto("Caja"))
+  CmbComprobante.Text = cRsl.TraerValorDeUnCampo("Comprobantes", "Descripcion", "Id=" & cRsl.RegPorDefecto("Cobranza"))
+  CmbCaja.Text = cRsl.DatoCombo("Cajas", "Caja", "Descripcion", cRsl.RegPorDefecto("Caja"))
   
 Exit Sub
 
@@ -958,7 +958,7 @@ Private Sub Grid1_Click()
   
   LblSeleccionado.Caption = 0
   
-  If TxtEfectivo.text <> 0 Then
+  If TxtEfectivo.Text <> 0 Then
      Botones False, False, True
      CmdAplicar.Enabled = False
       RsC.Bookmark = Grid1.Bookmark
@@ -968,14 +968,14 @@ Private Sub Grid1_Click()
 '         If Grid1.SelBookmarks.Count = 1 Then
 '            Botones True, True, True
 '         End If
-         If CDbl(TxtEfectivo.text) > CDbl(RsC!Cobrar) Then
-            TxtCancelar.text = Format(RsC!Cobrar, "#0.00")
+         If CDbl(TxtEfectivo.Text) > CDbl(RsC!Cobrar) Then
+            TxtCancelar.Text = Format(RsC!Cobrar, "#0.00")
          Else
-            TxtCancelar.text = Format(TxtEfectivo.text, "#0.00")
+            TxtCancelar.Text = Format(TxtEfectivo.Text, "#0.00")
          End If
     End If
     LblSeleccionado.Caption = Format(LblSeleccionado.Caption, "0.00")
-    cImporte = CCur(TxtEfectivo.text)
+    cImporte = CCur(TxtEfectivo.Text)
     nCas = 1
   End If
 Exit Sub
@@ -986,17 +986,17 @@ End Sub
 
 Private Sub TxtCancelar_GotFocus()
   TxtCancelar.SelStart = 0
-  TxtCancelar.SelLength = Len(TxtCancelar.text)
+  TxtCancelar.SelLength = Len(TxtCancelar.Text)
 End Sub
 
 Private Sub TxtCancelar_LostFocus()
-  If TxtCancelar.text = "" Then TxtCancelar.text = 0
-  TxtCancelar.text = Format(TxtCancelar.text, "#0.00")
+  If TxtCancelar.Text = "" Then TxtCancelar.Text = 0
+  TxtCancelar.Text = Format(TxtCancelar.Text, "#0.00")
 End Sub
 
 Private Sub TxtCliente_GotFocus()
   TxtCliente.SelStart = 0
-  TxtCliente.SelLength = Len(TxtCliente.text)
+  TxtCliente.SelLength = Len(TxtCliente.Text)
 End Sub
 Private Sub TxtCliente_LostFocus()
   Dim cRcL As ClsClienteL, cRiL As ClsClienteL
@@ -1007,9 +1007,9 @@ Private Sub TxtCliente_LostFocus()
   LblCliente.Caption = ""
   CrearRs
   CmdBotones(3).Enabled = False
-  If TxtCliente.text <> "" Then
-     If cRcL.BuscarNombreCliente(TxtCliente.text) <> "" Then
-        LblCliente.Caption = cRcL.BuscarNombreCliente(TxtCliente.text)
+  If TxtCliente.Text <> "" Then
+     If cRcL.BuscarNombreCliente(TxtCliente.Text) <> "" Then
+        LblCliente.Caption = cRcL.BuscarNombreCliente(TxtCliente.Text)
         Option1.Value = True
         LlenarGrilla
         nLlama = 1
@@ -1056,7 +1056,7 @@ End Sub
 Private Sub CabGrid()
   Set Grid1.DataSource = RsC
   Grid1.HeadFont.Size = 10
-  Grid1.HeadFont.bold = True
+  Grid1.HeadFont.Bold = True
  With Grid1
       .Columns(0).Width = 1400
       .Columns(0).Caption = "Vencimiento"
@@ -1106,7 +1106,7 @@ Private Sub LlenarGrilla()
  Set rCuen = New ADODB.Recordset
  Set cRx = New ClsLectura
  
- Set rCuen = cCom.DameCuentaCorriente(TxtCliente.text)
+ Set rCuen = cCom.DameCuentaCorriente(TxtCliente.Text)
  CmdDetalle.Enabled = False
  LblSeleccionado.Caption = "0.00"
  nReg = 1
@@ -1131,7 +1131,7 @@ Private Sub LlenarGrilla()
     RsC!Cancelado = 0
     RsC!Cobrar = Round((rCuen!Debe * nCotizacion), 2) - Round(RsC!Cobrado, 2)
     RsC!Venta = rCuen!Venta
-    RsC!Sucursal = rCuen!Sucursal
+    RsC!sucursal = rCuen!sucursal
     RsC.Update
     If RsC!Cobrar <= 0 And nReg + 1 <= rCuen.RecordCount Then
        cAdelanto = RsC!Cobrar
@@ -1176,7 +1176,7 @@ errHandler:
 End Sub
 Private Sub TxtEfectivo_GotFocus()
   TxtEfectivo.SelStart = 0
-  TxtEfectivo.SelLength = Len(TxtEfectivo.text)
+  TxtEfectivo.SelLength = Len(TxtEfectivo.Text)
 End Sub
 Private Sub TxtEfectivo_KeyPress(KeyAscii As Integer)
     If SoloNumeroDecimalFinal(KeyAscii, TxtEfectivo) = False Then
@@ -1184,8 +1184,8 @@ Private Sub TxtEfectivo_KeyPress(KeyAscii As Integer)
   End If
 End Sub
 Private Sub TxtEfectivo_LostFocus()
-  If TxtEfectivo.text = "" Then TxtEfectivo.text = 0
-  TxtEfectivo.text = Format(TxtEfectivo.text, "#0.00")
+  If TxtEfectivo.Text = "" Then TxtEfectivo.Text = 0
+  TxtEfectivo.Text = Format(TxtEfectivo.Text, "#0.00")
 End Sub
 
 Private Sub GrabarTodo()
@@ -1220,7 +1220,7 @@ Private Sub GrabarTodo()
   Set rRet = cRsl.RsVacio("Retenciones", "Id", "N")
 
   
-  If TxtNumero.text = 0 Then
+  If TxtNumero.Text = 0 Then
      If cRsl.TraerValorDeUnCampo("Impresion", "Numero", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario) = False Then
         nNum = Format(cNum.TraerUltimoNumeroVenta(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "00000000")
         nSuc = Format(cNum.TraerSucursalNumero(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "0000")
@@ -1229,14 +1229,14 @@ Private Sub GrabarTodo()
         nSuc = Format(cNum.TraerSucursalNumero(CmbComprobante.ItemData(CmbComprobante.ListIndex)), "0000")
     End If
   Else
-     nNum = TxtNumero.text
-     nSuc = TxtSucursal.text
+     nNum = TxtNumero.Text
+     nSuc = TxtSucursal.Text
   End If
   
   LblNumero.Caption = nSuc & "-" & nNum
   
-  TxtNumero.text = nNum
-  TxtSucursal.text = nSuc
+  TxtNumero.Text = nNum
+  TxtSucursal.Text = nSuc
   
   RsC.MoveFirst
   Do While Not RsC.EOF
@@ -1252,16 +1252,16 @@ Private Sub GrabarTodo()
   RsCv!tipo = cRsl.TraerValorDeUnCampo("Comprobantes", "TipoOperacion", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex))
   RsCv!Movimiento = cNum.TraerUltimoMovimiento
   RsCv!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
-  RsCv!fecha = DtpFecha.Value
-  RsCv!FechaIva = DtpFecha.Value
+  RsCv!fecha = DTPFecha.Value
+  RsCv!FechaIva = DTPFecha.Value
   RsCv!Numero = Right(LblNumero.Caption, 8)
-  RsCv!Sucursal = Left(LblNumero.Caption, 4)
-  RsCv!Cliente = TxtCliente.text
+  RsCv!sucursal = Left(LblNumero.Caption, 4)
+  RsCv!Cliente = TxtCliente.Text
   RsCv!Lista = 0
   RsCv!Vendedor = 0
   RsCv!Caja = CmbCaja.ItemData(CmbCaja.ListIndex)
   RsCv!CondVenta = 0
-  RsCv!Neto = 0
+  RsCv!neto = 0
   RsCv!Iva1 = 0
   RsCv!Descuentos = 0
   RsCv!Financiacion = 0
@@ -1273,7 +1273,7 @@ Private Sub GrabarTodo()
          Case 10
               RsCv!Debe = 0
               If Option3.Value = True Then
-                 RsCv!Haber = cSaldo + TxtEfectivo.text
+                 RsCv!Haber = cSaldo + TxtEfectivo.Text
               Else
                  RsCv!Haber = cSaldo
               End If
@@ -1294,25 +1294,25 @@ Private Sub GrabarTodo()
      ' Grabo Recibo de Pago
   rReci.AddNew
 '  rReci!Id = 0
-  rReci!fecha = DtpFecha.Value
-  rReci!Cliente = TxtCliente.text
+  rReci!fecha = DTPFecha.Value
+  rReci!Cliente = TxtCliente.Text
   rReci!Venta = RsCv!Movimiento
   rReci!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
   rReci!Numero = RsCv!Numero
-  rReci!Sucursal = RsCv!Sucursal
+  rReci!sucursal = RsCv!sucursal
   Select Case cStock.TraerTipoMovimiento(rReci!Comprobante)
          Case 10
               rReci!Cuota = 0
               rReci!Debe = 0
               If Option3.Value = True Then
-                 rReci!Haber = cSaldo + TxtEfectivo.text
+                 rReci!Haber = cSaldo + TxtEfectivo.Text
               Else
                  rReci!Haber = cSaldo
               End If
          Case 13
               rReci!Cuota = 1000
               If Option3.Value = True Then
-                 rReci!Debe = cSaldo + TxtEfectivo.text
+                 rReci!Debe = cSaldo + TxtEfectivo.Text
                  rReci!Haber = 0
               Else
                  rReci!Debe = cSaldo
@@ -1324,15 +1324,15 @@ Private Sub GrabarTodo()
   
   RsC.MoveFirst
   
-  If TxtEfectivo.text > 0 And Option2.Value = False Then
+  If TxtEfectivo.Text > 0 And Option2.Value = False Then
      rApli.AddNew
      rApli!Venta = RsC!Venta
      rApli!MoviCta = RsCv!Movimiento
      rApli!Comprobante = rReci!Comprobante
      rApli!Numero = rReci!Numero
-     rApli!Sucursal = rReci!Sucursal
+     rApli!sucursal = rReci!sucursal
      rApli!Cuota = RsC!Cuota
-     rApli!importe = TxtEfectivo.text
+     rApli!importe = TxtEfectivo.Text
      rApli!Retencion = 0
      rApli!GAnancia = 0
      rApli!Anulado = 0
@@ -1343,7 +1343,7 @@ Private Sub GrabarTodo()
  Dim rValoAux As ADODB.Recordset
  RsC.MoveFirst
  If nLlama = 4 Then
-    Set rValoAux = VentaValores.RsV
+   ' Set rValoAux = VentaValores.RsV
     rValoAux.MoveFirst
     Do While Not rValoAux.EOF
        rValo.AddNew
@@ -1374,7 +1374,7 @@ Private Sub GrabarTodo()
             rRet!Suc = nSucursal
             rRet!Movimiento = RsCv!Movimiento
             rRet!fecha = rValoAux!FAcredi
-            rRet!Cliente = TxtCliente.text
+            rRet!Cliente = TxtCliente.Text
             rRet!tipo = cRsl.TraerValorDeUnCampo("CondVenta", "Tipo", "CondVta=" & rValoAux!CodPago)
             rRet!Numero = rValoAux!NCheque
             rRet!importe = Format(rValoAux!importe, "#0.00")
@@ -1390,11 +1390,11 @@ Private Sub GrabarTodo()
       rValo!CodPago = 1
       rValo!formapago = cRsl.DatoCombo("CondVenta", "CondVta", "Descripcion", cRsl.RegPorDefecto("Cobro"))
       rValo!Nombre = ""
-      rValo!importe = cSaldo + CCur(TxtEfectivo.text)
+      rValo!importe = cSaldo + CCur(TxtEfectivo.Text)
       rValo.Update
   End If
   Dim cTotal As Double, cDife As Double
-  cDife = CCur(TxtEfectivo.text)
+  cDife = CCur(TxtEfectivo.Text)
   
   RsC.MoveFirst
   Do While Not RsC.EOF
@@ -1404,7 +1404,7 @@ Private Sub GrabarTodo()
         rApli!MoviCta = RsCv!Movimiento
         rApli!Comprobante = cRsl.TraerValorDeUnCampo("Comprobantes", "Id", "Descripcion='" & RsC!Comprobante & "'")
         rApli!Numero = RsC!Numero
-        rApli!Sucursal = RsC!Sucursal
+        rApli!sucursal = RsC!sucursal
         rApli!Cuota = RsC!Cuota
         rApli!importe = RsC!Cancelado
         rApli!Retencion = 0
@@ -1427,8 +1427,8 @@ Private Sub GrabarTodo()
               rCaja!Movimiento = RsCv!Movimiento
               rCaja!Comprobante = rReci!Comprobante
               rCaja!Numero = rReci!Numero
-              rCaja!Sucursal = rReci!Sucursal
-              rCaja!fecha = DtpFecha.Value
+              rCaja!sucursal = rReci!sucursal
+              rCaja!fecha = DTPFecha.Value
               rCaja!Hora = Time
               rCaja!Caja = CmbCaja.ItemData(CmbCaja.ListIndex)
               rCaja!formapago = rValo!formapago
@@ -1456,8 +1456,8 @@ Private Sub GrabarTodo()
                  rCaja!Movimiento = RsCv!Movimiento
                  rCaja!Comprobante = rReci!Comprobante
                  rCaja!Numero = rReci!Numero
-                 rCaja!Sucursal = rReci!Sucursal
-                 rCaja!fecha = DtpFecha.Value
+                 rCaja!sucursal = rReci!sucursal
+                 rCaja!fecha = DTPFecha.Value
                  rCaja!Hora = Time
                  rCaja!Caja = CmbCaja.ItemData(CmbCaja.ListIndex)
                  rCaja!formapago = "EFECTIVO"
@@ -1470,7 +1470,7 @@ Private Sub GrabarTodo()
                  rCaja!Autorizacion = Null
                  rCaja!Cupon = Null
                  rCaja!Debe = 0
-                 rCaja!Haber = TxtEfectivo.text
+                 rCaja!Haber = TxtEfectivo.Text
                  rCaja!Abierta = "S"
                  rCaja!Anulado = 0
                  rCaja.Update
@@ -1481,8 +1481,8 @@ Private Sub GrabarTodo()
                rBanco!Movimiento = RsCv!Movimiento
                rBanco!Comprobante = rReci!Comprobante
                rBanco!Numero = rReci!Numero
-               rBanco!Sucursal = rReci!Sucursal
-               rBanco!fecha = DtpFecha.Value
+               rBanco!sucursal = rReci!sucursal
+               rBanco!fecha = DTPFecha.Value
                rBanco!Hora = Time
                rBanco!Caja = CmbCaja.ItemData(CmbCaja.ListIndex)
                rBanco!formapago = rValo!formapago
@@ -1518,11 +1518,12 @@ Private Sub GrabarTodo()
   CmdBotones(0).Enabled = False
   CmdBotones(1).Enabled = False
 ' Imprimir Recibo de Cobro
+
   cGrab.AgregarCobranzas RsCv, rReci, rValo, rApli, rCaja, rBanco, rRet
   
-  sNumero = TxtSucursal.text & "-" & TxtNumero.text
-  TxtNumero.text = "00000000"
-  TxtSucursal.text = "0000"
+  sNumero = TxtSucursal.Text & "-" & TxtNumero.Text
+  TxtNumero.Text = "00000000"
+  TxtSucursal.Text = "0000"
   
   CmdClientes.Enabled = True
 
@@ -1569,11 +1570,11 @@ Private Sub Imprimir()
   Set cNum = New ClsComprobantesL
   
   
-  Dim P As Printer
+  Dim p As Printer
   
-  For Each P In Printers
-      If P.DeviceName = cRsl.TraerValorDeUnCampo("Impresion", "Impresora", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario) Then
-         Set Printer = P
+  For Each p In Printers
+      If p.DeviceName = cRsl.TraerValorDeUnCampo("Impresion", "Impresora", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario) Then
+         Set Printer = p
       '   Printer.FontName = "Courier New"
          Printer.ScaleMode = 7
          Printer.FontBold = cRsl.TraerValorDeUnCampo("Impresion", "Negrita", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex) & " AND Usuario=" & nUsuario)
@@ -1585,37 +1586,37 @@ Private Sub Imprimir()
   For nI = 1 To nRecibo
       cSaldo = 0
       
-      Printer.font.Name = "Ms Sans Seriff"
-      Printer.font.Size = 14
-      Printer.font.bold = True
+      Printer.Font.Name = "Ms Sans Seriff"
+      Printer.Font.Size = 14
+      Printer.Font.Bold = True
       Printer.ScaleMode = 7
       Printer.CurrentY = 1.5
       Printer.CurrentX = 1
       Printer.Print sNomFan  '  cRsl.TraerValorDeUnCampo("Empresa", "Razon", "") & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-      Printer.font.Size = 14
-      Printer.font.bold = False
+      Printer.Font.Size = 14
+      Printer.Font.Bold = False
       Printer.CurrentY = 2.5
       Printer.CurrentX = 1
       Printer.Print "RECIBO DE COBRANZAS"
-      Printer.font.Size = 10
+      Printer.Font.Size = 10
       Printer.CurrentY = 3.5
       Printer.CurrentX = 13
       Printer.Print "Nro.de Documento :" & sNumero
       Printer.CurrentY = 4
       Printer.CurrentX = 13
-      Printer.Print "Fecha de Cobro :" & DtpFecha.Value
+      Printer.Print "Fecha de Cobro :" & DTPFecha.Value
       Printer.CurrentY = 4.5
       Printer.CurrentX = 1
-      Printer.Print "Cliente :" & Trim(TxtCliente.text) & " - " & LblCliente.Caption
+      Printer.Print "Cliente :" & Trim(TxtCliente.Text) & " - " & LblCliente.Caption
       Printer.CurrentY = 5
       Printer.CurrentX = 1
-      Printer.Print "Domicilio :" & cRsl.TraerValorDeUnCampo("Clientes", "Domicilio", "Cliente='" & TxtCliente.text & "'")
+      Printer.Print "Domicilio :" & cRsl.TraerValorDeUnCampo("Clientes", "Domicilio", "Cliente='" & TxtCliente.Text & "'")
       Printer.CurrentY = 5.5
       Printer.CurrentX = 1
-      Printer.Print "Localidad :" & cRsl.TraerValorDeUnCampo("Clientes", "Ciudad", "Cliente='" & TxtCliente.text & "'")
+      Printer.Print "Localidad :" & cRsl.TraerValorDeUnCampo("Clientes", "Ciudad", "Cliente='" & TxtCliente.Text & "'")
       Printer.CurrentY = 6
       Printer.CurrentX = 1
-      Printer.Print "CUIT :" & cRsl.TraerValorDeUnCampo("Clientes", "Cuit", "Cliente='" & TxtCliente.text & "'")
+      Printer.Print "CUIT :" & cRsl.TraerValorDeUnCampo("Clientes", "Cuit", "Cliente='" & TxtCliente.Text & "'")
       Printer.CurrentY = 6.5
       Printer.CurrentX = 1
       Printer.Print "-------------------------------------------------------------------------------------------------------------------------------------------------"
@@ -1639,7 +1640,7 @@ Private Sub Imprimir()
         Printer.Print Rp!Comprobante
         Printer.CurrentY = pY
         Printer.CurrentX = 10
-        Printer.Print Format(Rp!Sucursal, "0000") & "-"
+        Printer.Print Format(Rp!sucursal, "0000") & "-"
         Printer.CurrentY = pY
         Printer.CurrentX = 11
         Printer.Print Format(Rp!Numero, "00000000")
@@ -1659,13 +1660,13 @@ Private Sub Imprimir()
          Printer.Print Format(rReci!Asiento, "00000000")
          Printer.CurrentY = pY
          Printer.CurrentX = 4
-         Printer.Print DtpFecha.Value
+         Printer.Print DTPFecha.Value
          Printer.CurrentY = pY
          Printer.CurrentX = 6.5
          Printer.Print "A Cuenta"
          Printer.CurrentY = pY
          Printer.CurrentX = 11
-         Printer.Print Format(rAde!Sucursal, "0000") & "-"
+         Printer.Print Format(rAde!sucursal, "0000") & "-"
          Printer.CurrentY = pY
          Printer.CurrentX = 12
          Printer.Print Format(rAde!Numero, "00000000")
@@ -1723,7 +1724,7 @@ End Sub
 
 Private Sub TxtSucursal_GotFocus()
   TxtSucursal.SelStart = 0
-  TxtSucursal.SelLength = Len(TxtSucursal.text)
+  TxtSucursal.SelLength = Len(TxtSucursal.Text)
 End Sub
 
 Private Sub TxtSucursal_KeyPress(KeyAscii As Integer)
@@ -1733,13 +1734,13 @@ Private Sub TxtSucursal_KeyPress(KeyAscii As Integer)
 End Sub
 
 Private Sub TxtSucursal_LostFocus()
-  If TxtSucursal.text = "" Then TxtSucursal.text = 1
-  TxtSucursal.text = Format(TxtSucursal.text, "0000")
+  If TxtSucursal.Text = "" Then TxtSucursal.Text = 1
+  TxtSucursal.Text = Format(TxtSucursal.Text, "0000")
 End Sub
 
 Private Sub TxtNumero_GotFocus()
   TxtNumero.SelStart = 0
-  TxtNumero.SelLength = Len(TxtNumero.text)
+  TxtNumero.SelLength = Len(TxtNumero.Text)
 End Sub
 
 Private Sub TxtNumero_KeyPress(KeyAscii As Integer)
@@ -1749,7 +1750,7 @@ Private Sub TxtNumero_KeyPress(KeyAscii As Integer)
 End Sub
 
 Private Sub TxtNumero_LostFocus()
-  If TxtNumero.text = "" Then TxtNumero.text = 0
-  TxtNumero.text = Format(TxtNumero.text, "00000000")
+  If TxtNumero.Text = "" Then TxtNumero.Text = 0
+  TxtNumero.Text = Format(TxtNumero.Text, "00000000")
 End Sub
 

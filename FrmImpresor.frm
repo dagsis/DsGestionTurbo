@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{C4847593-972C-11D0-9567-00A0C9273C2A}#8.0#0"; "crviewer.dll"
+Object = "{8767A745-088E-4CA6-8594-073D6D2DE57A}#9.2#0"; "crviewer9.dll"
 Begin VB.Form FrmImpresor 
    Caption         =   "o"
    ClientHeight    =   3195
@@ -11,12 +11,15 @@ Begin VB.Form FrmImpresor
    ScaleWidth      =   4680
    StartUpPosition =   3  'Windows Default
    WindowState     =   2  'Maximized
-   Begin CRVIEWERLibCtl.CRViewer CRViewer1 
-      Height          =   3015
-      Left            =   90
+   Begin CRVIEWER9LibCtl.CRViewer9 CRViewer1 
+      Height          =   3135
+      Left            =   0
       TabIndex        =   0
-      Top             =   120
-      Width           =   4485
+      Top             =   0
+      Width           =   4575
+      lastProp        =   500
+      _cx             =   8070
+      _cy             =   5530
       DisplayGroupTree=   -1  'True
       DisplayToolbar  =   -1  'True
       EnableGroupTree =   -1  'True
@@ -40,6 +43,7 @@ Begin VB.Form FrmImpresor
       EnableExportButton=   0   'False
       EnableSearchExpertButton=   0   'False
       EnableHelpButton=   0   'False
+      LaunchHTTPHyperlinksInNewBrowser=   -1  'True
    End
 End
 Attribute VB_Name = "FrmImpresor"
@@ -54,66 +58,61 @@ Dim sDesde As String, sHasta As String, pLista As Integer
 Dim sPdesde As String, sPhasta As String
 Dim fDesde As Date, fHasta As Date
 Dim cClases As ClsPrecios, cCanti As ClsProductoL
-Dim cCliente As ClsLectura, Rs As ADODB.Recordset
+Dim cCliente As ClsLectura, Rs As Recordset
 Dim cCaja As ClsComprobantesL
+Dim cRsl As ClsLectura
 
-Dim ReporteActivo As Object
+' No uses Object, usá el tipo específico de la librería CRAXDDRT
+Private CrxApp As New CRAXDDRT.Application
+Private ReporteActivo As CRAXDDRT.Report
+Private RsCrystal As ADODB.Recordset
+
 
 Private Sub CRViewer1_PrintButtonClicked(UseDefault As Boolean)
     On Error GoTo ManejoErrores
     UseDefault = False
 
-    If ReporteActivo Is Nothing Then Exit Sub
-
-    Dim prn As String
-    Dim f As Long, t As Long, copies As Long
+    Dim prn As String, f As Long, t As Long, copies As Long
     Dim collate As Boolean, useRange As Boolean
 
-    If Not ShowWindowsPrintDialog(Me.hwnd, prn, f, t, copies, collate, useRange) Then
-       Exit Sub
+    If Not ShowWindowsPrintDialog(Me.hwnd, prn, f, t, copies, collate, useRange) Then Exit Sub
+
+    Dim oldDef As String
+    oldDef = GetDefaultPrinterName()
+
+    ' Poner la elegida como predeterminada
+    If Not SetDefaultPrinterName(prn) Then
+        MsgBox "No pude setear como predeterminada: " & prn, vbExclamation
+        Exit Sub
     End If
 
-
-    ' Mapear a objeto Printer para obtener Driver/Port confiables
-    Dim p As Printer, found As Boolean
-    For Each p In Printers
-        If StrComp(p.DeviceName, prn, vbTextCompare) = 0 Then
-            Set Printer = p
-            found = True
-            Exit For
-        End If
-    Next
-
-    ' Crystal: conviene winspool + nombre
-    If found Then
-        ReporteActivo.SelectPrinter "winspool", Printer.DeviceName, Printer.Port
-    Else
-        ReporteActivo.SelectPrinter "winspool", prn, ""
-    End If
-
-    On Error Resume Next
-    ReporteActivo.PrintOptions.NumberOfCopies = copies
-    On Error GoTo ManejoErrores
-
+    ' Imprimir (Crystal usa la predeterminada)
     If useRange And f > 0 And t >= f Then
-        ReporteActivo.PrintOut False, , , CInt(f), CInt(t)
+        ReporteActivo.PrintOut False, CInt(copies), collate, CInt(f), CInt(t)
     Else
-        ReporteActivo.PrintOut False
+        ReporteActivo.PrintOut False, CInt(copies), collate
+    End If
+
+    ' Volver a la anterior
+    If Len(oldDef) > 0 Then
+        Call SetDefaultPrinterName(oldDef)
     End If
 
     Exit Sub
 
 ManejoErrores:
-    If err.Number <> 32755 Then
-        MsgBox "Error de impresión: " & err.Description, vbCritical
-    End If
-    err.Clear
+    ' Intentar volver a la predeterminada anterior si algo falla
+    On Error Resume Next
+    If Len(oldDef) > 0 Then Call SetDefaultPrinterName(oldDef)
+    MsgBox "Error: " & err.Description, vbCritical
 End Sub
 
 
 Private Sub Form_Load()
   
   Set cCliente = New ClsLectura
+  
+  Set cRsl = New ClsLectura
   Set Rs = New ADODB.Recordset
   
   Screen.MousePointer = 11
@@ -172,10 +171,6 @@ Private Sub Form_Load()
               Impre26
          Case 27
               Impre27
-         Case 28
-              Impre28
-         Case 29
-              Impre29
          Case 30
               Impre30
          Case 31
@@ -214,14 +209,10 @@ Private Sub Form_Load()
               Impre47
          Case 48
               Impre48
-         Case 49
-              Impre49
          Case 50
               Impre50
          Case 51
               Impre51
-         Case 52
-              Impre52
          Case 53
               Impre53
          Case 54
@@ -238,8 +229,6 @@ Private Sub Form_Load()
               Impre59
          Case 60
               Impre60
-         Case 61
-              Impre61
          Case 62
               Impre62
          Case 63
@@ -257,6 +246,7 @@ Private Sub Form_Load()
          Case 69
               Impre69
   End Select
+    
   
   If Rs.RecordCount <> 0 Then
         ' Configuración normal del visor
@@ -271,10 +261,10 @@ Private Sub Form_Load()
     Else
         ' No hay registros
         MsgBox "No hay Registros. Intente con Nuevos Parametros", vbCritical, "Atención"
-        
+
         ' 1. Limpiamos puntero
         Screen.MousePointer = vbDefault
-        
+
         ' 2. Descargamos el formulario de forma segura
         ' Usamos un Timer o simplemente Unload Me asegurándonos de que sea la última instrucción real
     '    Unload Me
@@ -292,25 +282,32 @@ Private Sub Form_Resize()
 End Sub
 
 Private Sub Impre01()
-  Dim cRsl As New ClsLectura
-  Set Rs = VentaInfResumen.Rs
+    On Error GoTo ManejoErrores
+     
+    Set Rs = VentaInfResumen.Rs
     
-  If Rs.RecordCount <> 0 Then
-        ' Usamos la variable global
-        Set ReporteActivo = New RptVentaResumen
-        
-        ReporteActivo.ReportTitle = sNomFan
-        ReporteActivo.ParameterFields(1).SetCurrentValue IIf(VentaInfResumen.ChkSaldo.Value = 1, True, False)
-        ReporteActivo.ParameterFields(2).SetCurrentValue VentaInfResumen.CmbZona.Text
-        ReporteActivo.ParameterFields(3).SetCurrentValue IIf(VentaInfResumen.ChkTexto.Value = 1, True, False)
-        ReporteActivo.ParameterFields(4).SetCurrentValue IIf(VentaInfResumen.ChkSalto.Value = 1, True, False)
-        ReporteActivo.ParameterFields(5).SetCurrentValue cRsl.TraerValorDeUnCampo("TblTextos", "Texto", "Id=1")
-        ReporteActivo.ParameterFields(6).SetCurrentValue cRsl.TraerValorDeUnCampo("TblTextos", "Texto", "Id=2")
-             
-        ReporteActivo.Database.SetDataSource Rs
-        CRViewer1.ReportSource = ReporteActivo
-    End If
+    Set ReporteActivo = CrxApp.OpenReport(App.Path & "\rpts\RptVentaResumen.rpt")
+
+    With ReporteActivo
+        .Database.SetDataSource Rs
+        .EnableParameterPrompting = False
+        .ReportTitle = sNomFan
+
+        .ParameterFields.GetItemByName("SaldoCero").AddCurrentValue (VentaInfResumen.ChkSaldo.Value = 1)
+        .ParameterFields.GetItemByName("Zona").AddCurrentValue VentaInfResumen.CmbZona.Text
+        .ParameterFields.GetItemByName("ImprimeTexto").AddCurrentValue (VentaInfResumen.ChkTexto.Value = 1)
+        .ParameterFields.GetItemByName("Salto").AddCurrentValue (VentaInfResumen.ChkSalto.Value = 1)
+        .ParameterFields.GetItemByName("Texto").AddCurrentValue cRsl.TraerValorDeUnCampo("TblTextos", "Texto", "Id=1")
+        .ParameterFields.GetItemByName("Texto2").AddCurrentValue cRsl.TraerValorDeUnCampo("TblTextos", "Texto", "Id=2")
+    End With
+
+    CRViewer1.ReportSource = ReporteActivo
+    Exit Sub
+
+ManejoErrores:
+    MsgBox "Impre01 - Error: " & err.Number & " - " & err.Description, vbCritical
 End Sub
+
 
 Private Sub Impre02()
   If VentaInfVencimiento.RsP.RecordCount <> 0 Then
@@ -994,37 +991,6 @@ Private Sub Impre27()
     CRViewer1.ReportSource = ReporteActivo
 End Sub
 
-Private Sub Impre28()
-    Dim cRem As New ClsProductoL
-    Set Rs = cRem.TraerPlanillaUtilidades(VentaInfFamilias.DtpDesde.Value, VentaInfFamilias.DtpHasta.Value)
-    
-    If Rs.RecordCount <> 0 Then
-        Set ReporteActivo = New RptPlanillaUtilidades
-        With ReporteActivo
-            .Database.SetDataSource Rs
-            .ParameterFields(1).SetCurrentValue VentaInfFamilias.DtpDesde.Value
-            .ParameterFields(2).SetCurrentValue VentaInfFamilias.DtpHasta.Value
-        End With
-        CRViewer1.ReportSource = ReporteActivo
-    End If
-End Sub
-
-Private Sub Impre29()
-    Dim cRem As New ClsProductoL, cRsl As New ClsLectura, cImporte As Single
-    Set Rs = cRsl.BuscarTodos("TablaDeGastos", "Descripcion", "Porcentaje")
-    
-    If Rs.RecordCount <> 0 Then
-        cImporte = cRem.TraerTotalVentas(VentaInfFamilias.DtpDesde.Value, VentaInfFamilias.DtpHasta.Value)
-        Set ReporteActivo = New RptControlGastos
-        With ReporteActivo
-            .ParameterFields(1).SetCurrentValue str(cImporte)
-            .ParameterFields(2).SetCurrentValue VentaInfFamilias.DtpDesde.Value
-            .ParameterFields(3).SetCurrentValue VentaInfFamilias.DtpHasta.Value
-            .Database.SetDataSource Rs
-        End With
-        CRViewer1.ReportSource = ReporteActivo
-    End If
-End Sub
 
 Private Sub Impre30()
     Dim cRem As New ClsProductoL, opt As Byte, nBus As Byte
@@ -1444,31 +1410,31 @@ Private Sub Impre48()
     End If
 End Sub
 
-Private Sub Impre49()
-    Set Rs = ComprasComprobantes.RsC
-    If Rs.RecordCount <> 0 Then
-        Set ReporteActivo = New RptEtiquetasTango
-        ReporteActivo.Database.SetDataSource Rs
-        CRViewer1.ReportSource = ReporteActivo
-    End If
-End Sub
-
 Private Sub Impre50()
-    Dim cRsl As New ClsLectura
+    
     Set Rs = CajaCerrarZ.rPrin
+    
     If Rs.RecordCount <> 0 Then
-        Set ReporteActivo = New RptCuentaFondos
+        ' Cargamos el RPT externo
+        Set ReporteActivo = CrxApp.OpenReport(App.Path & "\rpts\RptCuentaFondos.rpt")
+        
         With ReporteActivo
             .Database.SetDataSource Rs
-            .ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "") & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-            .ParameterFields(2).SetCurrentValue CajaCerrarZ.DtpFecha.Value
+            .EnableParameterPrompting = False
+            
+            ' Asignamos los parámetros
+            .ParameterFields.GetItemByName("Empresa").AddCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "") & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
+            .ParameterFields.GetItemByName("Fecha").AddCurrentValue CajaCerrarZ.DtpFecha.Value
         End With
+        
         CRViewer1.ReportSource = ReporteActivo
+
+        ' EN LUGAR DE .PrintOut, usamos el Visor para la presentación
+      
     End If
 End Sub
 
 Private Sub Impre51()
-    Dim cRsl As New ClsLectura
     Set Rs = CajaCerrarZ.rPrin
     If Rs.RecordCount <> 0 Then
         Set ReporteActivo = New RptChequesTarjetas
@@ -1480,23 +1446,6 @@ Private Sub Impre51()
         CRViewer1.ReportSource = ReporteActivo
     End If
 End Sub
-
-Private Sub Impre52()
-'   Dim Report35 As New RptCajaDiaria, cRsl As ClsLectura
-'
-'  Set cRsl = New ClsLectura
-'
-'   Set Rs = CajaCerrarZ.rPrin
-'  If Rs.RecordCount <> 0 Then
-'     Report35.Database.SetDataSource Rs
-'     Report35.ParameterFields(1).SetCurrentValue cRsl.TraerValorDeUnCampo("Empresa", "Razon", "") & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal)
-'     Report35.ParameterFields(2).SetCurrentValue str(CajaCerrarZ.lblTotal.Caption)
-'     CRViewer1.ReportSource = Report35
-'  End If
-'  Set Report35 = Nothing
-
-End Sub
-
 Private Sub Impre53()
     Set Rs = FrmInformeCobranzas.Rs3
     If Rs.RecordCount <> 0 Then
@@ -1517,17 +1466,24 @@ End Sub
 
 Private Sub Impre55()
     Set Rs = VentaInfResumen.Rs
+    
     If Rs.RecordCount <> 0 Then
-        Set ReporteActivo = New RptResuSimpli
+        Set ReporteActivo = CrxApp.OpenReport(App.Path & "\rpts\RptResuSimpli.rpt")
+        
         With ReporteActivo
-            .ReportTitle = sNomFan
-            .ParameterFields(1).SetCurrentValue IIf(VentaInfResumen.ChkSaldo.Value = 1, True, False)
-            .ParameterFields(2).SetCurrentValue VentaInfResumen.CmbZona.Text
             .Database.SetDataSource Rs
+            .EnableParameterPrompting = False
+            
+            ' Asignamos los parámetros
+            .ParameterFields.GetItemByName("SaldoCero").AddCurrentValue IIf(VentaInfResumen.ChkSaldo.Value = 1, True, False)
+            .ParameterFields.GetItemByName("Zona").AddCurrentValue VentaInfResumen.CmbZona.Text
         End With
+        
         CRViewer1.ReportSource = ReporteActivo
-        CRViewer1.DisplayGroupTree = False
     End If
+    
+    
+
 End Sub
 
 Private Sub Impre56()
@@ -1604,18 +1560,7 @@ Private Sub Impre60()
     End If
 End Sub
 
-Private Sub Impre61()
-    Set Rs = StockInfMovimientos.Rs
-    If Rs.RecordCount <> 0 Then
-        Set ReporteActivo = New RptCedronar
-        With ReporteActivo
-            .ParameterFields(1).SetCurrentValue StockInfMovimientos.DtpFecha(0).Value
-            .ParameterFields(2).SetCurrentValue StockInfMovimientos.DtpFecha(1).Value
-            .Database.SetDataSource Rs
-        End With
-        CRViewer1.ReportSource = ReporteActivo
-    End If
-End Sub
+
 
 Private Sub Impre62()
     Dim cRlx As New ClsComprobantesL

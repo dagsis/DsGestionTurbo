@@ -180,7 +180,7 @@ Begin VB.Form VentaInfResumen
          _ExtentX        =   2408
          _ExtentY        =   635
          _Version        =   393216
-         Format          =   158793729
+         Format          =   128712705
          CurrentDate     =   37021
       End
       Begin MSComCtl2.DTPicker DtpFecha 
@@ -193,7 +193,7 @@ Begin VB.Form VentaInfResumen
          _ExtentX        =   2408
          _ExtentY        =   635
          _Version        =   393216
-         Format          =   158793729
+         Format          =   128778241
          CurrentDate     =   37021
       End
       Begin VB.Label Label5 
@@ -278,7 +278,7 @@ Begin VB.Form VentaInfResumen
    Begin VB.CommandButton CmdAplicar 
       Caption         =   "&Aplicar"
       Height          =   375
-      Left            =   5175
+      Left            =   5160
       TabIndex        =   5
       Top             =   4500
       Width           =   930
@@ -291,7 +291,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 Dim cRsl As ClsClienteL
-Public Rs As ADODB.Recordset
+Public Rs As Recordset
 
 Private Sub CmdAplicar_Click()
 
@@ -326,22 +326,28 @@ End Sub
 
 Private Sub CrearRsApli()
   Set Rs = New ADODB.Recordset
-  
-  Rs.Fields.Append "Cliente", adVarChar, 100
-  Rs.Fields.Append "FComprobante", adDate
+  Rs.CursorLocation = adUseClient
+
+  Rs.Fields.Append "Cliente", adVarChar, 100, adFldIsNullable
+  Rs.Fields.Append "FComprobante", adDate, , adFldIsNullable
   Rs.Fields.Append "Comprobante", adVarChar, 30, adFldIsNullable
   Rs.Fields.Append "Numero", adVarChar, 15, adFldIsNullable
-  Rs.Fields.Append "Importe", adDouble
-  Rs.Fields.Append "FPago", adDate
+
+  ' Importes/saldos: mejor Currency que Double para Crystal
+  Rs.Fields.Append "Importe", adCurrency, , adFldIsNullable
+
+  Rs.Fields.Append "FPago", adDate, , adFldIsNullable
   Rs.Fields.Append "Cobranza", adVarChar, 30, adFldIsNullable
   Rs.Fields.Append "RNumero", adVarChar, 15, adFldIsNullable
-  Rs.Fields.Append "RImporte", adDouble
-  Rs.Fields.Append "SaldoAnterior", adDouble
-  Rs.Fields.Append "SaldoActual", adDouble
-  Rs.Fields.Append "SaldoFecha", adDouble
-  Rs.Open
+  Rs.Fields.Append "RImporte", adCurrency, , adFldIsNullable
 
+  Rs.Fields.Append "SaldoAnterior", adCurrency, , adFldIsNullable
+  Rs.Fields.Append "SaldoActual", adCurrency, , adFldIsNullable
+  Rs.Fields.Append "SaldoFecha", adCurrency, , adFldIsNullable
+
+  Rs.Open
 End Sub
+
 
 Private Sub TraerRsApli()
   Dim RsAux As ADODB.Recordset, cRsl As ClsLectura, cRx As ClsComprobantesL, j As Long, rRes As Recordset
@@ -404,11 +410,11 @@ End Sub
 Private Sub CrearRsSimp()
   Set Rs = New ADODB.Recordset
   
-  Rs.Fields.Append "Cliente", adVarChar, 15
-  Rs.Fields.Append "Razon", adVarChar, 50
+  Rs.Fields.Append "Cliente", adVarChar, 15, adFldIsNullable
+  Rs.Fields.Append "RazonSocial", adVarChar, 50, adFldIsNullable
   Rs.Fields.Append "Domicilio", adVarChar, 50, adFldIsNullable
   Rs.Fields.Append "Telefono", adVarChar, 40, adFldIsNullable
-  Rs.Fields.Append "Saldo", adDouble
+  Rs.Fields.Append "Saldo", adCurrency, , adFldIsNullable
   Rs.Open
 
 End Sub
@@ -429,7 +435,7 @@ Private Sub TraerResumen()
      Do While Not RsAux.EOF
         Rs.AddNew
         Rs!Cliente = RsAux!Cliente
-        Rs!Razon = RsAux!RazonSocial
+        Rs!RazonSocial = RsAux!RazonSocial
         Rs!Domicilio = RsAux!Domicilio
         Rs!Telefono = RsAux!Telefono
         Rs!saldo = RsAux!saldo
@@ -439,7 +445,7 @@ Private Sub TraerResumen()
         RsAux.MoveNext
      Loop
      If ChkAbc.Value = 1 Then
-        Rs.Sort = "Razon"
+        Rs.Sort = "RazonSocial"
      End If
   End If
   Set cRsl = Nothing
@@ -556,25 +562,25 @@ End Sub
 
 Private Sub CrearRs()
   
-  Set Rs = New ADODB.Recordset
+  Set Rs = New Recordset
   
-  Rs.Fields.Append "Cliente", adVarChar, 15
-  Rs.Fields.Append "Razon", adVarChar, 50
-  Rs.Fields.Append "Domicilio", adVarChar, 50, adFldIsNullable
-  Rs.Fields.Append "Postal", adVarChar, 8, adFldIsNullable
+  Rs.Fields.Append "Cliente", adVarChar, 15, adFldIsNullable
+  Rs.Fields.Append "RazonSocial", adVarChar, 45, adFldIsNullable
+  Rs.Fields.Append "Domicilio", adVarChar, 45, adFldIsNullable
+  Rs.Fields.Append "CPostal", adVarChar, 8, adFldIsNullable
   Rs.Fields.Append "Localidad", adVarChar, 30, adFldIsNullable
-  Rs.Fields.Append "Provincia", adVarChar, 30, adFldIsNullable
-  Rs.Fields.Append "Iva", adVarChar, 25, adFldIsNullable
-  Rs.Fields.Append "Cuit", adVarChar, 13, adFldIsNullable
-  Rs.Fields.Append "Telefono", adVarChar, 40, adFldIsNullable
+  Rs.Fields.Append "Provincia", adVarChar, 20, adFldIsNullable
+  Rs.Fields.Append "Iva", adVarChar, 30, adFldIsNullable
+  Rs.Fields.Append "Cuit", adVarChar, 15, adFldIsNullable
+  Rs.Fields.Append "Telefono", adVarChar, 20, adFldIsNullable
   Rs.Fields.Append "Fecha", adDate, , adFldIsNullable
-  Rs.Fields.Append "Comprobante", adVarChar, 40, adFldIsNullable
-  Rs.Fields.Append "Numero", adDouble, , adFldIsNullable
+  Rs.Fields.Append "Comprobante", adVarChar, 30, adFldIsNullable
+  Rs.Fields.Append "Numero", adInteger, , adFldIsNullable
   Rs.Fields.Append "Sucursal", adInteger, , adFldIsNullable
   Rs.Fields.Append "Cuota", adInteger, , adFldIsNullable
-  Rs.Fields.Append "Debe", adDouble
-  Rs.Fields.Append "Haber", adDouble
-  Rs.Fields.Append "Cobrador", adInteger
+  Rs.Fields.Append "Debe", adCurrency, , adFldIsNullable
+  Rs.Fields.Append "Haber", adCurrency, , adFldIsNullable
+  Rs.Fields.Append "Cobrador", adInteger, , adFldIsNullable
   Rs.Open
 End Sub
 
@@ -629,9 +635,9 @@ Private Sub TraerSiguiente()
      If ChkDesde.Value = 0 Then
         Rs.AddNew
         Rs!Cliente = RsAux!Cliente
-        Rs!Razon = RsAux!RazonSocial
+        Rs!RazonSocial = RsAux!RazonSocial
         Rs!Domicilio = RsAux!Domicilio
-        Rs!Postal = "" & RsAux!CodigoPostal
+        Rs!CPostal = "" & RsAux!CodigoPostal
         Rs!Localidad = RsAux!Ciudad
         Rs!Provincia = RsAux!Provincia
         Rs!Iva = RsAux!TipoIva
@@ -667,14 +673,14 @@ Private Sub TraerSiguiente()
            Rs!Haber = IIf(IsNull(RsAux!Haber), 0, RsAux!Haber)
            Rs!Cobrador = Format(RsAux!Zona, "00")
            Rs.Update
-     End If
+       End If
      End If
      ProgressBar1.Value = j
      j = j + 1
      RsAux.MoveNext
   Loop
   If ChkAbc.Value = 1 Then
-     Rs.Sort = "Razon"
+     Rs.Sort = "RazonSocial"
   End If
    Set cRcli = Nothing
 End Sub
