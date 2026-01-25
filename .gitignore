@@ -1,3 +1,5 @@
 *.tmp
 *.log
 *.obj
+*.vbw
+*.vbs
