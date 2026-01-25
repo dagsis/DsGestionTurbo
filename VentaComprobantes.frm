@@ -702,7 +702,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   156827649
+      Format          =   145489921
       CurrentDate     =   36783
    End
    Begin VB.ComboBox CmbComprobante 
@@ -722,7 +722,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   156827649
+      Format          =   145489921
       CurrentDate     =   36783
    End
    Begin VB.PictureBox Picture1 
@@ -999,6 +999,9 @@ Private mLoadingDetalle As Boolean
 Private mRefreshingUI As Boolean
 Private mMoviAfip As Long
 
+Private mTipoOperacion As Byte
+Private mTipoMovimiento As Byte
+
 
 '========================
 '  RS
@@ -1124,7 +1127,7 @@ Private Sub RefrescarUI()
             BotonBuscar False, False
 
             'Nuevo, Buscar, Salir
-            Botones True, False, False, False, False, True
+            Botones True, False, True, False, False, True
 
             CmdBotones(0).Caption = "Nuevo"
             CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
@@ -1190,19 +1193,26 @@ Private Sub RefrescarUI()
             End If
                    
         Case stViendo
-            HabilitarTodo False
-            HabilitarDetalles False
+             Dim puedeEditar As Boolean, puedeAnular As Boolean
+             
+             puedeEditar = PuedeModificarComprobante(mMoviAfip)
+             puedeAnular = PuedeAnularDirecto(mMoviAfip)
+             
+             HabilitarTodo False
+             HabilitarDetalles False
 
             'Nuevo, Buscar, Salir + acciones de ver
-            Botones True, True, True, True, True, True
+             Botones True, True, True, puedeEditar, True, True
+             
+            CmdBotones(1).Enabled = puedeAnular
 
-            CmdBotones(0).Caption = "Nuevo"
-            CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
-            CmdBotones(5).Caption = "Salir"
-            CmdBotones(5).Picture = LoadResPicture("Salir", 0)
+             CmdBotones(0).Caption = "Nuevo"
+             CmdBotones(0).Picture = LoadResPicture("Nuevo", 0)
+             CmdBotones(9).Caption = "Salir"
+             CmdBotones(9).Picture = LoadResPicture("Salir", 0)
 
-            BotonDetalles False, False, False, False
-            BotonBuscar False, False
+             BotonDetalles False, False, False, False
+             BotonBuscar False, False
     End Select
 Salir:
     mRefreshingUI = False
@@ -1664,7 +1674,7 @@ Private Sub LinkearProducto(pProducto As Long)
         mProdTasa = RsProduc!Porcentaje
         mProdDeposito = RsProduc!Deposito
         mProdImpuesto = RsProduc!Impuesto
-        mProdPrecio = CDbl(RsProduc!Precio)
+        mProdPrecio = CDbl(RsProduc!precio)
         mProdIntTipo = RsProduc!TipoInterno
         mProdIntValor = RsProduc!ValorInterno
         mprodActuaStock = RsProduc!ActuaStock
@@ -1680,7 +1690,7 @@ Private Sub LinkearProducto(pProducto As Long)
               p.SetComboByItemData CmbImpuesto, mProdImpuesto
             End If
         End If
-        If RsProduc!Precio <> 0 Then
+        If RsProduc!precio <> 0 Then
            TxtPrecio.Text = Format(mProdPrecio, "#0.00")
            TxtCantidad.SetFocus
         Else
@@ -1787,7 +1797,8 @@ Private Sub CmdBotones_Click(Index As Integer)
             ElseIf mEstado = stNuevo Then
                 GrabarComprobante
             End If
-
+        Case 1 'ANULAR
+            AnularComprobanteActual
         Case 9
             Salir
     End Select
@@ -1903,7 +1914,6 @@ Private Sub GrabarComprobante()
     mEstado = stViendo
     mDetEstado = detIdle
 
-    MostrarComprobanteGrabado mMoviAfip  '<<< nuevo helper
     RefrescarUI
 
     Exit Sub
@@ -1954,7 +1964,7 @@ Private Sub MostrarComprobanteGrabado(ByVal movi As Long)
                 Rsd!Impid = rsDet!tasa
                 Rsd!Impuesto = rsDet!Impuesto
                 Rsd!neto = rsDet!PrecioUnitario
-                Rsd!precioBase = CDbl(Val(rsDet!Precio & ""))
+                Rsd!precioBase = CDbl(Val(rsDet!precio & ""))
                 Rsd!PrecioUnitNeto = rsDet!PrecioUnitario
                 Rsd!Total = rsDet!PrecioTotal
                 'Acá mapear lo que tengas en DB a tu estructura en memoria
@@ -2024,7 +2034,7 @@ Private Sub GrabarTodo()
   RsCv.AddNew
   RsCv!Suc = nSucursal
 '  RsCv!Id = 0
-  RsCv!tipo = RsComp!TipoOperacion
+  RsCv!tipo = RsComp!tipooperacion
   RsCv!Movimiento = cComp.TraerUltimoMovimiento
   
   mMoviAfip = RsCv!Movimiento
@@ -2083,7 +2093,7 @@ Private Sub GrabarTodo()
                   RsCd!Deposito = Rsd!Deposito
                   RsCd!Medida = Rsd!Medida
                   RsCd!Impuesto = Rsd!Impuesto
-                  RsCd!Precio = Rsd!precioBase
+                  RsCd!precio = Rsd!precioBase
                   RsCd!PrecioUnitario = Rsd!PrecioUnitNeto + Rsd!desc
                   RsCd!PrecioTotal = Rsd!Total + Rsd!desc
                   RsCd!DetRemi = 0
@@ -2410,6 +2420,10 @@ Private Sub CmbComprobante_Click()
      Set cNum = New ClsComprobantesL
      
      Set RsComp = cRsl.TraerRsCondi("Comprobantes", "Id", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex))
+     
+     mTipoOperacion = RsComp!tipooperacion
+     mTipoMovimiento = RsComp!tipooperacion
+     
      
      ' Si en impresion es false Numera cuando Termina de grabar el comprobante, si es verdadero actualiza el numero aca
      
@@ -2964,10 +2978,7 @@ Private Sub TxtPDesc_Change()
 End Sub
 
 Private Function EsNegro() As Boolean
-    EsNegro = False
-    If Not (RsComp Is Nothing) Then
-        EsNegro = (Val(RsComp!Iva & "") = 0)
-    End If
+    EsNegro = (Val(RsComp!Iva & "") = 0)
 End Function
 
 Private Sub ResetDetalleMemoria()
@@ -2978,4 +2989,89 @@ Private Sub ResetDetalleMemoria()
     Set Grid1.DataSource = Rsd
     CabGrid
 End Sub
+
+Private Function TieneCae(ByVal movi As Long) As Boolean
+    On Error GoTo errHandler
+    TieneCae = (Val(cRsl.TraerValorDeUnCampo("AfipCae", "Movimiento", "Movimiento=" & movi)) <> 0)
+    Exit Function
+errHandler:
+    TieneCae = False
+End Function
+
+Private Function PuedeModificarComprobante(ByVal movi As Long) As Boolean
+    'Negro => SI se puede (salvo permisos futuros)
+    If EsNegro() Then
+        PuedeModificarComprobante = True
+        Exit Function
+    End If
+
+    'Blanco => si tiene CAE NO se puede
+    If TieneCae(movi) Then
+        PuedeModificarComprobante = False
+    Else
+        PuedeModificarComprobante = True
+    End If
+
+    'Futuro: permiso usuario
+    'If Not UsuarioPuedeModificar Then PuedeModificarComprobante = False
+End Function
+
+Private Function PuedeAnularDirecto(ByVal movi As Long) As Boolean
+    'Negro: siempre directo
+    If EsNegro() Then
+        PuedeAnularDirecto = True
+        Exit Function
+    End If
+
+    'Blanco: si tiene CAE => NO directo
+    PuedeAnularDirecto = (Not TieneCae(movi))
+End Function
+
+Private Sub AnularComprobanteActual()
+    On Error GoTo errHandler
+
+    If mEstado <> stViendo Then Exit Sub
+
+    If Not PuedeAnularDirecto(mMoviAfip) Then
+        MsgBox "Este comprobante es fiscal y ya tiene CAE." & vbCrLf & _
+               "No se puede anular directo. Se anula con Nota de Crédito.", vbExclamation, "Atención"
+        Exit Sub
+    End If
+
+    If MsgBox("¿Confirmás anular el comprobante " & mMoviAfip & "?", _
+              vbYesNo + vbQuestion, "Anular") = vbNo Then Exit Sub
+
+    '--- Borrado en DB
+    Dim cGrab As ClsComprobantesE
+    Set cGrab = New ClsComprobantesE
+
+    cGrab.AnularComprobantes mMoviAfip, mTipoOperacion, mTipoMovimiento
+
+    Set cGrab = Nothing
+
+    MsgBox "Comprobante anulado.", vbInformation, "OK"
+
+    '========================
+    '  DEJAR FORM EN BLANCO
+    '========================
+    mMoviAfip = 0
+
+    mEstado = stIdle
+    mDetEstado = detIdle
+
+    Limpiar
+    LimpiarDetalles
+
+    ResetDetalleMemoria   'recrea Rsd en memoria y lo linkea al grid
+    ResetValores          'vacía RsValor / nPorcValor, etc.
+
+    RefrescarUI
+    Exit Sub
+
+errHandler:
+    On Error Resume Next
+    Set cGrab = Nothing
+    ManejaErrores
+End Sub
+
 

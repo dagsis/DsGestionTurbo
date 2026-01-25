@@ -96,7 +96,7 @@ End Sub
 ' allowList: Dictionary con keys = nombres de campo permitidos (opcional)
 ' Si allowList = Nothing => mete todos (menos "Id")
 Private Sub ExecRsFields(ByRef cmd As ADODB.Command, _
-                         ByRef rs As ADODB.Recordset, _
+                         ByRef Rs As ADODB.Recordset, _
                          Optional ByVal allowList As Object)
 
     Dim i As Long
@@ -106,8 +106,8 @@ Private Sub ExecRsFields(ByRef cmd As ADODB.Command, _
     Dim t As DataTypeEnum
     Dim sz As Long
 
-    For i = 0 To rs.Fields.Count - 1
-        Set f = rs.Fields(i)
+    For i = 0 To Rs.Fields.Count - 1
+        Set f = Rs.Fields(i)
         nm = f.Name
 
         If UCase$(nm) <> "ID" Then
@@ -201,7 +201,7 @@ Public Sub Agregar( _
                 AddParam cmd, "Deposito", adDouble, adParamInput, 0, pRsDetalle!Deposito
                 AddParam cmd, "Medida", adDouble, adParamInput, 0, pRsDetalle!Medida
                 AddParam cmd, "Impuesto", adDouble, adParamInput, 0, pRsDetalle!Impuesto
-                AddParam cmd, "Precio", adDouble, adParamInput, 0, IIf(IsNull(pRsDetalle!Precio), pRsDetalle!PrecioUnitario, pRsDetalle!Precio)
+                AddParam cmd, "Precio", adDouble, adParamInput, 0, IIf(IsNull(pRsDetalle!precio), pRsDetalle!PrecioUnitario, pRsDetalle!precio)
                 AddParam cmd, "PrecioUnitario", adDouble, adParamInput, 0, pRsDetalle!PrecioUnitario
                 AddParam cmd, "PrecioTotal", adDouble, adParamInput, 0, pRsDetalle!PrecioTotal
                 AddParam cmd, "MoviRemi", adInteger, adParamInput, 0, IIf(IsNull(pRsDetalle!MoviRemi), 0, pRsDetalle!MoviRemi)
@@ -337,4 +337,65 @@ errHandler:
     If okTx = False Then RollbackTx
     err.Raise err.Number, "ClsComprobantesE.Agregar", err.Description
 End Sub
+
+
+Public Sub AnularComprobantes( _
+    ByVal pMovimiento As Long, _
+    ByVal pOpe As Integer, _
+    ByVal pTipo As Integer, _
+    Optional ByVal pFecha As String, _
+    Optional ByVal pProv As String = "", _
+    Optional ByVal pRsd As ADODB.Recordset)
+
+    On Error GoTo errHandler
+    EnsureConn
+
+    mConn.BeginTrans
+
+    Dim sSql As String
+
+    Select Case pOpe
+
+        Case 1 ' Venta
+            mConn.Execute "DELETE FROM CabComprobantes WHERE Movimiento=" & pMovimiento
+            'OJO: esta línea revisala (Lista=Movimiento huele mal)
+            'mConn.Execute "DELETE FROM CabComprobantes WHERE Lista=" & pMovimiento
+
+            mConn.Execute "DELETE FROM CuentaCorriente WHERE Venta=" & pMovimiento
+            mConn.Execute "DELETE FROM Cantidades WHERE Movimiento=" & pMovimiento
+            mConn.Execute "DELETE FROM Caja WHERE Movimiento=" & pMovimiento
+            mConn.Execute "DELETE FROM Valores WHERE Venta=" & pMovimiento
+
+            If Not pRsd Is Nothing Then
+                If pRsd.State = adStateOpen And pRsd.RecordCount > 0 Then
+                    pRsd.MoveFirst
+                    Do While Not pRsd.EOF
+                        mConn.Execute "UPDATE CabComprobantes SET Anulado=0 WHERE Movimiento=" & _
+                                      CLng(IIf(IsNull(pRsd!MoviRemi), 0, pRsd!MoviRemi))
+                        pRsd.MoveNext
+                    Loop
+                End If
+            End If
+
+            mConn.Execute "DELETE FROM DetallesComprobantes WHERE Movimiento=" & pMovimiento
+            mConn.Execute "UPDATE CabComprobantes SET Factura=0 WHERE Factura=" & pMovimiento
+
+        Case 2 ' Stock
+            mConn.Execute "DELETE FROM CabComprobantes WHERE Movimiento=" & pMovimiento
+            mConn.Execute "DELETE FROM DetallesComprobantes WHERE Movimiento=" & pMovimiento
+            mConn.Execute "DELETE FROM Cantidades WHERE Movimiento=" & pMovimiento
+
+        '... y así con el resto igual (Caja, Cobranza, etc.)
+
+    End Select
+
+    mConn.CommitTrans
+    Exit Sub
+
+errHandler:
+    On Error Resume Next
+    mConn.RollbackTrans
+    err.Raise err.Number, "AnularComprobantes", err.Description
+End Sub
+
 
