@@ -48,8 +48,6 @@ Private Function DetachRS(ByVal rs As ADODB.Recordset) As ADODB.Recordset
     Set DetachRS = rs
 End Function
 
-
-
 Public Sub GrabarError(pModulo As String, pError As String, pOtros As String)
   Dim intFile As Integer
   intFile = 1
@@ -204,6 +202,114 @@ Private Function DetachRSAsStatic(ByVal rsSrc As ADODB.Recordset) As ADODB.Recor
     Set DetachRSAsStatic = rsDest
 End Function
 
+Option Explicit
+
+'=========================================================
+' TraerRsSQL: ejecuta un SELECT y devuelve Recordset listo
+' para bindear a un DataGrid / DBGrid (client-side).
+'=========================================================
+Public Function TraerRsSQL(ByVal sSql As String, Optional ByVal nTimeout As Long = 30) As ADODB.Recordset
+    On Error GoTo errHandler
+
+    Dim cn As ADODB.Connection
+    Dim rs As ADODB.Recordset
+    Dim connStr As String
+
+    '--- Cadena de conexión (UDL)
+    '   Si ya usás sDb global, lo respetamos.
+    If Len(Trim$(sDb & "")) > 0 Then
+        connStr = sDb
+    Else
+        connStr = "FILE NAME=" & App.Path & "\Conex.udl"
+    End If
+
+    Set cn = New ADODB.Connection
+    cn.ConnectionTimeout = 5
+    cn.CommandTimeout = nTimeout
+    cn.Open connStr
+
+    Set rs = New ADODB.Recordset
+    rs.CursorLocation = adUseClient
+    rs.CursorType = adOpenStatic       'para RecordCount y navegación
+    rs.LockType = adLockReadOnly
+
+    rs.Open sSql, cn
+
+    'Desconectado => el grid sigue funcionando y no queda la conexión colgada
+    Set rs.ActiveConnection = Nothing
+    cn.Close
+    Set cn = Nothing
+
+    Set TraerRsSQL = rs
+    Exit Function
+
+errHandler:
+    On Error Resume Next
+    If Not rs Is Nothing Then
+        If rs.State = adStateOpen Then rs.Close
+    End If
+    If Not cn Is Nothing Then
+        If cn.State = adStateOpen Then cn.Close
+    End If
+    Set rs = Nothing
+    Set cn = Nothing
+    err.Raise err.Number, "ClsLectura.TraerRsSQL", err.Description
+End Function
+
+
+Public Function TraerRsSQLCmd(ByVal sSql As String, ByRef params() As Variant, Optional ByVal nTimeout As Long = 30) As ADODB.Recordset
+    On Error GoTo errHandler
+
+    Dim cn As ADODB.Connection
+    Dim cmd As ADODB.Command
+    Dim rs As ADODB.Recordset
+    Dim connStr As String
+    Dim i As Long
+
+    If Len(Trim$(sDb & "")) > 0 Then
+        connStr = sDb
+    Else
+        connStr = "FILE NAME=" & App.Path & "\Conex.udl"
+    End If
+
+    Set cn = New ADODB.Connection
+    cn.ConnectionTimeout = 5
+    cn.CommandTimeout = nTimeout
+    cn.Open connStr
+
+    Set cmd = New ADODB.Command
+    cmd.ActiveConnection = cn
+    cmd.CommandType = adCmdText
+    cmd.CommandText = sSql
+
+    'params: array de arrays => Array(Array("@p1", adInteger, 123), Array("@p2", adVarChar, "hola"))
+    For i = LBound(params) To UBound(params)
+        cmd.Parameters.Append cmd.CreateParameter(params(i)(0), params(i)(1), adParamInput, , params(i)(2))
+    Next i
+
+    Set rs = New ADODB.Recordset
+    rs.CursorLocation = adUseClient
+    rs.CursorType = adOpenStatic
+    rs.LockType = adLockReadOnly
+
+    rs.Open cmd
+
+    Set rs.ActiveConnection = Nothing
+    cn.Close
+    Set cn = Nothing
+
+    Set TraerRsSQLCmd = rs
+    Exit Function
+
+errHandler:
+    On Error Resume Next
+    If Not rs Is Nothing Then If rs.State = adStateOpen Then rs.Close
+    If Not cn Is Nothing Then If cn.State = adStateOpen Then cn.Close
+    Set rs = Nothing
+    Set cn = Nothing
+    err.Raise err.Number, "ClsLectura.TraerRsSQLCmd", err.Description
+End Function
+
 Public Function RsVacioD(pTabla As String, pCampo As String, pTipo As String) As ADODB.Recordset
   Dim sSql As String
   Dim rs As ADODB.Recordset
@@ -229,7 +335,7 @@ errHandler:
   err.Raise err.Number
 End Function
 
-Public Sub CargaComboComprobantes(P_Combo As Object, P_Tabla As String, P_Codigo As String, p_Campo As String, P_Condicion As String)
+Public Sub CargaComboComprobantes(P_Combo As Object, P_Tabla As String, P_Codigo As String, P_Campo As String, P_Condicion As String)
    Dim sSql As String
    Dim iCantidad As Integer
    Dim Conexion As ADODB.Connection
@@ -242,9 +348,9 @@ Public Sub CargaComboComprobantes(P_Combo As Object, P_Tabla As String, P_Codigo
    Conexion.Open sDb
 
    If P_Condicion = "" Then
-      sSql = "SELECT " & P_Codigo & " as codigo, " & p_Campo & " as descripc FROM " & P_Tabla & " ORDER BY " & p_Campo
+      sSql = "SELECT " & P_Codigo & " as codigo, " & P_Campo & " as descripc FROM " & P_Tabla & " ORDER BY " & P_Campo
    Else
-      sSql = "SELECT " & P_Codigo & " as codigo, " & p_Campo & " as descripc FROM " & P_Tabla & " WHERE " & P_Condicion & " ORDER BY " & p_Campo
+      sSql = "SELECT " & P_Codigo & " as codigo, " & P_Campo & " as descripc FROM " & P_Tabla & " WHERE " & P_Condicion & " ORDER BY " & P_Campo
    End If
  
    P_Combo.Clear
@@ -266,7 +372,7 @@ errHandler:
    err.Raise err.Number
 End Sub
 
-Public Sub CargaCombo(P_Combo As Object, P_Tabla As String, P_Codigo As String, p_Campo As String, P_Condicion As String, Optional pOrden As String = "")
+Public Sub CargaCombo(P_Combo As Object, P_Tabla As String, P_Codigo As String, P_Campo As String, P_Condicion As String, Optional pOrden As String = "")
     Dim sSql As String
     Dim Rs_Combo As ADODB.Recordset
     On Error GoTo errHandler
@@ -274,15 +380,15 @@ Public Sub CargaCombo(P_Combo As Object, P_Tabla As String, P_Codigo As String, 
     Set Rs_Combo = New ADODB.Recordset
 
     If P_Condicion = "" Then
-        sSql = "SELECT " & P_Codigo & " as codigo, " & p_Campo & " as descripc FROM " & P_Tabla
+        sSql = "SELECT " & P_Codigo & " as codigo, " & P_Campo & " as descripc FROM " & P_Tabla
     Else
-        sSql = "SELECT " & P_Codigo & " as codigo, " & p_Campo & " as descripc FROM " & P_Tabla & " WHERE " & P_Condicion
+        sSql = "SELECT " & P_Codigo & " as codigo, " & P_Campo & " as descripc FROM " & P_Tabla & " WHERE " & P_Condicion
     End If
 
     If Len(pOrden) > 0 Then
         sSql = sSql & " ORDER BY " & pOrden
     ElseIf P_Condicion = "" Then
-        sSql = sSql & " ORDER BY " & p_Campo
+        sSql = sSql & " ORDER BY " & P_Campo
     End If
 
     P_Combo.Clear
@@ -310,8 +416,71 @@ errHandler:
     MsgBox err.Description
 End Sub
 
+
+Public Sub CargaComboIn( _
+    P_Combo As Object, _
+    P_Tabla As String, _
+    P_Codigo As String, _
+    P_Campo As String, _
+    pCampoIn As String, _
+    pListaComas As String, _
+    Optional pCondicionExtra As String = "", _
+    Optional pOrden As String = "")
+
+    Dim sSql As String
+    Dim Rs_Combo As ADODB.Recordset
+    Dim lista As String
+
+    On Error GoTo errHandler
+
+    Set Rs_Combo = New ADODB.Recordset
+
+    lista = Trim$(pListaComas)
+
+    sSql = "SELECT " & P_Codigo & " as codigo, " & P_Campo & " as descripc FROM " & P_Tabla & " WHERE 1=1 "
+
+    ' IN (1,5,7)
+    If Len(lista) > 0 Then
+        sSql = sSql & " AND " & pCampoIn & " IN (" & lista & ") "
+    End If
+
+    ' Condición extra opcional (por ej: "Activo=1")
+    If Len(Trim$(pCondicionExtra)) > 0 Then
+        sSql = sSql & " AND (" & pCondicionExtra & ") "
+    End If
+
+    If Len(Trim$(pOrden)) > 0 Then
+        sSql = sSql & " ORDER BY " & pOrden
+    Else
+        sSql = sSql & " ORDER BY " & P_Campo
+    End If
+
+    P_Combo.Clear
+
+    Rs_Combo.CursorLocation = adUseServer
+    Rs_Combo.Open sSql, mConn, adOpenForwardOnly, adLockReadOnly
+
+    Do While Not Rs_Combo.EOF
+        P_Combo.AddItem Trim$(CStr(Rs_Combo!descripc))
+        P_Combo.ItemData(P_Combo.NewIndex) = CLng(Rs_Combo!codigo)
+        Rs_Combo.MoveNext
+    Loop
+
+    Rs_Combo.Close
+    Set Rs_Combo = Nothing
+    Exit Sub
+
+errHandler:
+    On Error Resume Next
+    If Not Rs_Combo Is Nothing Then
+        If Rs_Combo.State <> adStateClosed Then Rs_Combo.Close
+    End If
+    Set Rs_Combo = Nothing
+    MsgBox err.Description, vbCritical, "CargaComboIn"
+End Sub
+
  
- Public Sub CargaComboEmpresa(P_Combo As Object, P_Tabla As String, P_Codigo As String, p_Campo As String, P_Condicion As String)
+ Public Sub CargaComboEmpresa(P_Combo As Object, P_Tabla As String, P_Codigo As String, P_Campo As String, P_Condicion As String)
    Dim sSql As String
    Dim iCantidad As Integer
    Dim Conexion As ADODB.Connection
@@ -324,9 +493,9 @@ End Sub
    Conexion.Open sUdl
 
    If P_Condicion = "" Then
-      sSql = "SELECT " & P_Codigo & " as codigo, " & p_Campo & " as descripc FROM " & P_Tabla & " ORDER BY " & p_Campo
+      sSql = "SELECT " & P_Codigo & " as codigo, " & P_Campo & " as descripc FROM " & P_Tabla & " ORDER BY " & P_Campo
    Else
-      sSql = "SELECT " & P_Codigo & " as codigo, " & p_Campo & " as descripc FROM " & P_Tabla & " WHERE " & P_Condicion & " ORDER BY " & p_Campo
+      sSql = "SELECT " & P_Codigo & " as codigo, " & P_Campo & " as descripc FROM " & P_Tabla & " WHERE " & P_Condicion & " ORDER BY " & P_Campo
    End If
  
    P_Combo.Clear
@@ -348,7 +517,7 @@ errHandler:
    err.Raise err.Number
 End Sub
  
-Public Sub CargaComboLst(P_Combo As Object, P_Tabla As String, P_Codigo As String, p_Campo As String, p_Valor As String, P_Condicion As String, Optional pOrden As String = "")
+Public Sub CargaComboLst(P_Combo As Object, P_Tabla As String, P_Codigo As String, P_Campo As String, p_Valor As String, P_Condicion As String, Optional pOrden As String = "")
    Dim sSql As String
    Dim iCantidad As Integer
    Dim Conexion As ADODB.Connection
@@ -361,14 +530,14 @@ Public Sub CargaComboLst(P_Combo As Object, P_Tabla As String, P_Codigo As Strin
    Conexion.Open sDb
 
    If P_Condicion = "" Then
-      sSql = "SELECT " & P_Codigo & " as codigo, " & p_Campo & " as descripc, " & p_Valor & " as Valor  FROM " & P_Tabla & " ORDER BY " & p_Campo
+      sSql = "SELECT " & P_Codigo & " as codigo, " & P_Campo & " as descripc, " & p_Valor & " as Valor  FROM " & P_Tabla & " ORDER BY " & P_Campo
    Else
-      sSql = "SELECT " & P_Codigo & " as codigo, " & p_Campo & " as descripc, " & p_Valor & " as Valor  FROM " & P_Tabla & " WHERE " & P_Condicion
+      sSql = "SELECT " & P_Codigo & " as codigo, " & P_Campo & " as descripc, " & p_Valor & " as Valor  FROM " & P_Tabla & " WHERE " & P_Condicion
    End If
    If pOrden <> "" Then
       sSql = sSql & " ORDER BY " & pOrden
    Else
-    sSql = sSql & " ORDER BY " & p_Campo
+    sSql = sSql & " ORDER BY " & P_Campo
    End If
  
    P_Combo.Clear
@@ -379,7 +548,7 @@ Public Sub CargaComboLst(P_Combo As Object, P_Tabla As String, P_Codigo As Strin
    Do While Not Rs_Combo.EOF
       P_Combo.AddItem Trim(Rs_Combo!descripc)
       P_Combo.ItemData(P_Combo.NewIndex) = Rs_Combo!codigo
-      P_Combo.Selected(P_Combo.NewIndex) = Rs_Combo!Valor
+      P_Combo.Selected(P_Combo.NewIndex) = Rs_Combo!valor
       Rs_Combo.MoveNext
    Loop
    Rs_Combo.Close
@@ -392,7 +561,7 @@ errHandler:
 End Sub
 
 
-Public Function DatoCombo(P_Tabla As String, P_Codigo As String, p_Campo As String, iCodi As Long) As String
+Public Function DatoCombo(P_Tabla As String, P_Codigo As String, P_Campo As String, iCodi As Long) As String
     On Error GoTo errHandler
     EnsureConn
 
@@ -400,7 +569,7 @@ Public Function DatoCombo(P_Tabla As String, P_Codigo As String, p_Campo As Stri
     Set rs = New ADODB.Recordset
 
     Dim sSql As String
-    sSql = "SELECT " & p_Campo & " as descripc FROM " & P_Tabla & " WHERE " & P_Codigo & "=" & iCodi
+    sSql = "SELECT " & P_Campo & " as descripc FROM " & P_Tabla & " WHERE " & P_Codigo & "=" & iCodi
 
     rs.Open sSql, mConn, adOpenForwardOnly, adLockReadOnly
 
@@ -620,7 +789,7 @@ Public Function VerificarDeposito(nDep As Integer) As Boolean
   sSql = "SELECT Sum(Venta) as Cant FROM Depositos WHERE Deposito<>" & nDep
   rs.Open sSql, db, adOpenKeyset, adLockPessimistic
   If rs.EOF = False Or rs.BOF = False Then
-     If rs!Cant = 1 Then VerificarDeposito = True
+     If rs!cant = 1 Then VerificarDeposito = True
   End If
   
   db.Close
@@ -685,7 +854,7 @@ errHandler:
 
 End Function
 
-Public Function RegPorDefecto(p_Campo As String) As Integer
+Public Function RegPorDefecto(P_Campo As String) As Integer
    Dim sSql As String
    Dim Conexion As ADODB.Connection
    Dim Rs_Text As ADODB.Recordset
@@ -698,7 +867,7 @@ Public Function RegPorDefecto(p_Campo As String) As Integer
       db.Open sDb
    End If
 
-   sSql = "SELECT " & p_Campo & " as descripc FROM Registros WHERE Usuario=" & nUsuario & " And Suc = " & nSucursal
+   sSql = "SELECT " & P_Campo & " as descripc FROM Registros WHERE Usuario=" & nUsuario & " And Suc = " & nSucursal
  
    Rs_Text.Open sSql, db, adOpenKeyset, adLockPessimistic
    If Rs_Text.RecordCount <> 0 Then
@@ -716,7 +885,7 @@ errHandler:
   
 End Function
 
-Public Function SistemaPorDefecto(p_Campo As String) As String
+Public Function SistemaPorDefecto(P_Campo As String) As String
    Dim sSql As String
    Dim Conexion As ADODB.Connection
    Dim Rs_Text As ADODB.Recordset
@@ -729,7 +898,7 @@ Public Function SistemaPorDefecto(p_Campo As String) As String
       db.Open sDb
    End If
 
-   sSql = "SELECT " & p_Campo & " as descripc FROM Sistema "
+   sSql = "SELECT " & P_Campo & " as descripc FROM Sistema "
  
    Rs_Text.Open sSql, db, adOpenKeyset, adLockPessimistic
    If Rs_Text.RecordCount <> 0 Then
@@ -1467,7 +1636,7 @@ Public Function ActualizarCampoTraer(pCampo As String) As Long
   sSql = "SELECT " & pCampo & " as Valor FROM Sistema"
   rs.Open sSql, db, adOpenStatic, adLockOptimistic
   
-  ActualizarCampoTraer = rs!Valor
+  ActualizarCampoTraer = rs!valor
   db.Close
   
  Exit Function

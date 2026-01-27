@@ -159,6 +159,7 @@ Form=CajaVerTurnos.frm
 Form=CompraInfDetalles.frm
 Module=modPrintDlg; modPrintDlg.bas
 Module=modPrinter; modPrinter.bas
+Form=FrmBuscarComprobante.frm
 ResFile32="ds1.RES"
 IconForm="FrmUsuario"
 Startup="Principal"
