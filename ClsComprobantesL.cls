@@ -769,7 +769,7 @@ Public Function DepositoVenta() As Integer
   rs.Open sSql, db, adOpenKeyset, adLockPessimistic
   DepositoVenta = 0
   If rs.BOF = False Or rs.EOF = False Then
-     DepositoVenta = rs!deposito
+     DepositoVenta = rs!Deposito
   End If
   db.Close
   
@@ -2837,7 +2837,7 @@ Public Function TraerUltimoSistema(pCampo As String) As Long
 
    sSql = "SELECT " & pCampo & " as Valor FROM Sistema "
    rs.Open sSql, Conexion, adOpenStatic, adLockOptimistic
-   TraerUltimoSistema = rs!Valor
+   TraerUltimoSistema = rs!valor
    Conexion.Close
 End Function
 

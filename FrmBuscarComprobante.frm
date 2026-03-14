@@ -1,10 +1,11 @@
 VERSION 5.00
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Begin VB.Form FrmBuscarComprobante 
+   BorderStyle     =   1  'Fixed Single
    Caption         =   "Listar Comprobantes"
    ClientHeight    =   7560
-   ClientLeft      =   60
-   ClientTop       =   405
+   ClientLeft      =   45
+   ClientTop       =   390
    ClientWidth     =   10620
    KeyPreview      =   -1  'True
    LinkTopic       =   "Form1"
@@ -265,7 +266,7 @@ End Sub
 
 Private Sub SeleccionarTodo(ByVal tb As TextBox)
     tb.SelStart = 0
-    tb.SelLength = Len(tb.Text)
+    tb.SelLength = Len(tb.text)
 End Sub
 
 Private Sub CmdNext_Click()
@@ -307,8 +308,8 @@ Private Sub Form_Load()
     Set p = New ClsPrograma
 
     'IMPORTANTE: que arranque vacío, no "0"
-    txtSucursal.Text = ""
-    TxtNumero.Text = ""
+    txtSucursal.text = ""
+    TxtNumero.text = ""
     CargarCombos
     
     mPage = 1
@@ -388,7 +389,7 @@ Private Sub CargarCombos()
     CmbComprobante.AddItem "TODOS"
     CmbComprobante.ItemData(CmbComprobante.NewIndex) = 0
 
-    CmbComprobante.Text = "TODOS"
+    CmbComprobante.text = "TODOS"
 End Sub
 
 Private Function ListaTieneValor(ByVal lista As String, ByVal valor As Long) As Boolean
@@ -450,13 +451,13 @@ Private Sub Buscar()
     End If
 
     'Sucursal (ignorar 0 / vacío)
-    nSuc = CLng(Val(Trim$(txtSucursal.Text)))
+    nSuc = CLng(Val(Trim$(txtSucursal.text)))
     If nSuc > 0 Then
         whereSql = whereSql & " AND c.Sucursal=" & nSuc & vbCrLf
     End If
 
     'Número (ignorar 0 / vacío)
-    nNum = CLng(Val(Trim$(TxtNumero.Text)))
+    nNum = CLng(Val(Trim$(TxtNumero.text)))
     If nNum > 0 Then
         whereSql = whereSql & " AND c.Numero=" & nNum & vbCrLf
     End If
@@ -533,7 +534,7 @@ End Sub
 Private Sub FormatearGrid()
     On Error Resume Next
 
-    GridBus.HeadFont.Bold = True
+    GridBus.HeadFont.bold = True
 
     '0 Movimiento
     GridBus.Columns(0).Visible = False

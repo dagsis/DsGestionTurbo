@@ -51,6 +51,8 @@ Public nVentaFactura As Integer
 Public sVentaCPago As String
 Public sConsFinal As String
 Public nBanco As Integer
+Public nConcepto As Byte
+Public sTa As String
 
 Public nMedDetalle As Integer
 Public nImpDetalle As Integer
@@ -64,7 +66,7 @@ Public rUsu As ADODB.Recordset
 Public rRsReg As Recordset
 
 Public Us As String
-
+Public id_datos As Byte
 Public sCuitAfip As String
 Public nConceptoAfip As Byte
 Public sWebServiceLogin As String
@@ -711,7 +713,7 @@ Public Function EncodeBase64(ByRef arrData() As Byte) As String
 
     ' byte array to base64
     Set objNode = objXML.createElement("b64")
-    objNode.DataType = "bin.base64"
+    objNode.dataType = "bin.base64"
     objNode.nodeTypedValue = arrData
     EncodeBase64 = objNode.Text
 
@@ -754,10 +756,10 @@ Public Function DecodeJSON(json As String) As Scripting.Dictionary
     Set DecodeJSON = dict
 End Function
 
-Function ValorSeguro(Valor As Variant) As String
-    If IsNull(Valor) Or IsEmpty(Valor) Then
+Function ValorSeguro(valor As Variant) As String
+    If IsNull(valor) Or IsEmpty(valor) Then
         ValorSeguro = "0"
     Else
-        ValorSeguro = Replace(CStr(Valor), """", "'")
+        ValorSeguro = Replace(CStr(valor), """", "'")
     End If
 End Function

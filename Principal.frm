@@ -842,61 +842,66 @@ Private Sub MDIForm_Load()
   
   db.Open sDb
     
-  Dim Rs As New ADODB.Recordset
+  Dim rs As New ADODB.Recordset
   Dim sSEnvase As String
+  rs.Open "AfipDatos", db, adOpenKeyset, adLockPessimistic
+  id_datos = rs!id_datos
+  rs.Close
   
-  Rs.Open "Sistema", db, adOpenKeyset, adLockPessimistic
-  pControladora = Rs!Controladora
-  bImprimeCtaCte = Rs!ImprimeCtaCte
-  nCodeQr = Rs!Qr
+  rs.Open "Sistema", db, adOpenKeyset, adLockPessimistic
+  pControladora = rs!Controladora
+  bImprimeCtaCte = rs!ImprimeCtaCte
+  nConcepto = rs!ConceptoAfip
+  sTa = rs!ta
+  nCodeQr = rs!Qr
   
-  sNomFan = Rs!Fantasia
-  sDirFan = Rs!Direccion
-  sTelFan = Rs!Telefono
-  sCiuFan = Rs!Ciudad
-  nDigito = Rs!Digitos
-  nCodigo = Rs!Cadena
-  nRecibo = Rs!Recibo
-  nFactura = Rs!IdCheque
-  sCuitAfip = Rs!Cuit
+  sNomFan = rs!Fantasia
+  sDirFan = rs!Direccion
+  sTelFan = rs!Telefono
+  sCiuFan = rs!Ciudad
+  nDigito = rs!Digitos
+  nCodigo = rs!Cadena
+  nRecibo = rs!Recibo
+  nFactura = rs!IdCheque
+  sCuitAfip = rs!Cuit
   bBuscarActivo = True
-  bPagare = Rs!bPagare  ' Busqueda avanzada de Productos si/no por defecto
-  bModoSuper = Rs!Pagare 'Modo Precios directo o supermercado
-  bRecibo = IIf(Rs!Receta = 1, True, False) ' Modo comanda en los recibos y presupuestos en resto y deliv
-  bTransferencia = Rs!bRecibo  ' Permite conciliar las transferencias
-  bPermiteStockNega = Rs!bRapido ' Permite Facturar con stock negativo
-  nConceptoAfip = Rs!ConceptoAfip
-  sWebServiceLogin = Rs!WebServicelogin
-  sWebServiceCae = Rs!WebserviceCae
-  sCertificado = Rs!certificado
-  sClavePrivada = Rs!ClavePrivada
-  sArchFartura = Rs!ArchFactura
-  sLogoAfip = Rs!LogoAfip
-  sAnchoTexto = Rs!AnchoTexto
-  bMono = Rs!MONOTRIBUTO
-  nSocket = Rs!socket
-  CompaniaId = Rs!compania
-  CompaniaSuc = Rs!sucursal
+  bPagare = rs!bPagare  ' Busqueda avanzada de Productos si/no por defecto
+  bModoSuper = rs!Pagare 'Modo Precios directo o supermercado
+  bRecibo = IIf(rs!Receta = 1, True, False) ' Modo comanda en los recibos y presupuestos en resto y deliv
+  bTransferencia = rs!bRecibo  ' Permite conciliar las transferencias
+  bPermiteStockNega = rs!bRapido ' Permite Facturar con stock negativo
+  nConceptoAfip = rs!ConceptoAfip
+  sWebServiceLogin = rs!WebServicelogin
+  sWebServiceCae = rs!WebserviceCae
+  sCertificado = rs!certificado
+  sClavePrivada = rs!ClavePrivada
+  sArchFartura = rs!ArchFactura
+  sLogoAfip = rs!LogoAfip
+  sAnchoTexto = rs!AnchoTexto
+  bMono = rs!MONOTRIBUTO
+  nSocket = rs!socket
+  CompaniaId = rs!compania
+  CompaniaSuc = rs!sucursal
   
-  nLineasElectronic = Rs!Representante  ' Cantidad de Lineas en Las Facturas Electronicas
+  nLineasElectronic = rs!Representante  ' Cantidad de Lineas en Las Facturas Electronicas
   
-  nScaner = Rs!Scaner 'si la balanza trabaja con decimales
+  nScaner = rs!Scaner 'si la balanza trabaja con decimales
   
-  pClave = IIf(Rs!clave = "0", False, True)
-  pClave1 = IIf(Rs!ClaveStock = "0", False, True)
+  pClave = IIf(rs!clave = "0", False, True)
+  pClave1 = IIf(rs!ClaveStock = "0", False, True)
       
-  sClave = Rs!clave
-  sClave1 = Rs!ClaveStock
+  sClave = rs!clave
+  sClave1 = rs!ClaveStock
   
-  nDias = Rs!Dias
-  nCadena = Rs!Cadena
+  nDias = rs!Dias
+  nCadena = rs!Cadena
 
-  nCantDecimales = Rs!CantDecimales
+  nCantDecimales = rs!CantDecimales
     
-  bAmericana = Rs!FAmericana
-  bPercibe = Rs!Percibe
+  bAmericana = rs!FAmericana
+  bPercibe = rs!Percibe
    
-  For i = 0 To Rs!CantDecimales
+  For i = 0 To rs!CantDecimales
       If i = 0 Then
          nCantDecimales = "0"
       Else
@@ -905,7 +910,7 @@ Private Sub MDIForm_Load()
       End If
   Next i
   
-  For i = 0 To Rs!DecimalesCant
+  For i = 0 To rs!DecimalesCant
       If i = 0 Then
          nDecimalCant = "0"
       Else
@@ -914,10 +919,10 @@ Private Sub MDIForm_Load()
       End If
   Next i
   
-  sSEnvase = Rs!Envase
-  tEnvase = Rs!TextoEnvase
-  fBalanza = Rs!DBalanza
-  sVentaCPago = Rs!CondPago
+  sSEnvase = rs!Envase
+  tEnvase = rs!TextoEnvase
+  fBalanza = rs!DBalanza
+  sVentaCPago = rs!CondPago
 
   
   db.Close
@@ -939,7 +944,7 @@ Private Sub MDIForm_Load()
     Set rUsu = cRsl.DamePermisos(FrmUsuario.sUsuario, FrmUsuario.sContra)
     nUsuario = rUsu!Id_Usuario
     sUser = rUsu!Nombre
-    StatusBar1.Panels(1).Text = "Summer 2004 - " & Year(Date) & "  Carlos D´Agostino - Usuario :" & sUser
+    StatusBar1.Panels(1).text = "Summer 2004 - " & Year(Date) & "  Carlos D´Agostino - Usuario :" & sUser
     nPuerto = rUsu!Controladora
     
   '   nScaner = rUsu!Scanner 'Si la balanza trabaja con decimales
@@ -1103,41 +1108,41 @@ End Sub
 
 Private Sub Menu(pMenu As Object)
   
-  Dim cRsl As ClsLectura, Rs As Recordset, i As Byte, sAux As String, sCli As String
+  Dim cRsl As ClsLectura, rs As Recordset, i As Byte, sAux As String, sCli As String
 
   Set cRsl = New ClsLectura
-  Set Rs = cRsl.TraerRsCondi("Empresa", "Id", "Id<>10")
+  Set rs = cRsl.TraerRsCondi("Empresa", "Id", "Id<>10")
   
     
-  nEmpre(0, 0, 0) = Rs!ID
-  nEmpre(0, 1, 0) = Rs!Udl
-  nEmpre(0, 1, 1) = Rs!Razon
+  nEmpre(0, 0, 0) = rs!ID
+  nEmpre(0, 1, 0) = rs!Udl
+  nEmpre(0, 1, 1) = rs!Razon
   
-  sUdl = "FILE NAME=" & App.Path & "\" & Rs!Udl
+  sUdl = "FILE NAME=" & App.Path & "\" & rs!Udl
   
  
   
-  pMenu(1).Caption = Rs!Razon
+  pMenu(1).Caption = rs!Razon
   pMenu(1).Checked = True
   i = 2
-  Me.BackColor = QBColor(Rs!Color)
-  Me.Caption = "Ds Gestión Server - " & Rs!Razon & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal) & sVersion
+  Me.BackColor = QBColor(rs!Color)
+  Me.Caption = "Ds Gestión Server - " & rs!Razon & " - " & cRsl.TraerValorDeUnCampo("Sucursales", "Descripcion", "Id=" & nSucursal) & sVersion
   
   nMenu = 1
-  Rs.MoveNext
+  rs.MoveNext
 
-  Do While Not Rs.EOF
+  Do While Not rs.EOF
      Load pMenu(i)
-     pMenu(i).Caption = Rs!Razon
+     pMenu(i).Caption = rs!Razon
      pMenu(i).Checked = False
      i = i + 1
-     sAux = "FILE NAME=" & App.Path & "\" & cRsl.TraerValorDeUnCampo("Empresa", "Udl", "Id=" & Rs!ID)
+     sAux = "FILE NAME=" & App.Path & "\" & cRsl.TraerValorDeUnCampo("Empresa", "Udl", "Id=" & rs!ID)
      db.Open sAux
      sCli = cRsl.TraerValorDeUnCampo("Clientes", "Cliente", "Id=" & cRsl.TraerValorDeUnCampo("Registros", "ClienteConsFinal", ""))
      db.Execute "DELETE  FROM CuentaCorriente WHERE Cliente='" & sCli & "'"
      db.Close
      db.Open sUdl
-     Rs.MoveNext
+     rs.MoveNext
   Loop
   If db.State = 1 Then
      db.Close

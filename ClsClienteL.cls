@@ -43,23 +43,24 @@ Public Sub EnsureConn()
     End If
 End Sub
 
-Private Function DetachRS(ByVal Rs As ADODB.Recordset) As ADODB.Recordset
-    Rs.ActiveConnection = Nothing   ' <-- SIN Set
-    Set DetachRS = Rs
+Private Function DetachRS(ByVal rs As ADODB.Recordset) As ADODB.Recordset
+    rs.ActiveConnection = Nothing   ' <-- SIN Set
+    Set DetachRS = rs
 End Function
 
 Public Function TraerDatosCliente(sClie As String, Optional pId As Long = 0) As Recordset
   On Error GoTo errHandler
   EnsureConn
 
-  Dim Rs As ADODB.Recordset
-  Set Rs = New ADODB.Recordset
+  Dim rs As ADODB.Recordset
+  Set rs = New ADODB.Recordset
 
     Dim sSql As String
     
     sSql = "SELECT Clientes.*,"
-    sSql = sSql & "ListaPrecio,ListaPrecio,ListadePrecio.Descripcion AS ListaDesc, ListadePrecio.Porcentaje as ListaPorc, ListadePrecio.PrecioIva, Descuentos.Porcentaje AS DescPorc, Zonas.Descripcion AS ZonaDesc,"
+    sSql = sSql & "ListaPrecio,ListadePrecio.Descripcion AS ListaDesc, ListadePrecio.Porcentaje as ListaPorc, ListadePrecio.PrecioIva, Descuentos.Porcentaje AS DescPorc, Zonas.Descripcion AS ZonaDesc,"
     sSql = sSql & "Descuentos.Descripcion AS DescDesc, Transporte.Descripcion AS TransDesc, TipoIva.Descripcion AS TIvaDesc,"
+    sSql = sSql & "Provincias.Descripcion AS ProvDesc, "
     sSql = sSql & "Vendedores.Descripcion as VendDesc,Vendedores.Comision as VendComision,Recargos.Porcentaje as PorcRecargo "
     sSql = sSql & "FROM Clientes LEFT OUTER JOIN "
     sSql = sSql & "Vendedores ON Clientes.Vendedor = Vendedores.Vendedor LEFT OUTER JOIN "
@@ -76,11 +77,11 @@ Public Function TraerDatosCliente(sClie As String, Optional pId As Long = 0) As 
        sSql = sSql & "WHERE Clientes.Id=" & pId
     End If
     
-    Rs.CursorLocation = adUseClient
-    Rs.Open sSql, mConn, adOpenStatic, adLockOptimistic
-    Rs.ActiveConnection = Nothing
+    rs.CursorLocation = adUseClient
+    rs.Open sSql, mConn, adOpenStatic, adLockOptimistic
+    rs.ActiveConnection = Nothing
          
-    Set TraerDatosCliente = Rs
+    Set TraerDatosCliente = rs
     Exit Function
    
 errHandler:
@@ -288,16 +289,16 @@ End Function
 
 Public Function BuscarNombreCliente(sCod As String) As String
   Dim sSql As String
-  Dim Rs As ADODB.Recordset
+  Dim rs As ADODB.Recordset
   
   On Error GoTo errHandler
-  Set Rs = New ADODB.Recordset
+  Set rs = New ADODB.Recordset
   db.Open sDb
 
   sSql = "SELECT RazonSocial FROM Clientes WHERE Cliente='" & sCod & "'"
-  Rs.Open sSql, db, adOpenStatic, adLockOptimistic
-  If Rs.EOF = False Or Rs.BOF = False Then
-     BuscarNombreCliente = Rs!RazonSocial
+  rs.Open sSql, db, adOpenStatic, adLockOptimistic
+  If rs.EOF = False Or rs.BOF = False Then
+     BuscarNombreCliente = rs!RazonSocial
   End If
   db.Close
   
@@ -308,16 +309,16 @@ End Function
 
 Public Function BuscarNombreProveedor(sCod As String) As String
   Dim sSql As String
-  Dim Rs As ADODB.Recordset
+  Dim rs As ADODB.Recordset
   
   On Error GoTo errHandler
-  Set Rs = New ADODB.Recordset
+  Set rs = New ADODB.Recordset
   db.Open sDb
 
   sSql = "SELECT RazonSocial FROM Proveedores WHERE Proveedor='" & sCod & "'"
-  Rs.Open sSql, db, adOpenStatic, adLockOptimistic
-  If Rs.EOF = False Or Rs.BOF = False Then
-     BuscarNombreProveedor = Rs!RazonSocial
+  rs.Open sSql, db, adOpenStatic, adLockOptimistic
+  If rs.EOF = False Or rs.BOF = False Then
+     BuscarNombreProveedor = rs!RazonSocial
   End If
   db.Close
   
@@ -328,19 +329,19 @@ End Function
 
 Public Function BuscarTipoIva(sCod As String) As String
   Dim sSql As String
-  Dim Rs As ADODB.Recordset
+  Dim rs As ADODB.Recordset
   
   On Error GoTo errHandler
-  Set Rs = New ADODB.Recordset
+  Set rs = New ADODB.Recordset
   
   db.Open sDb
 
   sSql = "SELECT TipoIva.Descripcion "
   sSql = sSql & "FROM Clientes LEFT JOIN TipoIva ON Clientes.TipoIva = TipoIva.TipoIva "
   sSql = sSql & "WHERE (((Clientes.Cliente)='" & sCod & "'))"
-  Rs.Open sSql, db, adOpenStatic, adLockOptimistic
-  If Rs.EOF = False Or Rs.BOF = False Then
-     BuscarTipoIva = Rs!Descripcion
+  rs.Open sSql, db, adOpenStatic, adLockOptimistic
+  If rs.EOF = False Or rs.BOF = False Then
+     BuscarTipoIva = rs!Descripcion
   End If
   db.Close
   
@@ -352,19 +353,19 @@ End Function
 
 Public Function BuscarTipoIvaReceptor(sCod As String) As Integer
   Dim sSql As String
-  Dim Rs As ADODB.Recordset
+  Dim rs As ADODB.Recordset
   
   On Error GoTo errHandler
-  Set Rs = New ADODB.Recordset
+  Set rs = New ADODB.Recordset
   
   db.Open sDb
 
   sSql = "SELECT TipoIva.DocControlador "
   sSql = sSql & "FROM Clientes LEFT JOIN TipoIva ON Clientes.TipoIva = TipoIva.TipoIva "
   sSql = sSql & "WHERE (((Clientes.Cliente)='" & sCod & "'))"
-  Rs.Open sSql, db, adOpenStatic, adLockOptimistic
-  If Rs.EOF = False Or Rs.BOF = False Then
-     BuscarTipoIvaReceptor = Rs!DocControlador
+  rs.Open sSql, db, adOpenStatic, adLockOptimistic
+  If rs.EOF = False Or rs.BOF = False Then
+     BuscarTipoIvaReceptor = rs!DocControlador
   End If
   db.Close
   
@@ -375,19 +376,19 @@ errHandler:
 End Function
 Public Function BuscarTipoIvaProv(sCod As String) As String
   Dim sSql As String
-  Dim Rs As ADODB.Recordset
+  Dim rs As ADODB.Recordset
   
   On Error GoTo errHandler
-  Set Rs = New ADODB.Recordset
+  Set rs = New ADODB.Recordset
   
   db.Open sDb
 
   sSql = "SELECT TipoIva.Descripcion "
   sSql = sSql & "FROM Proveedores LEFT JOIN TipoIva ON Proveedores.TipoIva = TipoIva.TipoIva "
   sSql = sSql & "WHERE (((Proveedores.Proveedor)='" & sCod & "'))"
-  Rs.Open sSql, db, adOpenStatic, adLockOptimistic
-  If Rs.EOF = False Or Rs.BOF = False Then
-     BuscarTipoIvaProv = Rs!Descripcion
+  rs.Open sSql, db, adOpenStatic, adLockOptimistic
+  If rs.EOF = False Or rs.BOF = False Then
+     BuscarTipoIvaProv = rs!Descripcion
   End If
   db.Close
   
@@ -398,19 +399,19 @@ errHandler:
 End Function
 Public Function BuscarLista(sCod As String) As Integer
   Dim sSql As String
-  Dim Rs As ADODB.Recordset
+  Dim rs As ADODB.Recordset
   
   On Error GoTo errHandler
-  Set Rs = New ADODB.Recordset
+  Set rs = New ADODB.Recordset
   
   db.Open sDb
 
   sSql = "SELECT Precio "
   sSql = sSql & "FROM Clientes "
   sSql = sSql & "WHERE Cliente='" & sCod & "'"
-  Rs.Open sSql, db, adOpenStatic, adLockOptimistic
-  If Rs.EOF = False Or Rs.BOF = False Then
-     BuscarLista = Rs!precio
+  rs.Open sSql, db, adOpenStatic, adLockOptimistic
+  If rs.EOF = False Or rs.BOF = False Then
+     BuscarLista = rs!precio
   End If
   db.Close
   
@@ -443,19 +444,19 @@ End Function
 
 Public Function BuscarVendedor(sCod As String) As Integer
   Dim sSql As String
-  Dim Rs As ADODB.Recordset
+  Dim rs As ADODB.Recordset
   
   On Error GoTo errHandler
-  Set Rs = New ADODB.Recordset
+  Set rs = New ADODB.Recordset
   
   db.Open sDb
 
   sSql = "SELECT Vendedor "
   sSql = sSql & "FROM Clientes "
   sSql = sSql & "WHERE Cliente='" & sCod & "'"
-  Rs.Open sSql, db, adOpenStatic, adLockOptimistic
-  If Rs.EOF = False Or Rs.BOF = False Then
-     BuscarVendedor = Rs!Vendedor
+  rs.Open sSql, db, adOpenStatic, adLockOptimistic
+  If rs.EOF = False Or rs.BOF = False Then
+     BuscarVendedor = rs!Vendedor
   End If
   db.Close
   
@@ -467,19 +468,19 @@ End Function
 
 Public Function BuscarCuit(sCliente As String) As String
   Dim sSql As String
-  Dim Rs As ADODB.Recordset
+  Dim rs As ADODB.Recordset
   
   On Error GoTo errHandler
-  Set Rs = New ADODB.Recordset
+  Set rs = New ADODB.Recordset
   
   db.Open sDb
 
   sSql = "SELECT Cuit "
   sSql = sSql & "FROM Clientes "
   sSql = sSql & "WHERE Cliente='" & sCliente & "'"
-  Rs.Open sSql, db, adOpenStatic, adLockOptimistic
-  If Rs.EOF = False Or Rs.BOF = False Then
-     BuscarCuit = Rs!Cuit
+  rs.Open sSql, db, adOpenStatic, adLockOptimistic
+  If rs.EOF = False Or rs.BOF = False Then
+     BuscarCuit = rs!Cuit
   End If
   db.Close
   

@@ -702,7 +702,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   152174593
+      Format          =   165543937
       CurrentDate     =   36783
    End
    Begin VB.ComboBox CmbComprobante 
@@ -722,7 +722,7 @@ Begin VB.Form VentaComprobantes
       _ExtentX        =   2275
       _ExtentY        =   556
       _Version        =   393216
-      Format          =   152174593
+      Format          =   165543937
       CurrentDate     =   36783
    End
    Begin VB.PictureBox Picture1 
@@ -941,6 +941,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+
 Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" ( _
     ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 
@@ -1002,7 +1003,7 @@ Private mMoviAfip As Long
 
 Private mTipoOperacion As Byte
 Private mTipoMovimiento As Byte
-
+Dim imp_iva_fact As Double, imp_tributo_fact As Double, bEMail As Boolean
 
 '========================
 '  RS
@@ -1074,21 +1075,21 @@ Private Function CabeceraOK() As Boolean
     ok = ok And (CmbComprobante.ListIndex <> -1)
 
     ' Cliente: no solo TxtCliente, sino que esté linkeado (LblCliente)
-    ok = ok And (Len(Trim$(TxtCliente.Text)) > 0)
+    ok = ok And (Len(Trim$(TxtCliente.text)) > 0)
     ok = ok And (Len(Trim$(LblCliente.Caption)) > 0)
 
     ok = ok And (CmbLista.ListIndex <> -1)
 
     ' Corredor: si aceptás "Ninguno", no lo bloquees
-    ok = ok And (Len(Trim$(CmbCorredor.Text)) > 0)
+    ok = ok And (Len(Trim$(CmbCorredor.text)) > 0)
 
     ' Forma de pago
-    ok = ok And (Len(Trim$(CmbFormaPago.Text)) > 0)
+    ok = ok And (Len(Trim$(CmbFormaPago.text)) > 0)
 
     ' CondPago solo si CONTADO (según tu lógica)
-    If UCase$(Trim$(CmbFormaPago.Text)) = "CONTADO" Then
-        ok = ok And (Len(Trim$(CmbCondPago.Text)) > 0) _
-                 And (UCase$(Trim$(CmbCondPago.Text)) <> "NINGUNO")
+    If UCase$(Trim$(CmbFormaPago.text)) = "CONTADO" Then
+        ok = ok And (Len(Trim$(CmbCondPago.text)) > 0) _
+                 And (UCase$(Trim$(CmbCondPago.text)) <> "NINGUNO")
     End If
 
     CabeceraOK = ok
@@ -1098,14 +1099,14 @@ Private Function DetalleEditOK() As Boolean
     Dim ok As Boolean
     ok = True
 
-    ok = ok And (Len(Trim$(TxtDetalle.Text)) > 0)
+    ok = ok And (Len(Trim$(TxtDetalle.text)) > 0)
     ok = ok And (CmbDeposito.ListIndex <> -1)
     ok = ok And (CmbUnidad.ListIndex <> -1)
     ok = ok And (CmbImpuesto.ListIndex <> -1)
     ok = ok And (CmbCuenta.ListIndex <> -1)
-    ok = ok And (CDbl(Val(TxtCantidad.Text)) > 0)
-    ok = ok And (CDbl(Val(TxtPrecio.Text)) > 0)
-    ok = ok And (Len(Trim$(Val(TxtPDesc.Text))) > 0)
+    ok = ok And (CDbl(Val(TxtCantidad.text)) > 0)
+    ok = ok And (CDbl(Val(TxtPrecio.text)) > 0)
+    ok = ok And (Len(Trim$(Val(TxtPDesc.text))) > 0)
 
     DetalleEditOK = ok
 End Function
@@ -1403,26 +1404,26 @@ errHandler:
     ManejaErrores
 End Sub
 
-Private Function SumaValores(ByRef Rs As ADODB.Recordset) As Double
+Private Function SumaValores(ByRef rs As ADODB.Recordset) As Double
     On Error GoTo errHandler
 
     Dim s As Double, bk As Variant
     s = 0
 
-    If Rs Is Nothing Then Exit Function
-    If Rs.State <> adStateOpen Then Exit Function
-    If Rs.RecordCount <= 0 Then Exit Function
-    If (Rs.BOF And Rs.EOF) Then Exit Function
+    If rs Is Nothing Then Exit Function
+    If rs.State <> adStateOpen Then Exit Function
+    If rs.RecordCount <= 0 Then Exit Function
+    If (rs.BOF And rs.EOF) Then Exit Function
 
-    bk = Rs.Bookmark
-    Rs.MoveFirst
-    Do While Not Rs.EOF
-        s = s + CDbl(Val(Rs!importe & ""))
-        Rs.MoveNext
+    bk = rs.Bookmark
+    rs.MoveFirst
+    Do While Not rs.EOF
+        s = s + CDbl(Val(rs!importe & ""))
+        rs.MoveNext
     Loop
 
     On Error Resume Next
-    Rs.Bookmark = bk
+    rs.Bookmark = bk
     On Error GoTo errHandler
 
     SumaValores = Round(s, 2)
@@ -1441,11 +1442,11 @@ Private Sub LinkearDetalleDesdeRsd()
 
     mLoadingDetalle = True
 
-    TxtProducto.Text = Rsd!Producto & ""
-    TxtDetalle.Text = Rsd!Descripcion & ""
-    TxtCantidad.Text = Format(CDbl(Val(Rsd!Cantidad & "")), nDecimalCant)
-    TxtPDesc.Text = Format(CDbl(Val(Rsd!PDesc & "")), "#0.00")
-    TxtPrecio.Text = Format(CDbl(Val(Rsd!PrecioUnitFinal & "")), "#0.00")
+    TxtProducto.text = Rsd!Producto & ""
+    TxtDetalle.text = Rsd!Descripcion & ""
+    TxtCantidad.text = Format(CDbl(Val(Rsd!Cantidad & "")), nDecimalCant)
+    TxtPDesc.text = Format(CDbl(Val(Rsd!PDesc & "")), "#0.00")
+    TxtPrecio.text = Format(CDbl(Val(Rsd!PrecioUnitFinal & "")), "#0.00")
 
     p.SetComboByItemData CmbCuenta, CLng(Val(Rsd!Cuenta & ""))
     p.SetComboByItemData CmbDeposito, CLng(Val(Rsd!Deposito & ""))
@@ -1651,7 +1652,7 @@ End Sub
 
 Private Sub SeleccionarTodo(ByVal tb As TextBox)
     tb.SelStart = 0
-    tb.SelLength = Len(tb.Text)
+    tb.SelLength = Len(tb.text)
 End Sub
 
 Private Sub Grid1_RowColChange(LastRow As Variant, ByVal LastCol As Integer)
@@ -1673,11 +1674,11 @@ Private Sub LinkearDetalleActual()
 
     mLoadingDetalle = True
 
-    TxtProducto.Text = Rsd!Producto & ""
-    TxtDetalle.Text = Rsd!Descripcion & ""
-    TxtCantidad.Text = Format(Val(Rsd!Cantidad & ""), nDecimalCant)
-    TxtPDesc.Text = Format(Val(Rsd!PDesc & ""), "0.00")
-    TxtPrecio.Text = Format(Val(Rsd!precioBase & ""), "0.00")
+    TxtProducto.text = Rsd!Producto & ""
+    TxtDetalle.text = Rsd!Descripcion & ""
+    TxtCantidad.text = Format(Val(Rsd!Cantidad & ""), nDecimalCant)
+    TxtPDesc.text = Format(Val(Rsd!PDesc & ""), "0.00")
+    TxtPrecio.text = Format(Val(Rsd!precioBase & ""), "0.00")
 
     p.SetComboByItemData CmbDeposito, CLng(Val(Rsd!Deposito & ""))
     p.SetComboByItemData CmbUnidad, CLng(Val(Rsd!Medida & ""))
@@ -1700,8 +1701,8 @@ End Sub
 
 
 Private Sub TxtCantidad_LostFocus()
-  If TxtCantidad.Text = "" Then TxtCantidad.Text = 1
-  TxtCantidad.Text = Format(TxtCantidad.Text, nDecimalCant)
+  If TxtCantidad.text = "" Then TxtCantidad.text = 1
+  TxtCantidad.text = Format(TxtCantidad.text, nDecimalCant)
 End Sub
 
 Private Sub TxtCliente_Change()
@@ -1724,13 +1725,13 @@ Private Sub TxtCotizacion_Change()
 End Sub
 
 Private Sub TxtPrecio_LostFocus()
-  If TxtPrecio.Text = "" Then TxtPrecio.Text = 0
-  TxtPrecio.Text = Format(TxtPrecio.Text, nCantDecimales)
+  If TxtPrecio.text = "" Then TxtPrecio.text = 0
+  TxtPrecio.text = Format(TxtPrecio.text, nCantDecimales)
 End Sub
 
 Private Sub TxtPDesc_LostFocus()
-  If TxtPDesc.Text = "" Then TxtPDesc.Text = 0
-  TxtPDesc.Text = Format(TxtPDesc.Text, "#0.00")
+  If TxtPDesc.text = "" Then TxtPDesc.text = 0
+  TxtPDesc.text = Format(TxtPDesc.text, "#0.00")
 End Sub
 
 Private Sub TxtNumero_Change()
@@ -1742,9 +1743,9 @@ Private Sub LinkearProducto(pProducto As Long)
   
   Set cRpl = New ClsProductoL
   
-  If TxtProducto.Text <> "" Or nDat <> 0 Then
+  If TxtProducto.text <> "" Or nDat <> 0 Then
      Dim RsProduc As ADODB.Recordset
-     Set RsProduc = cRpl.TraerProducto(TxtProducto.Text, pProducto)
+     Set RsProduc = cRpl.TraerProducto(TxtProducto.text, pProducto)
      
      If Not RsProduc Is Nothing And RsProduc.RecordCount > 0 Then
      
@@ -1760,22 +1761,22 @@ Private Sub LinkearProducto(pProducto As Long)
         mProdIntValor = RsProduc!ValorInterno
         mprodActuaStock = RsProduc!ActuaStock
         
-        TxtProducto.Text = mProdCodigo
-        TxtDetalle.Text = mProdDescripcion
+        TxtProducto.text = mProdCodigo
+        TxtDetalle.text = mProdDescripcion
         
         p.SetComboByItemData CmbUnidad, mProdUM
         p.SetComboByItemData CmbDeposito, mProdDeposito
-         CmbImpuesto.Text = "IVA EXENTO"
+         CmbImpuesto.text = "IVA EXENTO"
          If Not RsComp Is Nothing Then
             If RsComp!Iva = 1 Then
               p.SetComboByItemData CmbImpuesto, mProdImpuesto
             End If
         End If
         If RsProduc!precio <> 0 Then
-           TxtPrecio.Text = Format(mProdPrecio, "#0.00")
+           TxtPrecio.text = Format(mProdPrecio, "#0.00")
            TxtCantidad.SetFocus
         Else
-           TxtPrecio.Text = "0.00"
+           TxtPrecio.text = "0.00"
            TxtPrecio.SetFocus
         End If
      Else
@@ -1814,56 +1815,56 @@ Private Sub Limpiar()
     Dim ctl As Control
 
     For Each ctl In Controls
-        If TypeOf ctl Is TextBox Then ctl.Text = ""
+        If TypeOf ctl Is TextBox Then ctl.text = ""
     Next ctl
 
-    DTPFecha.Value = Date
+    DtpFecha.Value = Date
     DtpVenc.Value = Date
 
     LblDescuento.Caption = "0.00"
-    TxtReparto.Text = "0000000000000"
+    TxtReparto.text = "0000000000000"
     LblCliente.Caption = ""
-    TxtSucursal.Text = "0000"
-    TxtNumero.Text = "00000000"
-    TxtVendedor.Text = "0.00"
+    txtSucursal.text = "0000"
+    TxtNumero.text = "00000000"
+    TxtVendedor.text = "0.00"
     LbLIva.Caption = ""
-    TxtCotizacion.Text = "1.000"
+    TxtCotizacion.text = "1.000"
     LblNeto.Caption = "0.00"
     LblBonificacion.Caption = "0.00"
     LblFinanciacion.Caption = "0.00"
-    TxtNoGrav.Text = "0.00"
-    LblIva1.Text = "0.00"
+    TxtNoGrav.text = "0.00"
+    LblIva1.text = "0.00"
     LblPercepcion.Caption = "0.00"
-    LblTotal.Caption = "0.00"
+    lblTotal.Caption = "0.00"
 
     CmbComprobante.ListIndex = -1
-    CmbVend.Text = "NINGUNO"
-    CmbCorredor.Text = "Ninguno"
+    CmbVend.text = "NINGUNO"
+    CmbCorredor.text = "Ninguno"
     CmbLista.ListIndex = -1
     CmbCuenta.ListIndex = -1
 
     ' Forma pago / cond pago
-    CmbFormaPago.Text = IIf(nCondPago = 0, "CUENTA CORRIENTE", "CONTADO")
-    CmbCondPago.Text = "EFECTIVO"
+    CmbFormaPago.text = IIf(nCondPago = 0, "CUENTA CORRIENTE", "CONTADO")
+    CmbCondPago.text = "EFECTIVO"
       
 End Sub
 
 Private Sub LimpiarDetalles()
-    TxtProducto.Text = ""
-    TxtDetalle.Text = ""
+    TxtProducto.text = ""
+    TxtDetalle.text = ""
     p.SetComboByItemData CmbUnidad, nMedDetalle
     p.SetComboByItemData CmbCuenta, nCueDetalle
     
-    CmbImpuesto.Text = "IVA EXENTO"
+    CmbImpuesto.text = "IVA EXENTO"
     If Not RsComp Is Nothing Then
         If RsComp!Iva = 1 Then
            p.SetComboByItemData CmbImpuesto, nImpDetalle
         End If
     End If
-    TxtCantidad.Text = Format(1, nDecimalCant)
-    TxtDetalle.Text = ""
-    TxtPDesc.Text = "0.00"
-    TxtPrecio.Text = Format(0, nCantDecimales) '<<< corregido
+    TxtCantidad.text = Format(1, nDecimalCant)
+    TxtDetalle.text = ""
+    TxtPDesc.text = "0.00"
+    TxtPrecio.text = Format(0, nCantDecimales) '<<< corregido
 End Sub
 
 
@@ -1884,6 +1885,8 @@ Private Sub CmdBotones_Click(Index As Integer)
             Buscar
         Case 3
              Modificar
+        Case 5
+             Imprimir
         Case 9
             Salir
     End Select
@@ -1906,12 +1909,12 @@ Private Sub Nuevo()
         CalcularTotales
         RefrescarUI
 
-        CmbCorredor.Text = "Ninguno"
+        CmbCorredor.text = "Ninguno"
         p.SetComboByItemData CmbComprobante, nVentaFactura
         CmbComprobante.SetFocus
 
 
-        CmbCorredor.Text = "Ninguno"
+        CmbCorredor.text = "Ninguno"
         p.SetComboByItemData CmbComprobante, nVentaFactura
         CmbComprobante.SetFocus
     End If
@@ -1927,7 +1930,7 @@ Public Sub Buscar()
     Set f = New FrmBuscarComprobante
     f.TipoOperacionWhere = "1,5"
     Set f.OwnerForm = Me
-    f.Show vbModeless
+    f.Show 1
              
     'NO lo descargues acá
 End Sub
@@ -1952,6 +1955,9 @@ errHandler:
     ManejaErrores
 End Sub
 
+Private Sub Imprimir()
+   Call ImprimirNuevo(Me, RsCli, RsComp, Rsd, nUsuario, sComputadora, mMoviAfip)
+End Sub
 Public Sub CargarComprobantePorMovimiento(ByVal pMov As Long)
     On Error GoTo errHandler
 
@@ -2022,7 +2028,7 @@ Private Sub GrabarComprobante()
      
     If mCodVentaTipo = 7 Then
         Dim totalPagar As Double
-        totalPagar = CDbl(Val(LblTotal.Caption)) 'esto ya incluye percepción en tu cálculo
+        totalPagar = CDbl(Val(lblTotal.Caption)) 'esto ya incluye percepción en tu cálculo
        
         VentaValores.Inicializar RsValor, totalPagar
         VentaValores.Show vbModal
@@ -2043,8 +2049,8 @@ Private Sub GrabarComprobante()
        
        RsValor.AddNew
        RsValor!FormaPagoId = CmbCondPago.ItemData(CmbCondPago.ListIndex)
-       RsValor!FormaPagoDesc = CmbCondPago.Text
-       RsValor!importe = Round(CDbl(Val(LblTotal.Caption)), 2)
+       RsValor!FormaPagoDesc = CmbCondPago.text
+       RsValor!importe = Round(CDbl(Val(lblTotal.Caption)), 2)
 
        RsValor!Nombre = LblCliente.Caption
        RsValor!BancoId = 0
@@ -2116,36 +2122,36 @@ Private Sub GuardarCambiosComprobante()
     RsCv!tipo = RsComp!TipoOperacion
     RsCv!Movimiento = mMoviAfip   '<<< CLAVE: no se cambia
     RsCv!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
-    RsCv!fecha = DTPFecha.Value
+    RsCv!fecha = DtpFecha.Value
     RsCv!FechaIva = DtpVenc.Value
-    RsCv!Numero = TxtNumero.Text
-    RsCv!sucursal = TxtSucursal.Text
-    RsCv!Cliente = TxtCliente.Text
+    RsCv!Numero = TxtNumero.text
+    RsCv!sucursal = txtSucursal.text
+    RsCv!Cliente = TxtCliente.text
     RsCv!lista = CmbLista.ItemData(CmbLista.ListIndex)
     RsCv!Vendedor = CmbVend.ItemData(CmbVend.ListIndex)
     RsCv!Caja = nCaja
     RsCv!CondVenta = CmbFormaPago.ItemData(CmbFormaPago.ListIndex)
     RsCv!neto = CCur(Val(LblNeto.Caption))
-    RsCv!Iva1 = CCur(Val(LblIva1.Text))
+    RsCv!Iva1 = CCur(Val(LblIva1.text))
     RsCv!Iva2 = CCur(Val(LblDescuento.Caption))
-    RsCv!COTIZACION = CCur(Val(TxtCotizacion.Text))
+    RsCv!COTIZACION = CCur(Val(TxtCotizacion.text))
     RsCv!Descuentos = CCur(Val(LblBonificacion.Caption))
     RsCv!Financiacion = CCur(Val(LblFinanciacion.Caption))
     RsCv!PIvaCompras = CCur(Val(LblPercepcion.Caption))
-    RsCv!IBrutosCompras = CCur(Val(TxtVendedor.Text))
-    RsCv!NoGravados = CCur(Val(TxtNoGrav.Text))
+    RsCv!IBrutosCompras = CCur(Val(TxtVendedor.text))
+    RsCv!NoGravados = CCur(Val(TxtNoGrav.text))
 
     Select Case RsComp!TipoMovimiento
         Case 1, 11
-            RsCv!Debe = CCur(Val(LblTotal.Caption))
+            RsCv!Debe = CCur(Val(lblTotal.Caption))
             RsCv!Haber = 0
         Case 2, 12, 13
             RsCv!Debe = 0
-            RsCv!Haber = CCur(Val(LblTotal.Caption))
+            RsCv!Haber = CCur(Val(lblTotal.Caption))
     End Select
 
     RsCv!Desde = CmbCondPago.ItemData(CmbCondPago.ListIndex)
-    RsCv!Hasta = TxtReparto.Text
+    RsCv!Hasta = TxtReparto.text
     RsCv!factura = CmbCorredor.ItemData(CmbCorredor.ListIndex)
     RsCv!Motivo = ""
     RsCv!Anulado = 0
@@ -2205,8 +2211,12 @@ End Sub
 Private Sub MostrarComprobanteGrabado(ByVal movi As Long)
     On Error GoTo errHandler
     
-    Dim sSql As String
-
+    Dim sSql As String, cRiL As ClsClienteL
+    Dim pvDefault As Integer
+    pvDefault = Val(id_datos) ' o tu sucursal/punto de venta por defecto
+    
+    Set cRiL = New ClsClienteL
+    
     sSql = ""
     sSql = sSql & "SELECT c.*, cli.RazonSocial, ti.Descripcion AS TipoIvaDesc " & vbCrLf
     sSql = sSql & "FROM CabComprobantes c " & vbCrLf
@@ -2215,23 +2225,39 @@ Private Sub MostrarComprobanteGrabado(ByVal movi As Long)
     sSql = sSql & "WHERE c.Movimiento = " & movi
 
     Set RsCv = cRsl.TraerRsSQL(sSql)
+        
+    Set RsCli = cRiL.TraerDatosCliente(RsCv!Cliente)
     
-    Set RsComp = cRsl.TraerRsSQL("SELECT * FROM Comprobantes WHERE Id=" & CLng(RsCv!Comprobante))
+    sSql = "SELECT " & _
+             "C.Id, UCV.Comprobante, UCV.Descripcion, UCV.Comanda, " & _
+             "C.TipoMovimiento, C.TipoOperacion, C.Iva, C.Numero, C.CtaCte, C.Caja, C.Costo, C.MoviStock, " & _
+             "C.Sucursal, C.Afip, C.Moneda, " & _
+             "AD.Id_Datos, AD.Empresa, AD.Fantasia, AD.Cuit, AD.IIBB, AD.Iva AS IvaDesc, AD.Direccion, AD.Localidad, AD.Inicio, " & _
+             "AD.Archivo, AD.Imagen, AD.Copias " & _
+             "FROM UsuariosComprobantesVentas UCV " & _
+             "LEFT JOIN Comprobantes C ON UCV.Comprobante = C.Id " & _
+             "LEFT JOIN AfipDatos AD ON AD.Id_Datos = " & _
+             "CASE WHEN ISNULL(C.Afip,0) > 0 THEN ISNULL(C.Sucursal," & pvDefault & ") ELSE " & pvDefault & " END " & _
+             "WHERE UCV.Usuario = 1 AND UCV.Ver = 1 AND (C.TipoOperacion = 1 OR C.TipoOperacion = 5) " & _
+             "AND C.Id=" & RsCv!Comprobante
 
+      
+    Set RsComp = cRsl.TraerRsSQL(sSql)
+  
     If RsComp Is Nothing Or RsComp.RecordCount = 0 Then
         MsgBox "No se pudo cargar la definición del comprobante (Comprobantes.Id=" & RsCv!Comprobante & ").", vbCritical
         Exit Sub
     End If
       
     '2) Linkear cabecera a controles
-    TxtSucursal.Text = Format$(RsCv!sucursal, "0000")
-    TxtNumero.Text = Format$(RsCv!Numero, "00000000")
-    TxtCliente.Text = RsCv!Cliente & ""
+    txtSucursal.text = Format$(RsCv!sucursal, "0000")
+    TxtNumero.text = Format$(RsCv!Numero, "00000000")
+    TxtCliente.text = RsCv!Cliente & ""
     
     LblCliente.Caption = RsCv!RazonSocial & ""
     LbLIva.Caption = RsCv!TipoIvaDesc & ""
 
-    DTPFecha.Value = RsCv!fecha
+    DtpFecha.Value = RsCv!fecha
     DtpVenc.Value = RsCv!FechaIva
 
     'si necesitás setear combos por ItemData:
@@ -2283,23 +2309,23 @@ Private Sub MostrarComprobanteGrabado(ByVal movi As Long)
     '4) Traer valores y dejarlos listos (si querés permitir reimprimir caja, etc.)
     If RsValor Is Nothing Then CrearRsValorMemoria Else VaciarRsValor
 
-    Dim rsVal As ADODB.Recordset
-    Set rsVal = cRsl.TraerRsCondi("Valores", "Venta", "Venta=" & movi)
+    Dim RSVal As ADODB.Recordset
+    Set RSVal = cRsl.TraerRsCondi("Valores", "Venta", "Venta=" & movi)
 
-    If Not rsVal Is Nothing Then
-        If rsVal.RecordCount > 0 Then
-            rsVal.MoveFirst
-            Do While Not rsVal.EOF
+    If Not RSVal Is Nothing Then
+        If RSVal.RecordCount > 0 Then
+            RSVal.MoveFirst
+            Do While Not RSVal.EOF
                 RsValor.AddNew
-                RsValor!FormaPagoId = rsVal!CodPago
-                RsValor!FormaPagoDesc = rsVal!formapago & ""
-                RsValor!importe = CDbl(Val(rsVal!importe & ""))
-                RsValor!Nombre = rsVal!Nombre & ""
-                RsValor!BancoId = CLng(Val(rsVal!Banco & ""))
-                RsValor!NroCheque = rsVal!NumeroCheque & ""
+                RsValor!FormaPagoId = RSVal!CodPago
+                RsValor!FormaPagoDesc = RSVal!formapago & ""
+                RsValor!importe = CDbl(Val(RSVal!importe & ""))
+                RsValor!Nombre = RSVal!Nombre & ""
+                RsValor!BancoId = CLng(Val(RSVal!Banco & ""))
+                RsValor!NroCheque = RSVal!NumeroCheque & ""
                 'fechas/tarjeta según tu tabla
                 RsValor.Update
-                rsVal.MoveNext
+                RSVal.MoveNext
             Loop
         End If
     End If
@@ -2350,34 +2376,34 @@ Private Sub GrabarTodo()
   mMoviAfip = RsCv!Movimiento
   
   RsCv!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
-  RsCv!fecha = DTPFecha.Value
+  RsCv!fecha = DtpFecha.Value
   RsCv!FechaIva = DtpVenc.Value
-  RsCv!Numero = TxtNumero.Text
-  RsCv!sucursal = TxtSucursal.Text
-  RsCv!Cliente = TxtCliente.Text
+  RsCv!Numero = TxtNumero.text
+  RsCv!sucursal = txtSucursal.text
+  RsCv!Cliente = TxtCliente.text
   RsCv!lista = CmbLista.ItemData(CmbLista.ListIndex)
   RsCv!Vendedor = CmbVend.ItemData(CmbVend.ListIndex)
   RsCv!Caja = nCaja
   RsCv!CondVenta = CmbFormaPago.ItemData(CmbFormaPago.ListIndex)
   RsCv!neto = CCur(Val(LblNeto.Caption))
-  RsCv!Iva1 = CCur(Val(LblIva1.Text))
+  RsCv!Iva1 = CCur(Val(LblIva1.text))
   RsCv!Iva2 = CCur(Val(LblDescuento.Caption))
-  RsCv!COTIZACION = CCur(Val(TxtCotizacion.Text))
+  RsCv!COTIZACION = CCur(Val(TxtCotizacion.text))
   RsCv!Descuentos = CCur(Val(LblBonificacion.Caption))
   RsCv!Financiacion = CCur(Val(LblFinanciacion.Caption))
   RsCv!PIvaCompras = CCur(Val(LblPercepcion.Caption))
-  RsCv!IBrutosCompras = CCur(Val(TxtVendedor.Text))
-  RsCv!NoGravados = CCur(Val(TxtNoGrav.Text))
+  RsCv!IBrutosCompras = CCur(Val(TxtVendedor.text))
+  RsCv!NoGravados = CCur(Val(TxtNoGrav.text))
   Select Case RsComp!TipoMovimiento
          Case 1, 11
-              RsCv!Debe = CCur(Val(LblTotal.Caption))
+              RsCv!Debe = CCur(Val(lblTotal.Caption))
               RsCv!Haber = 0
          Case 2, 12, 13
               RsCv!Debe = 0
-              RsCv!Haber = CCur(Val(LblTotal.Caption))
+              RsCv!Haber = CCur(Val(lblTotal.Caption))
   End Select
   RsCv!Desde = CmbCondPago.ItemData(CmbCondPago.ListIndex)
-  RsCv!Hasta = TxtReparto.Text
+  RsCv!Hasta = TxtReparto.text
   RsCv!factura = CmbCorredor.ItemData(CmbCorredor.ListIndex)
   RsCv!Motivo = ""
   RsCv!Anulado = 0
@@ -2404,7 +2430,7 @@ Private Sub GrabarTodo()
                   RsCd!Medida = Rsd!Medida
                   RsCd!Impuesto = Rsd!Impuesto
                   RsCd!precio = Rsd!precioBase
-                  RsCd!PrecioUnitario = Rsd!PrecioUnitNeto + Rsd!desc
+                  RsCd!PrecioUnitario = Rsd!PrecioUnitNeto + RsCd!Impuesto + Rsd!desc
                   RsCd!PrecioTotal = Rsd!Total + Rsd!desc
                   RsCd!DetRemi = 0
                   RsCd.Update
@@ -2420,26 +2446,26 @@ Private Sub GrabarTodo()
   If RsComp!ctacte <> "No" And CmbFormaPago.ItemData(CmbFormaPago.ListIndex) = 0 Then
       rReci.AddNew
       rReci!Venta = mMoviAfip
-      rReci!fecha = DTPFecha.Value
-      rReci!Cliente = TxtCliente.Text
+      rReci!fecha = DtpFecha.Value
+      rReci!Cliente = TxtCliente.text
       rReci!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
-      rReci!Numero = TxtNumero.Text
-      rReci!sucursal = TxtSucursal.Text
+      rReci!Numero = TxtNumero.text
+      rReci!sucursal = txtSucursal.text
       rReci!Cuota = 1
       Select Case RsComp!TipoMovimiento
             Case 1, 11
-                rReci!Debe = CDbl(Val(LblTotal.Caption))
+                rReci!Debe = CDbl(Val(lblTotal.Caption))
                 rReci!Haber = 0
             Case 2, 12, 13
                  rReci!Debe = 0
-                 rReci!Haber = CDbl(Val(LblTotal.Caption))
+                 rReci!Haber = CDbl(Val(lblTotal.Caption))
       End Select
       rReci!Anulado = 0
       rReci.Update
   End If
   
   ' Si Actualiza Stock
-  If RsComp!MoviStock <> "No" And CmbFormaPago.Text <> "COTIZAR" Then
+  If RsComp!MoviStock <> "No" And CmbFormaPago.text <> "COTIZAR" Then
      Rsd.MoveFirst
      Do While Not Rsd.EOF
         If Rsd!ActuaStock = "Si" Then
@@ -2486,9 +2512,9 @@ Private Sub GrabarTodo()
            rCaja!Suc = nSucursal
            rCaja!Movimiento = mMoviAfip
            rCaja!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
-           rCaja!Numero = TxtNumero.Text
-           rCaja!sucursal = TxtSucursal.Text
-           rCaja!fecha = DTPFecha.Value
+           rCaja!Numero = TxtNumero.text
+           rCaja!sucursal = txtSucursal.text
+           rCaja!fecha = DtpFecha.Value
            rCaja!Hora = Time
            rCaja!Caja = nCaja
            rCaja!formapago = RsValor!FormaPagoDesc
@@ -2521,14 +2547,14 @@ Private Sub GrabarTodo()
     
 End Sub
 Private Sub CmbFormaPago_Click()
-   If CmbFormaPago.Text <> "CONTADO" Then
+   If CmbFormaPago.text <> "CONTADO" Then
       CmbCondPago.Enabled = False
-      CmbCondPago.Text = "Ninguno"
+      CmbCondPago.text = "Ninguno"
       nPorcValor = 0
       If Rsd.RecordCount <> 0 Then RecalcularRsd
    Else
       CmbCondPago.Enabled = True
-      CmbCondPago.Text = "EFECTIVO"
+      CmbCondPago.text = "EFECTIVO"
    End If
    If mEstado = stNuevo Then RefrescarUI
 End Sub
@@ -2542,7 +2568,7 @@ Private Sub TxtReparto_KeyPress(KeyAscii As Integer)
 End Sub
 
 Private Sub TxtSucursal_GotFocus()
-    SeleccionarTodo TxtSucursal
+    SeleccionarTodo txtSucursal
 End Sub
 
 Private Sub TxtSucursal_KeyPress(KeyAscii As Integer)
@@ -2649,7 +2675,7 @@ End Sub
 Private Sub CabGrid()
   Set Grid1.DataSource = Rsd
   Grid1.HeadFont.Size = 10
-  Grid1.HeadFont.Bold = True
+  Grid1.HeadFont.bold = True
   With Grid1
       .Columns(0).Caption = "Producto"
       .Columns(0).Width = 1000
@@ -2723,12 +2749,30 @@ End Sub
 
 Private Sub CmbComprobante_Click()
   If mLoadingDetalle Then Exit Sub
-  Dim nNum As Long, nSuc As Long
+  Dim nNum As Long, nSuc As Long, sSql As String
   On Error GoTo errHandler
   
   If CmbComprobante.ListIndex <> -1 Then
      If mEstado = stNuevo Then
-       Set RsComp = cRsl.TraerRsCondi("Comprobantes", "Id", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex))
+     
+       Dim pvDefault As Integer
+       pvDefault = Val(id_datos) ' o tu sucursal/punto de venta por defecto
+
+       sSql = "SELECT " & _
+             "C.Id, UCV.Comprobante, UCV.Descripcion, UCV.Comanda, " & _
+             "C.TipoMovimiento, C.TipoOperacion, C.Iva, C.Numero, C.CtaCte, C.Caja, C.Costo, C.MoviStock, " & _
+             "C.Sucursal, C.Afip, C.Moneda, " & _
+             "AD.Id_Datos, AD.Empresa, AD.Fantasia, AD.Cuit, AD.IIBB, AD.Iva AS IvaDesc, AD.Direccion, AD.Localidad, AD.Inicio, " & _
+             "AD.Archivo, AD.Imagen, AD.Copias " & _
+             "FROM UsuariosComprobantesVentas UCV " & _
+             "LEFT JOIN Comprobantes C ON UCV.Comprobante = C.Id " & _
+             "LEFT JOIN AfipDatos AD ON AD.Id_Datos = " & _
+             "CASE WHEN ISNULL(C.Afip,0) > 0 THEN ISNULL(C.Sucursal," & pvDefault & ") ELSE " & pvDefault & " END " & _
+             "WHERE UCV.Usuario = 1 AND UCV.Ver = 1 AND (C.TipoOperacion = 1 OR C.TipoOperacion = 5) " & _
+             "AND C.Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)
+
+      
+       Set RsComp = cRsl.TraerRsSQL(sSql)
        
        If RsComp.RecordCount <> 0 Then
       
@@ -2747,8 +2791,8 @@ Private Sub CmbComprobante_Click()
            nNum = RsComp!Numero + 1
            nSuc = RsComp!sucursal
                
-           TxtSucursal.Text = Format(nSuc, "0000")
-           TxtNumero.Text = Format(nNum, "00000000")
+           txtSucursal.text = Format(nSuc, "0000")
+           TxtNumero.text = Format(nNum, "00000000")
           
           If Rsd.RecordCount <> 0 Then
              RecalcularRsd ' cRsl.TraerValorDeUnCampo("CondVenta", "Tipo", "CondVta=" & CmbCondPago.ItemData(CmbCondPago.ListIndex))
@@ -2789,7 +2833,7 @@ Public Sub CalcularTotales()
         nNeto = nNeto + CDbl(Val(Rsd!neto & ""))
         nIva = nIva + CDbl(Val(Rsd!Impuesto & ""))
         nDes = nDes + CDbl(Val(Rsd!desc & ""))
-        nNoGrabado = nNoGrabado + CDbl(Val(Rsd!IntTotal & ""))
+        nNoGrabado = nNoGrabado + CDbl(Val(Rsd!intTotal & ""))
         nTot = nTot + CDbl(Val(Rsd!Total & ""))
         Rsd.MoveNext
     Loop
@@ -2808,12 +2852,12 @@ pintar:
     End If
 
     LblFinanciacion.Caption = "0.00"
-    TxtNoGrav.Text = Format(Round(nNoGrabado, 2), "#0.00")
+    TxtNoGrav.text = Format(Round(nNoGrabado, 2), "#0.00")
     LblNeto.Caption = Format(Round(nNetoGravado, 2), "#0.00")
     LblBonificacion.Caption = Format(Round(nDes, 2), "#0.00")
-    LblIva1.Text = Format(Round(nIva, 2), "#0.00")
+    LblIva1.text = Format(Round(nIva, 2), "#0.00")
     LblPercepcion.Caption = Format(Round(nPercepcion, 2), "#0.00")
-    LblTotal.Caption = Format(Round(nTot + nPercepcion, 2), "#0.00")
+    lblTotal.Caption = Format(Round(nTot + nPercepcion, 2), "#0.00")
     Exit Sub
 
 errHandler:
@@ -2846,10 +2890,10 @@ Private Sub LinkearCliente(nDat As Long)
   Set cRiL = New ClsClienteL
   LblCliente.Caption = ""
   LbLIva.Caption = ""
-  If TxtCliente.Text <> "" Or nDat <> 0 Then
-       Set RsCli = cRiL.TraerDatosCliente(TxtCliente.Text, nDat)
+  If TxtCliente.text <> "" Or nDat <> 0 Then
+       Set RsCli = cRiL.TraerDatosCliente(TxtCliente.text, nDat)
        If RsCli.RecordCount <> 0 Then
-          TxtCliente.Text = RsCli!Cliente
+          TxtCliente.text = RsCli!Cliente
           mCliePercepcion = RsCli!Percepcion
         
          If IsNull(RsCli!FechaBaja) Or RsCli!FechaBaja = "" Then
@@ -2857,9 +2901,9 @@ Private Sub LinkearCliente(nDat As Long)
             LbLIva.Caption = RsCli!TivaDesc
             p.SetComboByItemData CmbLista, RsCli!ListaPrecio
             LblDescuento.Caption = Format(RsCli!DescPorc, "0.00")
-            If CmbVend.Text = "NINGUNO" Then
-               CmbVend.Text = RsCli!VendDesc
-               TxtVendedor.Text = Format(RsCli!VendComision, "0.00")
+            If CmbVend.text = "NINGUNO" Then
+               CmbVend.text = RsCli!VendDesc
+               TxtVendedor.text = Format(RsCli!VendComision, "0.00")
             End If
          End If
       End If
@@ -3005,16 +3049,16 @@ Private Sub IniciarEdicionDetalleActual()
     RefrescarUI
 
     'cargo controles desde el rs
-    TxtProducto.Text = Rsd!Producto & ""
-    TxtDetalle.Text = Rsd!Descripcion & ""
+    TxtProducto.text = Rsd!Producto & ""
+    TxtDetalle.text = Rsd!Descripcion & ""
 
     p.SetComboByItemData CmbCuenta, CLng(Val(Rsd!Cuenta & ""))
     p.SetComboByItemData CmbDeposito, CLng(Val(Rsd!Deposito & ""))
     p.SetComboByItemData CmbUnidad, CLng(Val(Rsd!Medida & ""))
     p.SetComboByItemData CmbImpuesto, CLng(Val(Rsd!ImpId & ""))
 
-    TxtCantidad.Text = Format(CDbl(Val(Rsd!Cantidad & "")), nDecimalCant)
-    TxtPDesc.Text = Format(CDbl(Val(Rsd!PDesc & "")), "0.00")
+    TxtCantidad.text = Format(CDbl(Val(Rsd!Cantidad & "")), nDecimalCant)
+    TxtPDesc.text = Format(CDbl(Val(Rsd!PDesc & "")), "0.00")
 
     'ojo: el precio base NO lo guardás en el rs (todavía).
     'lo más práctico: guardarlo también (te lo propongo abajo)
@@ -3037,15 +3081,15 @@ Private Sub ActualizarDetalleActual()
     If Rsd Is Nothing Then Exit Sub
     If (Rsd.BOF Or Rsd.EOF) Then Exit Sub
 
-    Rsd!Producto = TxtProducto.Text
-    Rsd!Descripcion = TxtDetalle.Text
+    Rsd!Producto = TxtProducto.text
+    Rsd!Descripcion = TxtDetalle.text
     Rsd!Cuenta = CmbCuenta.ItemData(CmbCuenta.ListIndex)
     Rsd!Deposito = CmbDeposito.ItemData(CmbDeposito.ListIndex)
     Rsd!Medida = CmbUnidad.ItemData(CmbUnidad.ListIndex)
-    Rsd!Cantidad = CDbl(Val(TxtCantidad.Text))
-    Rsd!PDesc = CDbl(Val(TxtPDesc.Text))
+    Rsd!Cantidad = CDbl(Val(TxtCantidad.text))
+    Rsd!PDesc = CDbl(Val(TxtPDesc.text))
     Rsd!ImpProduc = mProdTasa
-    Rsd!precioBase = CDbl(Val(TxtPrecio.Text))
+    Rsd!precioBase = CDbl(Val(TxtPrecio.text))
 
     Rsd!ImpId = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
     Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
@@ -3080,15 +3124,15 @@ Private Sub GrabarDetalleActual()
     mLoadingDetalle = True
 
     Rsd.AddNew
-    Rsd!Producto = TxtProducto.Text
-    Rsd!Descripcion = TxtDetalle.Text
+    Rsd!Producto = TxtProducto.text
+    Rsd!Descripcion = TxtDetalle.text
     Rsd!Cuenta = CmbCuenta.ItemData(CmbCuenta.ListIndex)
     Rsd!Deposito = CmbDeposito.ItemData(CmbDeposito.ListIndex)
     Rsd!Medida = CmbUnidad.ItemData(CmbUnidad.ListIndex)
-    Rsd!Cantidad = CDbl(Val(TxtCantidad.Text))
-    Rsd!PDesc = CDbl(Val(TxtPDesc.Text))
+    Rsd!Cantidad = CDbl(Val(TxtCantidad.text))
+    Rsd!PDesc = CDbl(Val(TxtPDesc.text))
     Rsd!ImpProduc = mProdTasa
-    Rsd!precioBase = CDbl(Val(TxtPrecio.Text))
+    Rsd!precioBase = CDbl(Val(TxtPrecio.text))
 
     Rsd!ImpId = CmbImpuesto.ItemData(CmbImpuesto.ListIndex)
     Rsd!ImpIncluido = IIf(mListaPrecio = 1, 1, 0)
@@ -3208,15 +3252,15 @@ Private Sub CalcularImportesRenglon(ByRef R As ADODB.Recordset)
     impu = tot - neto
 
     '--- 6) redondeos
-    netoUnit = Round(netoUnit, nCantDecimales)
-    finalUnit = Round(finalUnit, nCantDecimales)
+    netoUnit = Round(netoUnit, 4)
+    finalUnit = Round(finalUnit, 4)
 
-    neto = Round(neto, 2)
-    tot = Round(tot, 2)
-    impu = Round(impu, 2)
-    descMonto = Round(descMonto, 2)
-    intUnit = Round(intUnit, nCantDecimales)
-    intTot = Round(intTot, 2)
+    neto = Round(neto, 4)
+    tot = Round(tot, 4)
+    impu = Round(impu, 4)
+    descMonto = Round(descMonto, 4)
+    intUnit = Round(intUnit, 4)
+    intTot = Round(intTot, 4)
 
     '--- 7) asignar
     R!PrecioUnitNeto = netoUnit
@@ -3226,9 +3270,9 @@ Private Sub CalcularImportesRenglon(ByRef R As ADODB.Recordset)
     R!desc = descMonto
 
     R!intUnit = intUnit
-    R!IntTotal = intTot
+    R!intTotal = intTot
 
-    R!Total = tot  'tot ya incluye interno porque finalUnit lo incluye
+    R!Total = tot 'tot ya incluye interno porque finalUnit lo incluye
 
     Exit Sub
 errHandler:
@@ -3300,7 +3344,7 @@ End Sub
 
 Private Function TieneCae(ByVal movi As Long) As Boolean
     On Error GoTo errHandler
-    TieneCae = (Val(cRsl.TraerValorDeUnCampo("AfipCae", "Movimiento", "Movimiento=" & movi)) <> 0)
+    TieneCae = (Val(cRsl.TraerValorDeUnCampo("AfipCaes", "Movimiento", "Movimiento=" & movi)) <> 0)
     Exit Function
 errHandler:
     TieneCae = False
@@ -3382,4 +3426,932 @@ errHandler:
     ManejaErrores
 End Sub
 
+
+Public Function Autorizar(pCompro As Byte, pConcepto As Byte, pTipoDoc As Byte, pNumDoc As String, pTotal As String, pNeto As String, _
+   pIva As String, pPunto As Integer, pMovi As Long, pCosto As Byte) As Boolean
+   
+    Dim cRle As ClsEscritura
+    
+    Set cRle = New ClsEscritura
+    Set cRsl = New ClsLectura
+
+    Dim WSAA As Object, WSFEv1 As Object
+    Dim ttl As Long, tra As String, Path As String, certificado As String, ClavePrivada As String
+    Dim cms As String, cacert As String, wsdl As String
+    Dim cache As String, wrapper As String, proxy As String, ok As Boolean, ta As String
+    Dim tipo_cbte As Byte, punto_vta As Integer, cbte_nro As String, v As Variant, fecha As String
+    Dim concepto As Byte, tipo_doc As Byte, nro_doc As String, cbt_desde As Long, cbt_hasta As Long
+    Dim imp_total As String, imp_tot_conc As String, imp_neto As String, imp_iva As String, imp_trib As String
+    Dim imp_op_ex As String, fecha_cbte As String, fecha_venc_pago As String
+    Dim fecha_serv_desde As String, fecha_serv_hasta As String, moneda_id As String, moneda_ctz As String
+    Dim evento As Variant, token As String, Sign As String
+    Dim ID As Byte, base_imp As String, importe As String, CAE As String, cae2 As String
+    Dim fd As String, Excepcion As String
+    
+    On Error GoTo ManejoError
+    
+    
+    Set WSAA = CreateObject("WSAA")
+    Debug.Print WSAA.version
+    If WSAA.version < "2.02c" Then
+       MsgBox "Debe instalar una versión más actualizada de PyAfipWs WSAA!"
+       End
+    End If
+            
+   ta = cRsl.TraerValorDeUnCampo("Sistema", "Ta", "")
+   If ta <> "" Then
+      ok = WSAA.AnalizarXml(ta)
+       If Not WSAA.Expirado() Then
+           token = WSAA.ObtenerTagXml("token")
+           Sign = WSAA.ObtenerTagXml("sign")
+       End If
+   End If
+            
+   If token = "" Or Sign = "" Then
+      
+          ' deshabilito errores no manejados (version 2.04 o superior)
+       WSAA.LanzarExcepciones = False
+              
+    ' Generar un Ticket de Requerimiento de Acceso (TRA) para WSFEv1
+      ttl = 43200 ' tiempo de vida = 12hs hasta expiración
+      tra = WSAA.CreateTRA("wsfe", ttl)
+      ControlarExcepcion WSAA
+      Debug.Print tra
+    
+    ' Especificar la ubicacion de los archivos certificado y clave privada
+    
+      Path = App.Path + "\"
+ 
+      certificado = sCertificado '"dagsis.crt" ' certificado de prueba
+      ClavePrivada = sClavePrivada '"dagsis.key" ' clave privada de prueba
+        
+    ' Generar el mensaje firmado (CMS)
+      cms = WSAA.SignTRA(tra, Path + certificado, Path + ClavePrivada)
+      ControlarExcepcion WSAA
+      Debug.Print cms
+    
+    ' Conectarse con el webservice de autenticación:
+      cache = ""
+      proxy = "" '"usuario:clave@localhost:8000"
+      wrapper = ""
+      cacert = ""
+          
+      wsdl = sWebServiceLogin
+   
+      ok = WSAA.Conectar(cache, wsdl, proxy, wrapper, cacert) ' Homologación
+      ControlarExcepcion WSAA
+    
+    ' Llamar al web service para autenticar:
+      ta = WSAA.LoginCMS(cms)
+      ControlarExcepcion WSAA
+
+    ' Imprimir el ticket de acceso, ToKen y Sign de autorización
+      Debug.Print ta
+      Debug.Print "Token:", WSAA.token
+      Debug.Print "Sign:", WSAA.Sign
+    
+      If ta <> "" Then
+           cRle.GrabarValordeUnCampo "Sistema", "Ta", "'" & ta & "'", ""
+      End If
+      token = WSAA.token
+      Sign = WSAA.Sign
+
+    End If
+    
+    Set WSFEv1 = CreateObject("WSFEv1")
+    Debug.Print WSFEv1.version
+    If WSAA.version < "1.12" Then
+        MsgBox "Debe instalar una versión mas actualizada de PyAfipWs WSFEv1!"
+        End
+    End If
+    'Debug.Print WSFEv1.InstallDir
+
+    ' Setear tocken y sing de autorización (pasos previos)
+    WSFEv1.token = token ' WSAA.Token
+    WSFEv1.Sign = Sign ' WSAA.Sign
+
+    ' CUIT del emisor (debe estar registrado en la AFIP)
+    WSFEv1.Cuit = sCuitAfip
+    ' deshabilito errores no manejados
+    WSFEv1.LanzarExcepciones = False
+
+    ' Conectar al Servicio Web de Facturación
+    proxy = "" ' "usuario:clave@localhost:8000"
+    proxy = ""
+
+    wsdl = Trim(sWebServiceCae)
+
+   ' wsdl = "https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL"
+
+    cache = "" 'Path
+    wrapper = "" ' libreria http (httplib2, urllib2, pycurl)
+    cacert = "" ' WSAA.InstallDir & "\afip_ca_info.crt" ' certificado de la autoridad de certificante (solo pycurl)"
+
+    ok = WSFEv1.Conectar(cache, wsdl, proxy, wrapper, cacert) ' homologación
+    Debug.Print WSFEv1.version
+    ControlarExcepcion WSFEv1
+
+    ' mostrar bitácora de depuración:
+    Debug.Print WSFEv1.DebugLog
+
+    ' Llamo a un servicio nulo, para obtener el estado del servidor (opcional)
+    WSFEv1.Dummy
+    ControlarExcepcion WSFEv1
+    Debug.Print "appserver status", WSFEv1.AppServerStatus
+    Debug.Print "dbserver status", WSFEv1.DbServerStatus
+    Debug.Print "authserver status", WSFEv1.AuthServerStatus
+
+ 
+   
+   
+    ' Establezco los valores de la factura a autorizar:
+    tipo_cbte = pCompro '6
+    punto_vta = pPunto
+    
+    cbte_nro = WSFEv1.CompUltimoAutorizado(tipo_cbte, punto_vta)
+    ControlarExcepcion WSFEv1
+    
+    For Each v In WSFEv1.Errores
+        Debug.Print v
+    Next
+    Debug.Print WSFEv1.errmsg
+    Debug.Print WSFEv1.errcode
+    
+    If cbte_nro = "" Then
+        cbte_nro = 0                ' no hay comprobantes emitidos
+    Else
+        cbte_nro = CLng(cbte_nro)   ' convertir a entero largo
+    End If
+    Dim sDate As Date
+    sDate = DtpFecha.Value
+    
+    fecha = Format(sDate, "yyyymmdd")
+    
+    concepto = pConcepto
+    tipo_doc = pTipoDoc: nro_doc = pNumDoc
+    
+    cbte_nro = cbte_nro + 1
+    cbt_desde = cbte_nro: cbt_hasta = cbte_nro
+ 
+   ' Factura C
+   ' pIva = 3.4
+    imp_total = pTotal: imp_tot_conc = "0.00": imp_neto = Format(pNeto, "0.00")  '16.22
+    imp_iva = Format(pIva, "0.00"): imp_trib = LblPercepcion.Caption: imp_op_ex = "0.00"
+
+
+    fecha_cbte = fecha: fecha_venc_pago = ""
+    ' Fechas del período del servicio facturado (solo si concepto = 1?)
+    If pConcepto = 1 Then
+       fecha_serv_desde = "": fecha_serv_hasta = ""
+    Else
+       fecha_serv_desde = fecha: fecha_serv_hasta = fecha
+       fecha_venc_pago = fecha
+    End If
+    moneda_id = "PES": moneda_ctz = "1.000"
+    
+   ' moneda_id = "DOL": moneda_ctz = "850.00"
+    imp_tot_conc = TxtNoGrav.text
+    
+    
+    Dim cRcli As ClsClienteL
+    Set cRcli = New ClsClienteL
+    
+    Dim pTipoReceptor As Integer
+    pTipoReceptor = cRcli.BuscarTipoIvaReceptor(TxtCliente.text)
+
+
+    ok = WSFEv1.CrearFactura(concepto, tipo_doc, nro_doc, tipo_cbte, punto_vta, _
+        cbt_desde, cbt_hasta, imp_total, imp_tot_conc, imp_neto, _
+        imp_iva, imp_trib, imp_op_ex, fecha_cbte, fecha_venc_pago, _
+        fecha_serv_desde, fecha_serv_hasta, _
+        moneda_id, moneda_ctz, "N", 1)
+        
+    imp_iva_fact = imp_iva
+    imp_tributo_fact = imp_trib
+
+
+     If tipo_cbte = 201 Or tipo_cbte = 203 Then
+        'if tipo_cbte in (203, 208, 213):
+'
+        ok = WSFEv1.AgregarOpcional(2101, cRsl.TraerValorDeUnCampo("Sistema", "Cbu", "")) ' CBU
+        ok = WSFEv1.AgregarOpcional(2102, "pyafipws")                ' alias
+        If tipo_cbte = 201 Then
+           ok = WSFEv1.AgregarOpcional(27, "SCA")
+        Else
+           ok = WSFEv1.AgregarOpcional(22, "S")
+        End If
+     End If
+        
+    ' Agrego los comprobantes asociados:
+    If tipo_cbte = 3 Or tipo_cbte = 2 Or tipo_cbte = 7 Or tipo_cbte = 8 Or tipo_cbte = 12 Or tipo_cbte = 13 Or tipo_cbte = 212 Or tipo_cbte = 203 Then   ' solo nc/nd
+        Dim nNumeroAsoc As Integer, rAsoc As Recordset, tipoAsoc, puntoAsoc As Integer, numeroAsoc As Long
+        nLlama = 9
+        ComproBuscar.Show 1
+        If ComproBuscar.nId <> 0 Then
+           Set rAsoc = cRsl.TraerRS("CabezaTraerUno", ComproBuscar.nId, True)
+           
+           tipoAsoc = cRsl.TraerValorDeUnCampo("Comprobantes", "Afip", "Id=" & rAsoc!Comprobante)
+           puntoAsoc = rAsoc!sucursal
+           numeroAsoc = rAsoc!Numero
+          ok = WSFEv1.AgregarCmpAsoc(tipoAsoc, puntoAsoc, numeroAsoc, sCuitAfip, Format(rAsoc!fecha, "yyyymmdd"))
+       End If
+    End If
+'
+'    ' Agrego impuestos varios
+'    id = 99
+'    Desc = "Impuesto Municipal Matanza'"
+'    base_imp = "100.00"
+'    alic = "0.10"
+'    importe = "0.10"
+'    ok = WSFEv1.AgregarTributo(id, Desc, base_imp, alic, importe)
+'
+'    ' Agrego impuestos varios
+
+   Dim desc As String, nPerc As Currency, alic
+
+   
+'    Id = 4
+'    desc = "Impuestos internos"
+'    base_imp = imp_neto
+'    alic = "1.00"
+'    importe = "3168.90"
+'    ok = WSFEv1.AgregarTributo(Id, desc, base_imp, alic, importe)
+'
+'    ' Agrego impuestos varios
+'    id = 1
+'    Desc = "Impuesto nacional"
+'    base_imp = "50.00"
+'    alic = "1.00"
+'    importe = "0.50"
+'    ok = WSFEv1.AgregarTributo(id, Desc, base_imp, alic, importe)
+'
+     Dim i As Byte
+     
+     Dim nTasa(3) As Byte
+     Dim sBaseCam(3) As Currency, sImporte(3) As Currency
+     
+     
+     Rsd.MoveFirst
+    
+    
+      'Agrego impuestos varios
+    If LblPercepcion.Caption <> 0 Then
+       ID = 2
+       nPerc = cRsl.TraerValorDeUnCampo("Clientes", "Percepcion", "Cliente='" & TxtCliente.text & "'")
+       ok = WSFEv1.AgregarTributo(ID, "Perc.Ing.Bruto Bs.As.", LblNeto.Caption, str(nPerc), LblPercepcion.Caption)
+    End If
+    
+    If bMono = False Then
+        Do While Not Rsd.EOF
+           Select Case Rsd!ImpId
+               Case 9
+                  nTasa(0) = cRsl.TraerValorDeUnCampo("Impuestos", "CodAfip", "Impuesto=" & Rsd!ImpId)
+                  sBaseCam(0) = sBaseCam(0) + (Rsd!Total - Rsd!desc)
+                  sImporte(0) = sImporte(0) + Rsd!Impuesto
+               Case 10
+                  nTasa(1) = cRsl.TraerValorDeUnCampo("Impuestos", "CodAfip", "Impuesto=" & Rsd!ImpId)
+                  sBaseCam(1) = sBaseCam(1) + (Rsd!Total - Rsd!Des)
+                  sImporte(1) = sImporte(1) + Rsd!Impuesto
+               Case 15
+                  nTasa(2) = cRsl.TraerValorDeUnCampo("Impuestos", "CodAfip", "Impuesto=" & Rsd!ImpId)
+                  sBaseCam(2) = sBaseCam(2) + (Rsd!Total - Rsd!desc)
+                  sImporte(2) = sImporte(2) + Rsd!Impuesto
+               Case 16
+                  nTasa(3) = cRsl.TraerValorDeUnCampo("Impuestos", "CodAfip", "Impuesto=" & Rsd!ImpId)
+                  sBaseCam(3) = sBaseCam(3) + (Rsd!Total - Rsd!Descuento)
+                  sImporte(3) = sImporte(3) + Rsd!Impuesto
+           End Select
+           Rsd.MoveNext
+        Loop
+        For i = 0 To 3
+            If sImporte(i) <> 0 Or nTasa(i) = 3 Then
+               ID = nTasa(i)
+               base_imp = Round(sBaseCam(i), 2) - IIf(pCosto = 0, sImporte(i), 0)
+               base_imp = Round(base_imp, 2)
+               importe = Format(sImporte(i), "#0.00")
+               ok = WSFEv1.AgregarIva(ID, base_imp, importe)
+              ' ok = WSFEv1.AgregarIva(Id, 80, 18.9)
+            End If
+        Next
+     End If
+
+   
+    ' Habilito reprocesamiento automático (predeterminado):
+    WSFEv1.Reprocesar = True
+    
+    ok = WSFEv1.EstablecerCampoFactura("cancela_misma_moneda_ext", "N")
+    ok = WSFEv1.EstablecerCampoFactura("condicion_iva_receptor_id", pTipoReceptor)
+
+    ' Solicito CAE:
+    CAE = WSFEv1.CAESolicitar()
+    ControlarExcepcion WSFEv1
+
+    MsgBox "Resultado:" & WSFEv1.Resultado & " CAE: " & CAE & " Venc: " & WSFEv1.Vencimiento & " Obs: " & WSFEv1.obs & " Reproceso: " & WSFEv1.Reproceso, vbInformation + vbOKOnly
+
+    ' Muestro los errores
+    If WSFEv1.errmsg <> "" Then
+        MsgBox WSFEv1.errmsg, vbExclamation, "Error"
+    End If
+
+
+    If CAE = "" And tipo_cbte <> 203 Then
+        ' hubo error, no comparo
+    Else
+        Set cRle = New ClsEscritura
+        
+        Dim rCae As ADODB.Recordset
+        Set rCae = New ADODB.Recordset
+        
+        rCae.Fields.Append "Movimiento", adInteger
+        rCae.Fields.Append "Fecha", adVarChar, 10
+        rCae.Fields.Append "CAE", adVarChar, 50
+        rCae.Fields.Append "Documento", adVarChar, 20
+        rCae.Fields.Append "Comprobante", adInteger
+        rCae.Fields.Append "Numero", adInteger
+        rCae.Open
+        
+        rCae.AddNew
+        rCae!Movimiento = mMoviAfip
+        rCae!fecha = IIf(IsNull(WSFEv1.Vencimiento), Date, WSFEv1.Vencimiento)
+        rCae!CAE = CAE
+        rCae!Documento = pNumDoc
+        rCae!Comprobante = CmbComprobante.ItemData(CmbComprobante.ListIndex)
+        rCae!Numero = cbte_nro
+        rCae.Update
+        
+        TxtNumero.text = Format(cbte_nro, "00000000")
+        
+        cRle.Actualizar "AfipCaes_A", rCae
+        Botones True, True, True, True, False, True
+        Autorizar = True
+    End If
+Exit Function
+ManejoError:
+    ' Si hubo error (tradicional, no controlado):
+    
+    ' Depuración (grabar a un archivo los detalles del error)
+    fd = FreeFile
+    Open "c:\error.txt" For Append As fd
+    If Not WSAA Is Nothing Then
+        If WSAA.version >= "1.02a" Then
+            Print #fd, WSAA.Excepcion
+            Print #fd, WSAA.Traceback
+            Print #fd, WSAA.XmlRequest
+            Print #fd, WSAA.XmlResponse
+            ' guardo mensaje de error para mostrarlo:
+            Excepcion = WSAA.Excepcion
+        End If
+    End If
+    If Not WSFEv1 Is Nothing Then
+        If WSFEv1.version >= "1.10a" Then
+            Print #fd, WSFEv1.Excepcion
+            Print #fd, WSFEv1.Traceback
+            Print #fd, WSFEv1.XmlRequest
+            Print #fd, WSFEv1.XmlResponse
+            Print #fd, WSFEv1.DebugLog()
+            ' guardo mensaje de error para mostrarlo:
+            Excepcion = WSFEv1.Excepcion
+        End If
+    End If
+    Close fd
+    
+    Debug.Print err.Description            ' descripción error afip
+    Debug.Print err.Number - vbObjectError ' codigo error afip
+    If Excepcion = "" Then                 ' si no tengo mensaje de excepcion
+        Excepcion = err.Description        ' uso el error de VB
+    End If
+    
+    ' Mostrar el mensaje de error
+    Select Case MsgBox(Excepcion, vbCritical + vbRetryCancel, "Error:" & err.Number - vbObjectError & " en " & err.Source)
+        Case vbRetry
+            Debug.Assert False
+            Resume
+        Case vbCancel
+            Debug.Print err.Description
+    End Select
+End Function
+
+Sub ControlarExcepcion(obj As Object)
+    Dim fd As String
+
+    ' Nueva funcion para verificar que no haya habido errores:
+    On Error GoTo 0
+    If obj.Excepcion <> "" Then
+        ' Depuración (grabar a un archivo los detalles del error)
+        fd = FreeFile
+        Open "c:\excepcion.txt" For Append As fd
+        Print #fd, obj.Excepcion
+        Print #fd, obj.Traceback
+        Print #fd, obj.XmlRequest
+        Print #fd, obj.XmlResponse
+        Close fd
+        MsgBox "Servidor de AFIP Caido. Intentelo Mas tarde....", vbCritical, "Atención"
+        End
+    End If
+End Sub
+
+Public Function ImprimirPdf(pCompro As Byte, pConcepto As Byte, pTipoDoc As Byte, pNumDoc As String, pTotal As String, pNeto As String, _
+   pIva As String, pValIva() As String, pPorIva() As Byte, pPunto As Integer, pMovi As Long, pDire As String, pLocalidad As String, _
+   pProvincia As String, pCosto As Byte) As Boolean
+
+
+'      Dim PyEmail As Object
+'
+'      Set PyEmail = CreateObject("PyEmail")
+'
+'     ' Primer paso: conexión al servidor (por unica vez)
+'     servidor = "mail.sistemasagiles.com.ar"
+'     usuario = "no.responder@nsis.com.ar"
+'     clave = "1238478"
+'     ok = PyEmail.Conectar(servidor, usuario, clave)
+'
+'     ' Envio el o los correos (repetir por cada FE)
+'     remitente = "no.responder@sistemasagiles.com.ar"
+'     destinatario = "mariano@sistemasagiles.com.ar"
+'     mensaje = "Se envia factura electronica adjunta"
+'     archivo = "C:\FACTURA.PDF"
+'
+'     ok = PyEmail.Enviar(remitente, motivo, destinatario, mensaje, archivo)
+
+    Dim PyFEPDF As Object
+    
+    Dim domicilio_cliente  As String, nombre_cliente As String, Path As String
+    Dim cms As String, cacert As String, wsdl As String, pais_dst_cmp As String, Descuento As String, imp_subtotal As String
+    Dim ok As Variant, id_impositivo As String
+    Dim tipo_cbte As Byte, punto_vta As Integer, cbte_nro As String, fecha As String
+    Dim concepto As Byte, tipo_doc As Byte, nro_doc As String
+    Dim imp_total As String, imp_tot_conc As String, imp_neto As String, imp_iva As String, imp_trib As String
+    Dim imp_op_ex As String, fecha_cbte As String, fecha_venc_pago As String
+    Dim fecha_serv_desde As String, fecha_serv_hasta As String, moneda_id As String, moneda_ctz As String
+    Dim ID As Byte, base_imp As String, importe As String, CAE As String
+    Dim obs_generales As String, obs_comerciales As String, motivo_obs As String, forma_pago As String, fecha_vto_cae As String, incoterms As String
+    Dim idioma_cbte As String
+    Dim iva_id As Byte, u_mtx  As String, codigo As String, ds As String
+    Dim qty As String, umed As Byte, precio As String, bonif As String, despacho As String
+    Dim dato_a, dato_b, dato_c, dato_d, dato_e As String, cod_mtx As String
+    Dim papel As String, orientacion As String, num_copias As Byte, lineas_max As Integer, qty_pos As String, salida As String, Imprimir As Boolean
+    Dim cRsl As ClsLectura, i As Byte
+    Dim cSal As ClsClienteL
+    
+    Set cRsl = New ClsLectura
+    Set cSal = New ClsClienteL
+    
+    On Error GoTo ManejoError
+    
+    ' Crear objeto interface para generación de F.E. en PDF
+    Set PyFEPDF = CreateObject("PyFEPDF")
+    Debug.Print PyFEPDF.version
+    Debug.Print PyFEPDF.InstallDir
+        
+        
+    Path = App.Path
+        
+    ' CUIT del emisor
+    PyFEPDF.Cuit = sCuitAfip
+    
+    tipo_cbte = pCompro         ' Factura A
+    punto_vta = pPunto    ' prefijo
+    cbte_nro = Val(TxtNumero.text) ' número de factura
+    fecha = DtpFecha.Value
+    concepto = pConcepto
+    ' datos del cliente:
+    
+    
+    tipo_doc = pTipoDoc: nro_doc = cRsl.TraerValorDeUnCampo("AfipCaes", "Documento", "Movimiento=" & pMovi)
+    nombre_cliente = TxtCliente.text & " - " & LblCliente.Caption
+    
+    domicilio_cliente = pDire
+    pais_dst_cmp = 16 ' código para exportación
+    id_impositivo = LbLIva.Caption
+    ' totales del comprobante:
+    imp_total = pTotal: imp_tot_conc = "0.00"
+    imp_neto = Format(pNeto, "0.00"): imp_iva = Format(pIva, "0.00")
+    imp_trib = "0.00": imp_op_ex = "0.00": imp_subtotal = "0.00"
+    Descuento = "0.00"
+    fecha_cbte = fecha: fecha_venc_pago = fecha
+    ' Fechas del período del servicio facturado
+    fecha_serv_desde = fecha: fecha_serv_hasta = fecha
+    moneda_id = "PES": moneda_ctz = "1.000"
+    
+   ' moneda_id = "DOL": moneda_ctz = "850.00"
+    obs_generales = ""
+    obs_comerciales = ""
+   ' moneda_id = "012"
+   ' moneda_ctz = 0.5
+    forma_pago = IIf(CmbFormaPago.text = "COTIZAR", "CONTADO", CmbFormaPago.text)
+    incoterms = "FOB" ' termino de comercio exterior para exportación
+    idioma_cbte = 1   ' idioma para exportación (no usado por el momento)
+    ' motivo de observación (F136 y otros - RG2485/08 Art. 30 inc. c):
+    motivo_obs = ""
+
+    ' Código de Autorización Electrónica y fecha de vencimiento:
+    ' (para facturas tradicionales, no imprimir el CAE ni código de barras)
+    CAE = cRsl.TraerValorDeUnCampo("AfipCaes", "Cae", "Movimiento=" & pMovi)
+    fecha_vto_cae = cRsl.TraerValorDeUnCampo("AfipCaes", "Fecha", "Movimiento=" & pMovi)
+    
+    
+    
+    ' Creo la factura (internamente en la interfaz)
+    ok = PyFEPDF.CrearFactura( _
+        concepto, tipo_doc, nro_doc, tipo_cbte, punto_vta, _
+        cbte_nro, imp_total, imp_tot_conc, imp_neto, _
+        imp_iva, imp_trib, imp_op_ex, fecha_cbte, fecha_venc_pago, _
+        fecha_serv_desde, fecha_serv_hasta, _
+        moneda_id, moneda_ctz, CAE, fecha_vto_cae, id_impositivo, _
+        nombre_cliente, domicilio_cliente, pais_dst_cmp, _
+        obs_comerciales, obs_generales, forma_pago, incoterms, _
+        idioma_cbte, motivo_obs, Descuento)
+    
+    
+'    imp_iva_fact = imp_iva
+'    imp_tributo_fact = imp_trib
+    
+    ' Agregar comprobantes asociados (si es una NC/ND):
+    'tipo = 19
+    'pto_vta = 2
+    'nro = 1234
+    'pyfepdf.AgregarCmpAsoc(tipo, pto_vta, nro)
+    
+     ' Path = CurDir() + "\"
+     Path = App.Path + "\"
+    ' Agrego subtotales de IVA (uno por alicuot,codigo )
+    
+     Dim nTasa(3) As Byte
+     Dim sBaseCam(3) As Currency, sImporte(3) As Currency
+    
+     Rsd.MoveFirst
+    
+    If bMono = False Then
+         Do While Not Rsd.EOF
+           Select Case Rsd!ImpId
+               Case 9
+                  nTasa(0) = cRsl.TraerValorDeUnCampo("Impuestos", "CodAfip", "Impuesto=" & Rsd!ImpId)
+                  sBaseCam(0) = sBaseCam(0) + (Rsd!Total - Rsd!desc)
+                  sImporte(0) = sImporte(0) + Rsd!Impuesto
+               Case 10
+                  nTasa(1) = cRsl.TraerValorDeUnCampo("Impuestos", "CodAfip", "Impuesto=" & Rsd!ImpId)
+                  sBaseCam(1) = sBaseCam(1) + (Rsd!Total - Rsd!Des)
+                  sImporte(1) = sImporte(1) + Rsd!Impuesto
+               Case 15
+                  nTasa(2) = cRsl.TraerValorDeUnCampo("Impuestos", "CodAfip", "Impuesto=" & Rsd!ImpId)
+                  sBaseCam(2) = sBaseCam(2) + (Rsd!Total - Rsd!desc)
+                  sImporte(2) = sImporte(2) + Rsd!Impuesto
+               Case 16
+                  nTasa(3) = cRsl.TraerValorDeUnCampo("Impuestos", "CodAfip", "Impuesto=" & Rsd!ImpId)
+                  sBaseCam(3) = sBaseCam(3) + (Rsd!Total - Rsd!Descuento)
+                  sImporte(3) = sImporte(3) + Rsd!Impuesto
+           End Select
+           Rsd.MoveNext
+        Loop
+        For i = 0 To 3
+            If sImporte(i) <> 0 Or nTasa(i) = 3 Then
+               iva_id = nTasa(i)
+               base_imp = sBaseCam(i) - IIf(pCosto = 0, sImporte(i), 0)
+               importe = sImporte(i)
+               ok = PyFEPDF.AgregarIva(iva_id, base_imp, importe)
+            End If
+        Next
+     End If
+
+    
+    ' Agregar cada impuesto (por ej. IIBB, retenciones, percepciones, etc.):
+    Dim alic As Currency
+    
+    If LblPercepcion.Caption <> 0 Then
+       base_imp = LblNeto.Caption     ' importe sujeto a este tributo
+       alic = cRsl.TraerValorDeUnCampo("Clientes", "Percepcion", "Cliente='" & TxtCliente.text & "'") ' alicuota (porcentaje) de este tributo
+       importe = LblPercepcion.Caption        ' importe liquidado de este tributo
+       ok = PyFEPDF.AgregarTributo(2, "Perc. Ing.Brutos", base_imp, Format(alic, "0.00"), importe)
+    End If
+    
+'    Id = 4
+'  '  desc = "Impuestos internos"
+'    base_imp = LblNeto.Caption
+'    alic = "1.00"
+'    importe = "3168.90"
+'    ok = PyFEPDF.AgregarTributo(4, "Percepcion Iva RG 2459", base_imp, alic, importe)
+    ' Agrego detalles de cada item de la factura:
+    
+    Rsd.MoveFirst
+    i = 0
+    
+    Dim nConta As Byte
+    nConta = 1
+    
+    Dim bDetalle As Boolean
+    
+    Dim ret As Long
+    ret = SafeUBound(sTexFiscal)  ' -1 si no está inicializado
+
+   
+    Do While Not Rsd.EOF
+     '  If ret = 0 Then
+          u_mtx = 123456              ' unidades
+          cod_mtx = 1234567890123#    ' código de barras
+          codigo = Rsd!Producto       ' codigo interno a imprimir (ej. "articulo")
+          ds = Left(Rsd!Descripcion, 50)
+          qty = Rsd!Cantidad           ' cantidad
+          umed = Rsd!Medida ' código de unidad de medida (ej. 7 para "unidades")
+          bonif = IIf(IsNull(Rsd!PDesc), 0, Rsd!PDesc) + LblDescuento.Caption       ' importe de descuentos
+'       Else
+'         If UBound(sTexFiscal) = 0 Then
+'            ret = 0
+'             u_mtx = 123456              ' unidades
+'             cod_mtx = 1234567890123#    ' código de barras
+'             codigo = Rsd!Producto       ' codigo interno a imprimir (ej. "articulo")
+'             ds = Left(Rsd!Descripcion, 60)
+'             qty = Rsd!Cantidad           ' cantidad
+'             umed = 7                    ' código de unidad de medida (ej. 7 para "unidades")
+'             bonif = Rsd!PDesc + LblDescuento.Caption   ' importe de descuentos
+'          End If
+'       End If
+       precio = Rsd!PrecioUnitNeto ' precio neto (A) o iva incluido (B)
+       If pCosto = 1 Then
+          iva_id = Val(cRsl.TraerValorDeUnCampo("Impuestos", "CodAfip", "Impuesto=" & Rsd!ImpId))
+          imp_iva = Rsd!Impuesto              ' importe liquidado de iva
+          importe = Rsd!Total - Rsd!desc + IIf(pCompro = 11, 0, Rsd!Impuesto)
+        Else
+           iva_id = 0
+           imp_iva = 0
+           importe = Rsd!Total - Rsd!desc
+        End If
+       i = i + 1
+       ' importe total del item
+       despacho = ""               ' numero de despacho de importación
+       dato_a = ""                 ' primer dato adicional del item
+       dato_b = ""
+       dato_c = ""
+       dato_d = ""
+       dato_e = ""           ' ultimo dato adicional del item
+       
+       ok = PyFEPDF.AgregarDetalleItem(u_mtx, cod_mtx, codigo, ds, qty, umed, _
+            precio, bonif, iva_id, imp_iva, importe, despacho, _
+            dato_a, dato_b, dato_c, dato_d, dato_e)
+       Rsd.MoveNext
+       nConta = nConta + 1
+    Loop
+    
+
+    Dim rDatos As ADODB.Recordset
+    
+    Set rDatos = New ADODB.Recordset
+    
+    Set rDatos = cRsl.TraerRsCondi("AfipDatos", "Id_Datos", "Id_Datos=" & Val(txtSucursal.text))
+    If rDatos.RecordCount = 0 Then
+       MsgBox "Debe Definir las Sucursales en AFIP Datos", vbInformation, "Atención"
+       Exit Function
+    End If
+    
+    ' Agrego datos adicionales fijos:
+     ok = PyFEPDF.AgregarDato("logo", Trim(Path & rDatos!Imagen))
+     ok = PyFEPDF.AgregarDato("EMPRESA", Trim(rDatos!Fantasia))
+     ok = PyFEPDF.AgregarDato("MEMBRETE1", Trim(rDatos!Empresa))
+     ok = PyFEPDF.AgregarDato("MEMBRETE2", Trim(rDatos!Direccion))
+     ok = PyFEPDF.AgregarDato("MEMBRETE3", Trim(rDatos!Localidad))
+     ok = PyFEPDF.AgregarDato("CUIT", Trim(rDatos!Cuit))
+     ok = PyFEPDF.AgregarDato("IIBB", Trim(rDatos!IIBB))
+     ok = PyFEPDF.AgregarDato("IVA", Trim(rDatos!Iva))
+     ok = PyFEPDF.AgregarDato("INICIO", "Inicio de Actividad: " & Trim(rDatos!Inicio))
+     ok = PyFEPDF.AgregarDato("VENCI", Format(DtpVenc.Value, "dd/MM/yyyy"))
+
+'     ok = PyFEPDF.AgregarDato("ObservacionesGenerales1", "Nota al pie1")
+'     ok = PyFEPDF.AgregarDato("ObservacionesGenerales2", "")
+'     ok = PyFEPDF.AgregarDato("ObservacionesGenerales3", "")
+
+    ' Cargo el formato desde el archivo CSV (opcional)
+    ' (carga todos los campos a utilizar desde la planilla)
+    
+    ok = PyFEPDF.CargarFormato(Path & rDatos!Archivo)
+    
+    ' Agrego campos manualmente (opcional):
+    
+    Dim Nombre As String, tipo As String, x1 As Single, x2 As Single, y1 As Single, y2 As Single
+    Dim font As String, Size As Byte, bold As Boolean, italic As Boolean, underline As Boolean
+    Dim foreground As Long, background As Long, Align As String, prioridad As Byte, text As String
+    Dim priority As Byte
+    
+    
+    Nombre = "Localidad": tipo = "T" ' "T" texto, "L" lineas, "I" imagen, etc.
+    x1 = 26.09: y1 = 57.5: x2 = 79.02: y2 = 59.7   ' coordenadas (en milimetros)
+    font = "Arial": Size = 10: bold = 0: italic = 0: underline = 0 ' tipo de letra
+    foreground = 0: background = 65535     ' colores de frente y fondo
+    Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+    prioridad = 0 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+    text = pLocalidad
+    ok = PyFEPDF.AgregarCampo(Nombre, tipo, x1, y1, x2, y2, _
+                        font, Size, bold, italic, underline, _
+                        foreground, background, _
+                        Align, text, priority)
+
+    Nombre = "Provincia": tipo = "T" ' "T" texto, "L" lineas, "I" imagen, etc.
+    x1 = 99.29: y1 = 57.5: x2 = 140.3: y2 = 60.1     ' coordenadas (en milimetros)
+    font = "Arial": Size = 10: bold = 0: italic = 0: underline = 0 ' tipo de letra
+    foreground = 0: background = 65535     ' colores de frente y fondo
+    Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+    prioridad = 0 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+    text = pProvincia
+    ok = PyFEPDF.AgregarCampo(Nombre, tipo, x1, y1, x2, y2, _
+                        font, Size, bold, italic, underline, _
+                        foreground, background, _
+                        Align, text, priority)
+
+
+    Nombre = "Texto": tipo = "T"           ' "T" texto, "L" lineas, "I" imagen, etc.
+    x1 = 45.1: y1 = 79.01 + (4 * nConta): x2 = 105.4: y2 = 81.29 + (4 * nConta)      ' coordenadas (en milimetros)
+    font = "Arial": Size = 8: bold = 0: italic = 0: underline = 0 ' tipo de letra
+    foreground = 0: background = 65535   ' colores de frente y fondo
+    Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+    prioridad = 2 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+   ' Text = sText
+    
+    Dim j As Byte
+    
+    Dim Ub As Long
+      Ub = SafeUBound(sTexFiscal)
+      If Ub >= 0 Then
+          For j = 0 To Ub
+             ok = PyFEPDF.AgregarCampo(Nombre & j, tipo, x1, y1, x2, y2, _
+                   font, Size, bold, italic, underline, _
+                   foreground, background, _
+                   Align, sTexFiscal(j), priority)
+                   y1 = y1 + 4
+                   y2 = y2 + 4
+          Next j
+      End If
+    
+    If cRsl.TraerValorDeUnCampo("Impresion", "ResInscrip", "Comprobante=" & CmbComprobante.ItemData(CmbComprobante.ListIndex)) <> "0" Then
+       Nombre = "Saldo": tipo = "T" ' "T" texto, "L" lineas, "I" imagen, etc.
+       x1 = 8.8: y1 = 239: x2 = 34.8: y2 = 243     ' coordenadas (en milimetros)
+       font = "Arial": Size = 10: bold = 0: italic = 0: underline = 0 ' tipo de letra
+       foreground = 0: background = 65535     ' colores de frente y fondo
+       Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+       prioridad = 0 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+    
+       text = "Saldo Cta.Cte :" & Format(cSal.TraerSaldoCtaCte(TxtCliente.text), "#0.00")
+       ok = PyFEPDF.AgregarCampo(Nombre, tipo, x1, y1, x2, y2, _
+                        font, Size, bold, italic, underline, _
+                        foreground, background, _
+                        Align, text, priority)
+    End If
+    
+    If pCompro = 6 Or pCompro = 11 Then
+       Nombre = "Orientacion": tipo = "T" ' "T" texto, "L" lineas, "I" imagen, etc.
+       x1 = 13.3: y1 = 242.7: x2 = 108.3: y2 = 247.7      ' coordenadas (en milimetros)
+       font = "Arial": Size = 7: bold = 0: italic = 0: underline = 0 ' tipo de letra
+       foreground = 0: background = 65535     ' colores de frente y fondo
+       Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+       prioridad = 0 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+       text = "ORIENTACIÓN AL CONSUMIDOR PCIA BUENOS AIRES 0800-222-9042"
+       
+       ok = PyFEPDF.AgregarCampo(Nombre, tipo, x1, y1, x2, y2, _
+                        font, Size, bold, italic, underline, _
+                        foreground, background, _
+                        Align, text, priority)
+                        
+       If pCompro = 6 Then
+       
+          Nombre = "regimen": tipo = "T" ' "T" texto, "L" lineas, "I" imagen, etc.
+          x1 = 13.3: y1 = 248.7: x2 = 109.3: y2 = 248.7      ' coordenadas (en milimetros)
+          font = "Arial": Size = 7: bold = 0: italic = 0: underline = 0 ' tipo de letra
+          foreground = 0: background = 65535     ' colores de frente y fondo
+          Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+          prioridad = 0 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+          text = "Régimen de Transparencia Fiscal al Consumidor. (Ley 27.743)"
+          
+          ok = PyFEPDF.AgregarCampo(Nombre, tipo, x1, y1, x2, y2, _
+                           font, Size, bold, italic, underline, _
+                           foreground, background, _
+                           Align, text, priority)
+                           
+          If imp_iva_fact = 0 Then
+              imp_iva_fact = Abs(((lblTotal.Caption / 1.21) - lblTotal.Caption))
+          End If
+                           
+          Nombre = "regimen": tipo = "T" ' "T" texto, "L" lineas, "I" imagen, etc.
+          x1 = 13.3: y1 = 254.7: x2 = 109.3: y2 = 249.7      ' coordenadas (en milimetros)
+          font = "Arial": Size = 7: bold = 0: italic = 0: underline = 0 ' tipo de letra
+          foreground = 0: background = 65535     ' colores de frente y fondo
+          Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+          prioridad = 0 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+          text = "IVA Contenido :" & Format(imp_iva_fact, "#0.00")
+          
+          ok = PyFEPDF.AgregarCampo(Nombre, tipo, x1, y1, x2, y2, _
+                           font, Size, bold, italic, underline, _
+                           foreground, background, _
+                           Align, text, priority)
+                           
+          Nombre = "regimen": tipo = "T" ' "T" texto, "L" lineas, "I" imagen, etc.
+          x1 = 13.3: y1 = 260.7: x2 = 109.3: y2 = 250.7      ' coordenadas (en milimetros)
+          font = "Arial": Size = 7: bold = 0: italic = 0: underline = 0 ' tipo de letra
+          foreground = 0: background = 65535     ' colores de frente y fondo
+          Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+          prioridad = 0 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+          text = "Otros Impuestos Nacionales Indirectos :" & Format(imp_tributo_fact, "#0.00")
+          
+          ok = PyFEPDF.AgregarCampo(Nombre, tipo, x1, y1, x2, y2, _
+                           font, Size, bold, italic, underline, _
+                           foreground, background, _
+                           Align, text, priority)
+                        
+                        
+       End If
+
+    End If
+    
+    
+    
+    If (pCompro = 1 Or pCompro = 3) And cRsl.TraerValorDeUnCampo("Clientes", "TipoIva", "Cliente='" & TxtCliente.text & "'") = 4 Then
+       Nombre = "Orientacion": tipo = "T" ' "T" texto, "L" lineas, "I" imagen, etc.
+       x1 = 13.3: y1 = 242.7: x2 = 108.3: y2 = 247.7      ' coordenadas (en milimetros)
+       font = "Arial": Size = 7: bold = 0: italic = 0: underline = 0 ' tipo de letra
+       foreground = 0: background = 65535     ' colores de frente y fondo
+       Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+       prioridad = 0 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+       text = "EL CREDITO FISCAL DISCRIMINADO EN EL PRESENTE COMPROBANTE SOLO PODRA SER COMPUTADO A EFECTOS"
+            
+       ok = PyFEPDF.AgregarCampo(Nombre, tipo, x1, y1, x2, y2, _
+                        font, Size, bold, italic, underline, _
+                        foreground, background, _
+                        Align, text, priority)
+                        
+       Nombre = "Orientacion": tipo = "T" ' "T" texto, "L" lineas, "I" imagen, etc.
+       x1 = 13.3: y1 = 245: x2 = 108.3: y2 = 250      ' coordenadas (en milimetros)
+       font = "Arial": Size = 7: bold = 0: italic = 0: underline = 0 ' tipo de letra
+       foreground = 0: background = 65535     ' colores de frente y fondo
+       Align = "I" ' Alineación: Centrado, Izquierda, Derecha
+       prioridad = 0 ' Orden Z, menor prioridad se dibuja primero (para superposiciones)
+       text = "DEL REGIMEN DE SOSTENIMIENTO E INCLUSION FISCAL PARA PEQUENOS CONTRIBUYENTES DE LA LEY 27818."
+                        
+       ok = PyFEPDF.AgregarCampo(Nombre, tipo, x1, y1, x2, y2, _
+                        font, Size, bold, italic, underline, _
+                        foreground, background, _
+                        Align, text, priority)
+
+    End If
+    
+    
+    
+    ' Creo plantilla para esta factura (papel A4 vertical):
+    papel = "A4" ' o "letter" para carta, "legal" para oficio
+    orientacion = "portrait" ' o landscape (apaisado)
+    ok = PyFEPDF.CrearPlantilla(papel, orientacion)
+    num_copias = IIf(bEMail = False, rDatos!copias, 1) ' original, duplicado y triplicado
+    lineas_max = IIf(nLineasElectronic = 0, 30, nLineasElectronic) ' cantidad de linas de items por página
+    qty_pos = "izq" ' (cantidad a la izquierda de la descripción del artículo)
+    ' Proceso la plantilla
+    ok = PyFEPDF.ProcesarPlantilla(num_copias, lineas_max, qty_pos)
+    ' Genero el PDF de salida según la plantilla procesada
+    Dim sCob As String
+    
+    sCob = cRsl.TraerValorDeUnCampo("Comprobantes", "Comprobante", "Id=" & CmbComprobante.ItemData(CmbComprobante.ListIndex))
+    
+    salida = Path & "\Facturas\" & sCob & "-" & LblCliente.Caption & "-" & TxtNumero.text & ".pdf"
+    ok = PyFEPDF.GenerarPDF(salida)
+    
+    ' Abro el visor de PDF y muestro lo generado
+    ' (es necesario tener instalado Acrobat Reader o similar)
+    Imprimir = False ' cambiar a True para que lo envie directo a la impresora
+    If bEMail = False Then
+       ok = PyFEPDF.MostrarPDF(salida, Imprimir)
+    End If
+    
+    bEMail = False
+ '   Erase sTexFiscal
+    Exit Function
+ManejoError:
+    ' Si hubo error:
+    Debug.Print err.Description            ' descripción error afip
+    Debug.Print err.Number - vbObjectError ' codigo error afip
+    Select Case MsgBox(err.Description, vbCritical + vbRetryCancel, "Error:" & err.Number - vbObjectError & " en " & err.Source)
+        Case vbRetry
+            Debug.Print PyFEPDF.Excepcion
+            Debug.Print PyFEPDF.Traceback
+            Debug.Assert False
+            Resume
+        Case vbCancel
+            Debug.Print err.Description
+    End Select
+    Debug.Assert False
+End Function
+
+
+Private Function SafeUBound(ByRef arr As Variant) As Long
+    On Error GoTo EH
+    SafeUBound = UBound(arr)
+    Exit Function
+EH:
+    SafeUBound = -1
+End Function
+
+Private Function NzNum(ByVal v As Variant, Optional ByVal defValue As Double = 0) As Double
+    On Error GoTo EH
+    If IsNull(v) Or Len(Trim$(CStr(v))) = 0 Then
+        NzNum = defValue
+    Else
+        NzNum = CDbl(v)
+    End If
+    Exit Function
+EH:
+    NzNum = defValue
+End Function
 
